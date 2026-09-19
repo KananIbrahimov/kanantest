@@ -1,0 +1,3938 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Günlük Gider Takibi</title>
+<!-- ==== PWA: manifest.json, sw.js, icon-192.png, icon-512.png ilə eyni qovluqda olmalıdır ====
+     Bunları http(s):// üzərindən açmaq lazımdır (file:// ilə Service Worker işləmir,
+     Google Drive girişi ilə eynən). Məs: GitHub Pages, Netlify və ya `python3 -m http.server`. -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-maskable-192.png">
+<meta name="theme-color" content="#1f2a44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Xərclər">
+<script>
+  // TƏHLÜKƏSİZLİK: HTML içərisinə istifadəçi məlumatı yazmazdan əvvəl xüsusi simvolları
+  // təhlükəsiz formaya salır. Bu olmasa, kimsə kateqoriya adına zərərli bir script teqi
+  // yazsa (məsələn, sinxronlaşdırılmış JSON backup vasitəsilə), brauzer onu KOD kimi işə salar.
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+</script>
+<!-- Chart.js: Aylıq xülasədəki pasta və trend qrafikləri üçün (internet lazımdır) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<!-- Firebase: telefon/kompüter arasında anlıq (1-2 saniyəlik) sinxronizasiya üçün -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --bg: #eef1f6;
+    --panel: #ffffff;
+    --panel-alt: #f7f8fb;
+    --ink: #1c2333;
+    --muted: #6b7688;
+    --line: #e3e7ee;
+    --navy: #1f2a44;
+    --navy-soft: #2c3a5c;
+    --gold: #c99a3a;
+    --gold-soft: #f4e6c6;
+    --gold-line: #e8d29c;
+    --gold-ink: #8a6a22;
+    --gold-ink-dark: #4a3a10;
+    --danger: #c0435a;
+    --danger-bg: #fceef0;
+    --danger-bg-soft: #fdf2f4;
+    --success-bg: #e3f3ec;
+    --success-ink: #2b7a56;
+    --input-border: #cdd3de;
+    --swatch-border: #ffffff;
+    --overlay: rgba(20,25,40,0.45);
+    --shadow: rgba(0,0,0,0.12);
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    color-scheme: light;
+  }
+  [data-theme="dark"] {
+    --bg: #12151f;
+    --panel: #1b2030;
+    --panel-alt: #232a3d;
+    --ink: #e7eaf3;
+    --muted: #929cb5;
+    --line: #2c3448;
+    --navy: #2c3a5c;
+    --navy-soft: #3d4d76;
+    --gold: #d9ac4c;
+    --gold-soft: #3a3320;
+    --gold-line: #574a25;
+    --gold-ink: #e0b95e;
+    --gold-ink-dark: #f0d190;
+    --danger: #e2687e;
+    --danger-bg: #3a212a;
+    --danger-bg-soft: #2c1c22;
+    --success-bg: #1c332a;
+    --success-ink: #5cc99a;
+    --input-border: #3a4258;
+    --swatch-border: #1b2030;
+    --overlay: rgba(0,0,0,0.6);
+    --shadow: rgba(0,0,0,0.4);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 20px 14px calc(86px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    color: var(--ink);
+    transition: background .2s, color .2s;
+    touch-action: manipulation; /* iOS-da çift toxunuşla yaxınlaşdırmanı söndürür — native tətbiq hissi */
+  }
+  .container { width: 100%; max-width: 430px; }
+
+  .top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 18px;
+  }
+  .top h1 {
+    font-size: 21px; font-weight: 700; letter-spacing: -0.01em; margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .gear-btn {
+    background: var(--panel); border: 1px solid var(--line); color: var(--navy-soft);
+    padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+  }
+  .gear-btn:hover { border-color: var(--navy-soft); }
+
+  /* ==== Alt naviqasiya paneli (bottom tab bar) ==== */
+  .bottom-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+    display: flex; justify-content: center; background: var(--panel);
+    border-top: 1px solid var(--line); box-shadow: 0 -3px 14px var(--shadow);
+  }
+  .bottom-nav-inner {
+    display: flex; width: 100%; max-width: 430px; margin: 0 auto;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; background: none; border: none; cursor: pointer; padding: 6px 2px 5px;
+    color: var(--muted); font-size: 10.5px; font-weight: 600; border-radius: 12px;
+    transition: color .15s, background .15s;
+  }
+  .nav-item:active { background: var(--panel-alt); }
+  .nav-item .nav-icon { font-size: 20px; line-height: 1; transition: transform .15s; }
+  .nav-item.active { color: var(--navy); }
+  .nav-item.active .nav-icon { transform: translateY(-1px); }
+  [data-theme="dark"] .nav-item.active { color: var(--gold); }
+
+  .menu-balance-card {
+    background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: var(--radius-lg);
+    padding: 16px 18px; margin: 0 0 16px;
+  }
+  .menu-balance-card .k { font-size: 12px; color: var(--gold-ink); font-weight: 600; }
+  .menu-balance-card .v { font-size: 26px; font-weight: 700; color: var(--gold-ink-dark); margin-top: 3px; }
+  .menu-balance-card .v.low { color: var(--danger); }
+  .menu-balance-card .v2 { font-size: 12.5px; font-weight: 600; color: var(--gold-ink); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gold-line); }
+  .menu-balance-card .v2 b { color: var(--gold-ink-dark); font-weight: 700; }
+
+  .tabs {
+    display: flex; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 999px; padding: 4px; margin-bottom: 16px;
+  }
+  .tab-btn {
+    flex: 1; padding: 8px 0; border-radius: 999px; border: none; background: transparent;
+    cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted);
+    transition: background .15s, color .15s;
+  }
+  .tab-btn.active { background: var(--navy); color: #fff; }
+
+  .summary-card {
+    background: var(--navy); color: #fff; border-radius: var(--radius-lg);
+    padding: 20px 20px 18px; margin-bottom: 14px; position: relative; overflow: hidden;
+  }
+  .summary-card::after {
+    content: ""; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px;
+    border-radius: 50%; background: radial-gradient(circle, rgba(201,154,58,0.25), transparent 70%);
+  }
+  .summary-label { font-size: 12.5px; color: #c7cfe0; font-weight: 500; }
+  .summary-amount { font-size: 32px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
+  .summary-sub { font-size: 12px; color: #9aa6c2; margin-top: 6px; }
+
+  .balance-card {
+    background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: var(--radius-lg);
+    padding: 16px 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+    gap: 10px;
+  }
+  .balance-card .info { min-width: 0; }
+  .balance-card .k { font-size: 12px; color: var(--gold-ink); font-weight: 600; }
+  .balance-card .v { font-size: 24px; font-weight: 700; color: var(--gold-ink-dark); margin-top: 2px; }
+  .balance-card .v.low { color: var(--danger); }
+  .balance-card .edit-btn {
+    background: var(--panel); border: 1px solid var(--gold-line); color: var(--gold-ink); font-weight: 600; font-size: 12px;
+    padding: 7px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  }
+  .balance-card .edit-btn:hover { background: var(--gold-soft); }
+  .balance-bar-container {
+    width: 100%; height: 7px; background: rgba(138,106,34,0.18); border-radius: 999px; overflow: hidden; margin-top: 10px;
+  }
+  .balance-bar-fill { height: 100%; background: var(--gold-ink); }
+  .balance-card.stacked { flex-direction: column; align-items: stretch; }
+  .balance-card.stacked .top-row { display: flex; justify-content: space-between; align-items: center; }
+
+  .daily-limit-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
+    padding: 14px 16px; margin-bottom: 14px; transition: background .2s, border-color .2s;
+  }
+  .daily-limit-card.over { border-color: var(--danger); background: var(--danger-bg-soft); }
+  .daily-limit-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .daily-limit-head .lbl { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .daily-limit-head .lbl.over { color: var(--danger); }
+  .daily-limit-head .pct { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .daily-limit-head .pct.over { color: var(--danger); }
+  .daily-limit-bar-bg { width: 100%; height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
+  .daily-limit-bar-fill { height: 100%; background: var(--navy); border-radius: 999px; transition: width .2s, background .2s; }
+  .daily-limit-bar-fill.over { background: var(--danger); }
+  .daily-limit-foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .daily-limit-foot .qalan { font-weight: 700; color: var(--navy); }
+  .daily-limit-foot .qalan.over { color: var(--danger); }
+
+  .progress-bar-container {
+    width: 100%; height: 10px; background: rgba(255,255,255,0.12); border-radius: 999px;
+    overflow: hidden; display: flex; margin: 16px 0 12px;
+  }
+  .breakdown { display: flex; flex-direction: column; gap: 6px; }
+  .breakdown-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12.5px; color: #dfe4f0;
+  }
+  .breakdown-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .breakdown-empty { font-size: 12.5px; color: #9aa6c2; text-align: center; padding: 6px 0; }
+
+  .insight-strip {
+    display: flex; gap: 10px; margin-bottom: 18px;
+  }
+  .insight-box {
+    flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: 10px 12px;
+  }
+  .insight-box .k { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .insight-box .v { font-size: 15px; font-weight: 700; margin-top: 2px; color: var(--navy); }
+
+  .grid-buttons {
+    display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 14px;
+  }
+  .cat-btn {
+    color: #fff; font-weight: 600; padding: 14px 10px; border-radius: var(--radius-md); border: none;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; min-height: 66px; transition: transform .08s;
+  }
+  .cat-btn:active { transform: scale(0.97); }
+  .cat-btn .name { font-size: 13.5px; text-align: center; }
+  .cat-btn .sub { font-size: 11px; opacity: 0.85; font-weight: 500; }
+
+  /* Xərclər ekranı: günlük (tiksiz) və aylıq sabit (tikli) kateqoriyalar arasında xətt */
+  .grid-ayirici {
+    grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
+    color: var(--muted); font-size: 11.5px; font-weight: 600; margin: 2px 0;
+  }
+  .grid-ayirici::before, .grid-ayirici::after { content: ''; flex: 1; height: 1px; background: var(--input-border); }
+
+  .dashed-btn {
+    width: 100%; margin-bottom: 22px; border: 1.5px dashed #b9c1d1; background: transparent;
+    color: var(--muted); font-weight: 600; padding: 11px; border-radius: var(--radius-md);
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13.5px;
+  }
+  .dashed-btn:hover { border-color: var(--navy-soft); color: var(--navy-soft); }
+
+  .history-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .history-head span { font-weight: 700; font-size: 14.5px; color: var(--navy); }
+  .history-head button { font-size: 12px; color: var(--danger); background: none; border: none; cursor: pointer; font-weight: 600; }
+
+  .list-item {
+    display: flex; justify-content: space-between; align-items: center; background: var(--panel);
+    border: 1px solid var(--line); padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13.5px; margin-bottom: 7px;
+  }
+  .list-item .cat { font-weight: 600; color: var(--ink); }
+  .list-item .time { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .list-item .right { display: flex; align-items: center; gap: 10px; }
+  .list-item .amt { font-weight: 700; color: var(--navy); }
+  .list-item button { color: #b7bfcf; background: none; border: none; cursor: pointer; font-size: 14px; }
+  .list-item button:hover { color: var(--danger); }
+  .empty-note { color: #9aa3b5; text-align: center; font-size: 13.5px; padding: 18px 0; margin: 0; }
+
+  .modal { position: fixed; inset: 0; background: var(--overlay); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 70; }
+  .modal.active { display: flex; }
+  #confirmModal { z-index: 70; }
+  #newCatModal { z-index: 70; }
+  #transferModal { z-index: 70; }
+  #hesabDuzeltModal { z-index: 70; }
+  #krediBorcuDuzeltModal { z-index: 70; }
+  #senkronKeyGirModal { z-index: 70; }
+  #pinAyarlaModal { z-index: 70; }
+  #islemFormModal { z-index: 70; }
+  #hesabSecModal { z-index: 70; }
+  .monthly-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .monthly-item .left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .monthly-item .icon { font-size: 18px; }
+  .monthly-item .name { font-weight: 600; font-size: 13.5px; }
+  .monthly-item .amt { font-size: 12px; color: var(--muted); }
+  .monthly-item .badge {
+    font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .monthly-item .badge.paid { background: var(--success-bg); color: var(--success-ink); }
+  .monthly-item .badge.unpaid { background: var(--danger-bg); color: var(--danger); cursor: pointer; }
+  .monthly-item .del-btn { background: none; border: none; cursor: pointer; font-size: 13px; color: #b7bfcf; }
+  .monthly-item .del-btn:hover { color: var(--danger); }
+
+  .ay-row {
+    display: flex; align-items: center; gap: 10px; background: var(--panel-alt); border: 1px solid var(--line);
+    border-radius: var(--radius-md); padding: 10px 12px;
+  }
+  .ay-row .icon-input {
+    flex: 0 0 34px; width: 34px; border: 1px solid var(--line); background: var(--panel); text-align: center;
+    font-size: 16px; padding: 5px 2px; border-radius: 6px; color: var(--ink);
+  }
+  .ay-row .icon-input:focus { outline: none; border-color: var(--navy-soft); }
+  .ay-row .ay-name-input {
+    flex: 1 1 auto; min-width: 0; border: 1px solid transparent; background: transparent;
+    font-weight: 600; font-size: 13.5px; padding: 6px 6px; border-radius: 6px; color: var(--ink);
+  }
+  .ay-row .ay-name-input:hover, .ay-row .ay-name-input:focus { border-color: var(--line); background: var(--panel); outline: none; }
+  .ay-row .ay-amt-input {
+    flex: 0 0 72px; width: 72px; border: 1px solid var(--line); background: var(--panel);
+    font-size: 13px; font-weight: 600; padding: 6px 7px; border-radius: 6px; color: var(--navy); text-align: right;
+  }
+  .ay-row .ay-amt-input:focus { outline: none; border-color: var(--navy-soft); }
+  .ay-row .ay-checkbox { flex: 0 0 auto; width: 19px; height: 19px; accent-color: var(--navy); cursor: pointer; margin: 0; }
+  .ay-row .del-btn { flex: 0 0 auto; background: none; border: none; cursor: pointer; font-size: 13px; color: #b7bfcf; padding: 4px; }
+  .ay-row .taksit-badge { flex: 0 0 auto; font-size: 10px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .ay-row .del-btn:hover { color: var(--danger); }
+  .ay-total-row {
+    display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 14.5px;
+    color: var(--navy); background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: var(--radius-md);
+    padding: 10px 14px; margin-bottom: 14px;
+  }
+  .modal-content { background: var(--panel); width: 100%; max-width: 400px; border-radius: 16px; padding: 22px; box-sizing: border-box; max-height: 88vh; display: flex; flex-direction: column; color: var(--ink); }
+  .modal-content h2, .page-inner h2 { font-size: 17px; margin: 0 0 4px; }
+  .modal-content p.hint, .page-inner p.hint { font-size: 12.5px; color: var(--muted); margin: 0 0 16px; }
+  .modal-list { overflow-y: auto; flex: 1; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; padding-right: 2px; }
+  .modal-item { background: var(--panel-alt); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  /* Kateqoriyaların sürüşdürülərək sıralanması (drag-to-reorder) */
+  .modal-item.siralana-bilen { position: relative; }
+  .drag-handle { touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; font-size: 16px; color: var(--muted); padding: 0 4px; flex: 0 0 auto; line-height: 1; }
+  .modal-item.siralanan { opacity: 0.92; box-shadow: 0 8px 20px var(--shadow); z-index: 5; }
+  .field-row { display: flex; align-items: center; gap: 8px; }
+  .field-row.between { justify-content: space-between; }
+  input[type="text"], input[type="number"] {
+    padding: 8px 10px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; outline: none; width: 100%;
+    font-family: inherit; background: var(--panel); color: var(--ink);
+  }
+  input:focus { border-color: var(--navy-soft); }
+  .swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid var(--swatch-border); box-shadow: 0 0 0 1px var(--line); }
+  .swatch.selected { box-shadow: 0 0 0 2px var(--navy); }
+  /* 20 rəngli palitra: 10-10 iki sıra */
+  .renk-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px 4px; justify-items: center; padding-top: 2px; }
+  .renk-grid .swatch { width: 22px; height: 22px; }
+  .btn { border: none; border-radius: 10px; padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:hover { background: var(--navy-soft); }
+  .btn-ghost { background: transparent; color: var(--muted); }
+  .btn-danger { background: var(--danger-bg); color: var(--danger); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .error-text { font-size: 12px; color: var(--danger); min-height: 15px; margin-top: -4px; }
+
+  /* Full page sections (opened from the side menu) instead of centered popups */
+  .page-screen {
+    position: fixed; inset: 0; background: var(--bg); display: none;
+    flex-direction: column; z-index: 60; overflow-y: auto;
+  }
+  .page-screen.active { display: flex; animation: pageSlideIn .22s ease; }
+  @keyframes pageSlideIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+  .page-inner {
+    width: 100%; max-width: 430px; margin: 0 auto; box-sizing: border-box;
+    padding: 20px 14px calc(86px + env(safe-area-inset-bottom, 0px)); flex: 1; display: flex; flex-direction: column; min-height: 100%;
+  }
+  .page-inner .modal-list { max-height: none; }
+  /* Long pages (like Hesablar və Borclar) have more content than fits one screen.
+     Without this, flexbox silently shrinks — and for elements with overflow:hidden/auto,
+     crops — children like .debt-summary-card or .modal-list instead of just letting the
+     page scroll. Forcing every direct child to keep its natural size fixes that. */
+  .page-inner > * { flex-shrink: 0; }
+
+  .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 60vh; color: var(--muted); font-size: 14px; }
+
+  /* Güncel Borclar: combined debt summary chart */
+  .debt-summary-card {
+    background: var(--navy); color: #fff; border-radius: var(--radius-lg);
+    padding: 18px 18px 16px; margin-bottom: 14px; position: relative; overflow: hidden;
+  }
+  .debt-summary-label { font-size: 12.5px; color: #c7cfe0; font-weight: 500; }
+  .debt-summary-amount { font-size: 28px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
+  .debt-chart-container {
+    width: 100%; height: 12px; background: rgba(255,255,255,0.12); border-radius: 999px;
+    overflow: hidden; display: flex; margin: 14px 0 10px;
+  }
+  .debt-breakdown { display: flex; flex-direction: column; gap: 6px; }
+  .debt-breakdown-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12.5px; color: #dfe4f0;
+  }
+  .debt-breakdown-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+
+  /* Dashboard: circular (doughnut) charts */
+  .pie-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
+    padding: 16px 16px 14px; margin-bottom: 12px;
+  }
+  .pie-card .pie-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+  .pie-card-row { display: flex; align-items: center; gap: 16px; }
+  .pie-canvas-wrap { position: relative; width: 108px; height: 108px; flex: none; }
+  .pie-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
+  .pie-center-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; pointer-events: none; }
+  .pie-center-label .n { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .pie-center-label .l { font-size: 9.5px; color: var(--muted); margin-top: 1px; }
+  .pie-legend { display: flex; flex-direction: column; gap: 7px; flex: 1; min-width: 0; }
+  .pie-legend-row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink); }
+  .pie-legend-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; flex: none; }
+  .pie-legend-row .lbl { display: flex; align-items: center; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pie-legend-row .amt { font-weight: 700; flex: none; }
+  .pie-empty { font-size: 12.5px; color: var(--muted); padding: 6px 0; }
+
+  /* Hesablar: add-account ("+") picker */
+  .hesab-add-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 10px; }
+  .hesab-add-head h3 { margin: 0; font-size: 14px; color: var(--ink); }
+  .hesab-add-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--navy);
+    color: #fff; font-size: 19px; line-height: 1; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; flex: none;
+  }
+  .hesab-sec-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 12px 12px; border: 1px solid var(--line); border-radius: var(--radius-md);
+    background: var(--panel-alt); cursor: pointer; margin-bottom: 8px; font-size: 14px; color: var(--ink);
+  }
+  .hesab-sec-item .ic { font-size: 19px; }
+  .hesab-sec-item small { display: block; color: var(--muted); font-size: 11.5px; font-weight: 400; margin-top: 1px; }
+
+  /* Monthly installment column chart */
+  .taksit-chart { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; }
+  .taksit-bar-col { flex: 1 1 0; min-width: 28px; display: flex; flex-direction: column; align-items: center; }
+  .taksit-bar-amt { font-size: 9.5px; color: var(--muted); margin-bottom: 4px; font-weight: 600; white-space: nowrap; }
+  .taksit-bar-amt.paid { color: #2b7a56; }
+  .taksit-bar { width: 100%; max-width: 26px; height: 46px; border-radius: 6px 6px 3px 3px; background: var(--line); transition: background .2s; }
+  .taksit-bar.filled { background: var(--navy); }
+  .taksit-bar-month { font-size: 9.5px; color: var(--muted); margin-top: 5px; white-space: nowrap; }
+
+  .drive-box { background: var(--panel-alt); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 10px 12px; margin: 0 2px 8px; }
+  .drive-box .drive-status { font-size: 12px; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .drive-box .drive-status.ok { color: var(--success-ink); }
+  .drive-box .drive-status.err { color: var(--danger); }
+  .drive-box .drive-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .drive-box .drive-btns { display: flex; gap: 6px; margin-top: 8px; }
+  .drive-box .drive-btns button { flex: 1; font-size: 11.5px; padding: 7px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; color: var(--navy-soft); }
+  .drive-box .drive-btns button:hover { border-color: var(--navy-soft); }
+
+  /* Ayarlar səhifəsindəki bütün sətir ikonları eyni ölçü/boşluqla düzülsün deyə */
+  .ayarlar-ikon { display: inline-flex; align-items: center; justify-content: center; width: 20px; font-size: 15px; margin-right: 8px; flex: 0 0 auto; }
+  .ayarlar-metin { display: inline-flex; align-items: center; }
+  /* Ayarlar səhifəsindəki bütün qutucuqlar (Kateqoriyalar, Son əməliyyatlar, İşıqlı rejim,
+     Tətbiq kilidi, System, Yenilə, Günlük limit) eyni ölçü/şrift/haşiyə istifadə etsin deyə vahid siniflər */
+  .ayarlar-kutu {
+    box-sizing: border-box; width: 100%; border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: 13px 14px; background: transparent; font-family: inherit; text-align: left;
+  }
+  .ayarlar-setir-ic {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3;
+  }
+  button.ayarlar-kutu { cursor: pointer; }
+  button.ayarlar-kutu:hover { border-color: var(--navy-soft); }
+  .error-text:empty { display: none; margin: 0; min-height: 0; }
+
+  .theme-toggle-row {
+    display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; color: var(--ink);
+  }
+  .theme-switch {
+    position: relative; width: 42px; height: 24px; border-radius: 999px; background: var(--line);
+    border: none; cursor: pointer; flex: 0 0 auto; transition: background .2s;
+  }
+  .theme-switch::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform .2s;
+  }
+  [data-theme="dark"] .theme-switch { background: var(--navy); }
+  [data-theme="dark"] .theme-switch::after { transform: translateX(18px); }
+
+  .hesabat-cemi-card {
+    background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: var(--radius-lg);
+    padding: 14px 16px; margin-bottom: 16px;
+  }
+  .hesabat-cemi-card .k { font-size: 12.5px; color: var(--gold-ink); font-weight: 600; }
+  .hesabat-cemi-card .v { font-size: 22px; font-weight: 700; color: var(--gold-ink-dark); margin-top: 2px; }
+  /* Aylıq hesabat: 2 dairəvi qrafik (günlük xərclər / aylıq sabit xərclər) */
+  .hesabat-bolme-basliq { font-size: 14px; margin: 18px 0 10px; color: var(--ink); }
+  .hesabat-kart { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 16px; }
+  .donut-sarici { position: relative; width: 100%; max-width: 250px; aspect-ratio: 1 / 1; margin: 0 auto; }
+  .donut-sarici canvas { width: 100% !important; height: 100% !important; }
+  .donut-merkez { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; padding: 0 20%; }
+  .donut-merkez .t { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+  .donut-merkez .b { font-weight: 800; color: var(--ink); line-height: 1.15; margin-top: 2px; white-space: nowrap; }
+  .donut-merkez .s { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-top: 3px; }
+  .donut-merkez .b.over, .donut-merkez .s.over { color: var(--danger); }
+  .donut-caption { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 14px; }
+  .donut-caption:empty { display: none; }
+  .hesabat-row { margin-bottom: 12px; }
+  .hesabat-row-top { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+  .hesabat-bar-bg { width: 100%; height: 10px; background: var(--panel-alt); border-radius: 999px; overflow: hidden; }
+  .hesabat-bar-fill { height: 100%; border-radius: 999px; transition: width .3s; }
+  .trend-row {
+    display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; font-size: 13px;
+    font-weight: 600; background: var(--panel-alt); border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 6px;
+  }
+  .trend-up { color: var(--danger); }
+  .trend-down { color: var(--success-ink); }
+  .trend-new { color: var(--gold-ink); }
+
+  .date-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 14px; }
+  .date-nav-arrow {
+    background: var(--panel); border: 1px solid var(--line); color: var(--navy-soft); width: 34px; height: 34px;
+    border-radius: 50%; font-size: 17px; line-height: 1; cursor: pointer; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .date-nav-arrow:disabled { opacity: 0.3; cursor: default; }
+  .date-nav-label { flex: 1; text-align: center; font-weight: 700; font-size: 14px; color: var(--ink); }
+
+  /* ==== Tətbiq kilidi (Face ID / Touch ID / PIN) ==== */
+  .lock-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 200;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .lock-screen.active { display: flex; }
+  .lock-box { width: 100%; max-width: 320px; text-align: center; }
+  .lock-icon { font-size: 42px; margin-bottom: 10px; }
+  .lock-box h2 { margin: 0 0 6px; font-size: 18px; color: var(--ink); }
+  #kilidPinInput { text-align: center; letter-spacing: 10px; font-size: 20px; margin-bottom: 8px; }
+  .toggle-switch {
+    position: relative; width: 42px; height: 24px; border-radius: 999px; background: var(--line);
+    border: none; cursor: pointer; flex: 0 0 auto; transition: background .2s;
+  }
+  .toggle-switch::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform .2s;
+  }
+  .toggle-switch.on { background: var(--navy); }
+  .toggle-switch.on::after { transform: translateX(18px); }
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<!-- Tətbiq kilidi: Face ID / Touch ID (WebAuthn) və ya ehtiyat PIN -->
+<div class="lock-screen" id="kilidEkrani">
+  <div class="lock-box">
+    <div class="lock-icon">🔒</div>
+    <h2>Tətbiq kilidlidir</h2>
+    <p class="hint" id="kilidHint">Davam etmək üçün təsdiqlə.</p>
+    <button class="btn btn-primary" id="kilidFaceBtn" onclick="kilidWebAuthnDogrula()" style="width:100%; margin-bottom:10px; display:none;">🔓 Face ID / Touch ID ilə aç</button>
+    <div id="kilidPinWrap" style="display:none;">
+      <input type="password" inputmode="numeric" maxlength="4" id="kilidPinInput" placeholder="PIN kodu">
+      <button class="btn btn-primary" onclick="kilidPinIleAc()" style="width:100%;">Aç</button>
+    </div>
+    <div class="error-text" id="kilidError"></div>
+  </div>
+</div>
+
+<!-- PIN təyin etmə (Face ID mövcud olmayanda ehtiyat) -->
+<div id="pinAyarlaModal" class="modal">
+  <div class="modal-content">
+    <h2>Ehtiyat PIN təyin et</h2>
+    <p class="hint">Bu cihaz Face ID/Touch ID dəstəkləmir (və ya rədd edildi). 4 rəqəmli bir PIN qoy.</p>
+    <input type="password" inputmode="numeric" maxlength="4" id="pinAyarlaInput" placeholder="Məs: 1234" style="text-align:center; letter-spacing:8px; font-size:18px;">
+    <div class="error-text" id="pinAyarlaError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('pinAyarlaModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="pinAyarlaOnayla()">Təyin et</button>
+    </div>
+  </div>
+</div>
+
+<div class="container" id="app">
+  <div class="loading-screen" id="loadingScreen">Yüklənir...</div>
+</div>
+
+<!-- Dashboard tab: kredit kartının güncəl borcu -->
+<div id="dashboardModal" class="page-screen">
+  <div class="page-inner">
+    <div style="padding-bottom:12px; margin-bottom:4px;">
+      <h2 style="margin:0;">Dashboard</h2>
+    </div>
+
+    <!-- 1. Ümumi Borc — dairəvi diaqram -->
+    <div class="pie-card">
+      <div class="pie-title">📊 Ümumi borc</div>
+      <div class="pie-card-row">
+        <div class="pie-canvas-wrap"><canvas id="dashUmumiBorcCanvas"></canvas>
+          <div class="pie-center-label"><span class="n" id="dashUmumiBorcMerkez">—</span><span class="l">cəm</span></div>
+        </div>
+        <div class="pie-legend" id="dashUmumiBorcLegend"></div>
+      </div>
+    </div>
+
+    <!-- 2. Kredit kartı — istifadə olunan / istifadə edilə bilən — dairəvi diaqram -->
+    <div class="pie-card">
+      <div class="pie-title">💳 Kredit kartı limiti</div>
+      <div class="pie-card-row">
+        <div class="pie-canvas-wrap"><canvas id="dashKrediKartCanvas"></canvas>
+          <div class="pie-center-label"><span class="n" id="dashKrediKartMerkez">—</span><span class="l">limit</span></div>
+        </div>
+        <div class="pie-legend" id="dashKrediKartLegend"></div>
+      </div>
+    </div>
+
+    <!-- 3. Kredit borcu (taksit) — ödənilib / qalıb — dairəvi diaqram -->
+    <div class="pie-card">
+      <div class="pie-title">🧾 Kredit borcu — taksit ödənilib</div>
+      <div class="pie-card-row">
+        <div class="pie-canvas-wrap"><canvas id="dashKrediBorcuCanvas"></canvas>
+          <div class="pie-center-label"><span class="n" id="dashKrediBorcuMerkez">—</span><span class="l">taksit</span></div>
+        </div>
+        <div class="pie-legend" id="dashKrediBorcuLegend"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Alt naviqasiya (bottom tab bar) -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-inner">
+    <button class="nav-item" id="navDashboard" onclick="sekmeSec('dashboard')">
+      <span class="nav-icon">📊</span><span>Dashboard</span>
+    </button>
+    <button class="nav-item" id="navAylikHesabat" onclick="sekmeSec('aylikHesabat')">
+      <span class="nav-icon">📈</span><span>Aylıq</span>
+    </button>
+    <button class="nav-item active" id="navAna" onclick="sekmeSec('ana')">
+      <span class="nav-icon">🧾</span><span>Xərclər</span>
+    </button>
+    <button class="nav-item" id="navHesablar" onclick="sekmeSec('hesablar')">
+      <span class="nav-icon">💰</span><span>Hesablar</span>
+    </button>
+    <button class="nav-item" id="navAyarlar" onclick="sekmeSec('ayarlar')">
+      <span class="nav-icon">⚙️</span><span>Ayarlar</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Amount entry modal -->
+<div id="amountModal" class="modal">
+  <div class="modal-content">
+    <h2 id="amountModalTitle">Tutarı daxil et</h2>
+    <p class="hint">Bu xərc üçün məbləği AZN olaraq yaz.</p>
+    <input type="number" step="0.01" min="0" id="amountInput" placeholder="0.00" style="margin-bottom:10px;">
+    <div id="amountReasonWrap" style="display:none;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Səbəb</label>
+      <input type="text" id="amountReasonInput" placeholder="Məs: Taksi, hədiyyə, təmir...">
+    </div>
+    <div class="error-text" id="amountError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('amountModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="amountModalOnayla()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<!-- Credit card modal: limit + actual balance -->
+<div id="balanceModal" class="modal">
+  <div class="modal-content">
+    <h2>Kredit kartı</h2>
+    <p class="hint">Kartının limitini və hazırkı borcunu yaz. Hər xərc avtomatik olaraq borcu artıracaq (mənfi tərəfə).</p>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Kredit limiti (AZN)</label>
+      <input type="number" step="0.01" min="0" id="cardLimitInput" placeholder="Məs: 2000">
+    </div>
+    <div style="margin-bottom:6px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Borc (AZN)</label>
+      <input type="number" step="0.01" max="0" id="cardBalanceInput" placeholder="Məs: -800">
+    </div>
+    <div class="error-text" id="balanceError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('balanceModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="balanceModalOnayla()">Yadda saxla</button>
+    </div>
+  </div>
+</div>
+
+<!-- New category modal -->
+<div id="newCatModal" class="modal">
+  <div class="modal-content">
+    <h2>Yeni kateqoriya</h2>
+    <p class="hint">Ad ver və istəsən sabit bir məbləğ təyin et.</p>
+    <div class="field-row" style="margin-bottom:10px;">
+      <input type="text" id="newCatName" placeholder="Məs: Metro, Kofe, Fatura">
+    </div>
+    <div class="field-row" style="margin-bottom:6px;">
+      <input type="number" step="0.01" min="0" id="newCatFixed" placeholder="Sabit tutar (boş = hər dəfə soruş)">
+    </div>
+    <label class="field-row" style="gap:8px; font-size:13px; color:var(--ink); margin:4px 0 10px; cursor:pointer;">
+      <input type="checkbox" id="newCatAylik" style="width:auto;">
+      <span>📌 Aylıq sabit xərcdir <span style="color:var(--muted);">(tik yoxdursa – günlük xərc)</span></span>
+    </label>
+    <div class="error-text" id="newCatError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('newCatModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="yeniKategoriOnayla()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase Sync Key gir (başqa cihazdakı key ilə bağlan) -->
+<div id="senkronKeyGirModal" class="modal">
+  <div class="modal-content">
+    <h2>Sync Key gir</h2>
+    <p class="hint">Digər cihazında yaratdığın Sync Key-i bura yapışdır. İkisi eyni olanda o iki cihaz avtomatik sinxronlaşır.</p>
+    <input type="text" id="senkronKeyGirInput" placeholder="Sync Key" style="font-family:monospace; font-size:12px;">
+    <div class="error-text" id="senkronKeyGirError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('senkronKeyGirModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="senkronKeyGirOnayla()">Bağlan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase layihə konfiqi gir (YALNIZ bu cihazda, localStorage-da saxlanılır — fayl daxilində DEYİL, GitHub-a getmir) -->
+<div id="firebaseKonfiqModal" class="modal">
+  <div class="modal-content">
+    <h2>Öz Firebase layihən</h2>
+    <p class="hint">Anlıq sinxronizasiya üçün öz Firebase/Firestore layihənin konfiqini bura yaz. Bu məlumat YALNIZ bu cihazın brauzer yaddaşında (localStorage) saxlanılır — fayl daxilinə yazılmır, GitHub-a getmir.</p>
+    <input type="text" id="firebaseKonfiqApiKey" placeholder="apiKey" style="font-family:monospace; font-size:12px;">
+    <input type="text" id="firebaseKonfiqAuthDomain" placeholder="authDomain (məs: layihe.firebaseapp.com)" style="font-family:monospace; font-size:12px; margin-top:8px;">
+    <input type="text" id="firebaseKonfiqProjectId" placeholder="projectId" style="font-family:monospace; font-size:12px; margin-top:8px;">
+    <div class="error-text" id="firebaseKonfiqError"></div>
+    <button type="button" class="btn btn-ghost" style="width:100%; margin-top:10px;" onclick="modalKapat('firebaseKonfiqModal'); firebaseHamisiModalAc();">📦 Hamısını birdən yapışdır</button>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('firebaseKonfiqModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="firebaseKonfiqKaydet()">Yadda saxla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase: 4 məlumatı (apiKey, authDomain, projectId, Sync Key) BİR DƏFƏYƏ yapışdır -->
+<div id="firebaseHamisiModal" class="modal">
+  <div class="modal-content">
+    <h2>Hamısını birdən yapışdır</h2>
+    <p class="hint">Digər cihazda <b>"📦 Hamısını kopyala"</b> düyməsinə bas, sonra bura bir dəfə yapışdır. apiKey, authDomain, projectId və Sync Key avtomatik ayrılıb yazılır. (Firebase konsolundan kopyaladığın konfiq blokunu da qəbul edir.)</p>
+    <textarea id="firebaseHamisiInput" rows="6" placeholder="apiKey: ...&#10;authDomain: ...&#10;projectId: ...&#10;syncKey: ..." autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" style="width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--input-border); border-radius:8px; font-family:monospace; font-size:12px; background:var(--panel); color:var(--ink); resize:vertical; outline:none;"></textarea>
+    <button type="button" class="btn btn-ghost" style="width:100%; margin-top:8px;" onclick="firebaseHamisiBuferdenOxu()">📋 Buferdən yapışdır</button>
+    <div class="error-text" id="firebaseHamisiError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('firebaseHamisiModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="firebaseHamisiOnayla()">Yadda saxla və bağlan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Xərci düzəlt / köhnə tarixli xərc əlavə et -->
+<div id="islemFormModal" class="modal">
+  <div class="modal-content">
+    <h2 id="islemFormBaslik">Xərci düzəlt</h2>
+    <p class="hint">Kateqoriya, məbləğ, səbəb və tarixi dəyiş.</p>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Kateqoriya</label>
+      <select id="islemFormKategori" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);"></select>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Məbləğ (AZN)</label>
+      <input type="number" step="0.01" min="0" id="islemFormTutar" placeholder="0.00">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Səbəb (istəyə bağlı)</label>
+      <input type="text" id="islemFormSebeb" placeholder="Məs: Taksi, hədiyyə...">
+    </div>
+    <div style="margin-bottom:6px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Tarix</label>
+      <input type="date" id="islemFormTarix">
+    </div>
+    <div class="error-text" id="islemFormError"></div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-danger" id="islemFormSilBtn" onclick="islemFormSilOnayla()" style="display:none;">Sil</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-ghost" onclick="modalKapat('islemFormModal')">Ləğv et</button>
+        <button class="btn btn-primary" onclick="islemFormOnayla()">Yadda saxla</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Generic confirm modal -->
+<div id="confirmModal" class="modal">
+  <div class="modal-content">
+    <h2 id="confirmTitle">Əminsən?</h2>
+    <p class="hint" id="confirmText"></p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('confirmModal')">Ləğv et</button>
+      <button class="btn btn-danger" id="confirmActionBtn">Bəli, sil</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drive: available backups list to pick from -->
+<div id="driveBackupSecModal" class="modal">
+  <div class="modal-content">
+    <h2>Hansı backup?</h2>
+    <p class="hint">Drive-a göndərilmiş backuplardan birini seç.</p>
+    <div id="driveBackupSecListesi" class="modal-list" style="max-height:320px;"></div>
+    <div class="modal-footer" style="justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="modalKapat('driveBackupSecModal')">Bağla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ayarlar (Settings) page: Günlük limit + Kateqoriyalar + Son əməliyyatlar + İşıq rejimi -->
+<div id="ayarlarModal" class="page-screen">
+  <div class="page-inner">
+    <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
+      <button onclick="ayarlarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <h2 style="margin:0; flex:1;">Ayarlar</h2>
+    </div>
+
+    <div class="ayarlar-kutu" style="margin-bottom:14px;">
+      <div class="ayarlar-setir-ic" style="gap:8px;">
+        <span class="ayarlar-metin" style="white-space:nowrap;">Günlük xərc limiti</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="number" step="0.01" min="0" id="gunlukLimitInput" placeholder="20" style="width:64px; padding:8px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
+          <button class="btn btn-primary" onclick="gunlukLimitYadSaxla()" style="white-space:nowrap; padding:8px 12px; font-size:13px;">Yadda saxla</button>
+        </div>
+      </div>
+      <div class="error-text" id="gunlukLimitError"></div>
+    </div>
+
+    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:8px;" onclick="ayarlarKateqoriyalarAc()"><span class="ayarlar-ikon">⚙️</span><span class="ayarlar-metin">Kateqoriyalar</span></button>
+    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:14px;" onclick="ayarlarSonEmeliyyatlarAc()"><span class="ayarlar-ikon">🧾</span><span class="ayarlar-metin">Son əməliyyatlar</span></button>
+
+    <div class="ayarlar-kutu ayarlar-setir-ic" style="margin-bottom:8px;">
+      <span id="temaLabel" style="display:flex; align-items:center;"></span>
+      <button class="theme-switch" id="temaSwitch" onclick="temaDeyis()" aria-label="Tema dəyiş"></button>
+    </div>
+
+    <div class="ayarlar-kutu" style="margin-bottom:14px;">
+      <div class="ayarlar-setir-ic">
+        <span id="kilidAyarLabel" style="display:flex; align-items:center;"></span>
+        <button class="toggle-switch" id="kilidAyarSwitch" onclick="kilidToggle()" aria-label="Tətbiq kilidini aç/bağla"></button>
+      </div>
+      <div class="error-text" id="kilidAyarError"></div>
+    </div>
+
+    <button class="ayarlar-kutu ayarlar-setir-ic" id="sistemBaslikBtn" style="margin-bottom:8px;" onclick="sistemBolmesiToggle()">
+      <span style="display:flex; align-items:center;"><span class="ayarlar-ikon">⚙️</span><span class="ayarlar-metin">System</span></span>
+      <span id="sistemBaslikOx" style="transition:transform .15s;">▾</span>
+    </button>
+    <div id="sistemBolmesi" style="display:none;">
+
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">☁️ Google Drive (əl ilə yedəkləmə)</h3>
+    <div class="drive-box" id="driveBox">
+      <div class="drive-status" id="driveStatus">☁️ Google Drive-a bağlı deyil</div>
+      <div class="drive-sub" id="driveSub">Bağlansan, "Göndər" və "Çək" düymələri ilə özün idarə edəcəksən.</div>
+      <div class="drive-sub" id="driveDebug" style="opacity:0.65;"></div>
+      <div class="drive-btns" id="driveBtns">
+        <button onclick="driveBaglan()">Bağlan</button>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">⚡ Anlıq sinxronizasiya (Firebase)</h3>
+    <div class="drive-box" id="firebaseBox">
+      <div class="drive-status" id="firebaseStatus">⚡ Anlıq sinxronizasiya bağlı deyil</div>
+      <div class="drive-sub" id="firebaseSub">Telefon və kompüter arasında 1-2 saniyədə avtomatik sinxron üçün bir Sync Key lazımdır.</div>
+      <div id="firebaseKeyGosterim" style="display:none; margin:8px 0; padding:8px; background:var(--bg); border:1px solid var(--line); border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:var(--ink);"></div>
+      <div class="drive-btns" id="firebaseBtns">
+        <button onclick="senkronKeyOlustur()">🔑 Yeni Sync Key yarat</button>
+        <button onclick="senkronKeyGirModalAc()">📋 Var olan Key-i gir</button>
+      </div>
+      <div class="drive-btns" id="firebaseBtns2">
+        <button onclick="firebaseHamisiModalAc()">📦 4 məlumatı birdən yapışdır</button>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">💾 Yedək faylı</h3>
+    <button class="ayarlar-kutu ayarlar-setir-ic" id="menuBackupIndir" style="justify-content:flex-start; margin-bottom:8px;" onclick="backupIndir()"><span class="ayarlar-ikon">📥</span><span class="ayarlar-metin">Backup yüklə (JSON)</span></button>
+    <button class="ayarlar-kutu ayarlar-setir-ic" id="menuBackupBerpa" style="justify-content:flex-start; margin-bottom:14px;" onclick="document.getElementById('backupFileInput').click()"><span class="ayarlar-ikon">📤</span><span class="ayarlar-metin">Backup bərpa et</span></button>
+    <input type="file" id="backupFileInput" accept="application/json" style="display:none;" onchange="backupBerpaEt(event)">
+
+    </div>
+
+    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:14px;" onclick="tetbiqiYenile()"><span class="ayarlar-ikon">🔄</span><span class="ayarlar-metin">Yenilə (son versiyanı yüklə)</span></button>
+
+    <div class="modal-footer" style="justify-content:flex-end; margin-top:16px;">
+      <button class="btn btn-ghost" onclick="ayarlarPaneliniKapat()">Bağla</button>
+    </div>
+    <p style="text-align:center; font-size:11px; color:var(--muted); margin:18px 0 0;">Powered by Kanan Ibrahimov</p>
+    <p style="text-align:center; font-size:10px; color:var(--muted); margin:2px 0 0;">Version <span id="tetbiqVersiyaGoster"></span></p>
+  </div>
+</div>
+
+<!-- Category management page -->
+<div id="yonetimModal" class="page-screen">
+  <div class="page-inner">
+    <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
+      <button onclick="yonetimPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <h2 style="margin:0; flex:1;">Kateqoriyalar</h2>
+    </div>
+    <p class="hint">Adını, ikonunu, rəngini, sabit qiymətini və günlük/aylıq növünü dəyiş.</p>
+    <div id="kategoriDuzenlemeListesi" class="modal-list"></div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-ghost" onclick="yeniKategoriModalAc()">➕ Yeni kateqoriya</button>
+      <button class="btn btn-primary" onclick="yonetimPaneliniKapat()">Bağla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly spending report page: "Bu ay hara pul gedir?" -->
+<div id="aylikHesabatModal" class="page-screen">
+  <div class="page-inner">
+    <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
+      <button onclick="aylikHesabatPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <h2 style="margin:0; flex:1;">Bu ay hara pul gedir?</h2>
+    </div>
+    <div class="hesabat-cemi-card">
+      <div class="k">Bu ay xərclədiyin</div>
+      <div class="v" id="aylikHesabatCemi">—</div>
+      <div class="k" id="aylikHesabatAlt" style="margin-top:4px; font-weight:500;"></div>
+    </div>
+
+    <h3 class="hesabat-bolme-basliq">🛒 Günlük xərclər</h3>
+    <div class="hesabat-kart">
+      <div class="donut-sarici" id="aylikGunlukSarici">
+        <canvas id="aylikGunlukCanvas"></canvas>
+        <div class="donut-merkez" id="aylikGunlukMerkez"></div>
+      </div>
+      <p class="empty-note" id="aylikGunlukBosMesaj" style="display:none;"></p>
+      <div class="donut-caption" id="aylikGunlukCaption"></div>
+      <div id="aylikGunlukListesi"></div>
+    </div>
+
+    <h3 class="hesabat-bolme-basliq">📌 Aylıq sabit xərclər</h3>
+    <div class="hesabat-kart">
+      <div class="donut-sarici" id="aylikSabitSarici">
+        <canvas id="aylikSabitCanvas"></canvas>
+        <div class="donut-merkez" id="aylikSabitMerkez"></div>
+      </div>
+      <p class="empty-note" id="aylikSabitBosMesaj" style="display:none;"></p>
+      <div id="aylikSabitListesi"></div>
+    </div>
+
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Günlük xərc trendi (bu ay)</h3>
+    <div style="background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); padding:14px; margin-bottom:16px;">
+      <canvas id="aylikTrendCanvas" height="160"></canvas>
+    </div>
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Keçən aya görə</h3>
+    <div id="aylikHesabatTrend"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="aylikHesabatPaneliniKapat()">Bağla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Full transaction history page -->
+<div id="sonEmeliyyatlarModal" class="page-screen">
+  <div class="page-inner">
+    <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
+      <button onclick="sonEmeliyyatlarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <h2 style="margin:0; flex:1;">Son əməliyyatlar</h2>
+    </div>
+    <div class="modal-footer" style="justify-content:flex-end; border-top:none; padding-top:0; margin-bottom:6px;">
+      <button class="btn btn-ghost" onclick="listeyiTemizleOnayla()">Hamısını sil</button>
+    </div>
+    <ul id="sonEmeliyyatlarListesi" style="list-style:none; padding:0; margin:0; max-height:65vh; overflow-y:auto;"></ul>
+  </div>
+</div>
+
+<!-- Kredit borcu (taksitli kredit) düzəliş modalı -->
+<div id="krediBorcuDuzeltModal" class="modal">
+  <div class="modal-content">
+    <h2>Kredit borcunu düzəlt</h2>
+    <p class="hint">Aylıq taksit məbləğini, taksit sayını və başlanğıc tarixini özün təyin et.</p>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Aylıq taksit (AZN)</label>
+      <input type="number" step="0.01" min="0" id="krediBorcuDuzeltMebleg" placeholder="Məs: 550">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Taksit sayısı</label>
+      <input type="number" step="1" min="1" id="krediBorcuDuzeltSayi" placeholder="Məs: 8">
+    </div>
+    <div style="margin-bottom:6px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Başlanğıc tarixi</label>
+      <input type="date" id="krediBorcuDuzeltBaslangic">
+    </div>
+    <div class="error-text" id="krediBorcuDuzeltError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('krediBorcuDuzeltModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="krediBorcuDuzeltOnayla()">Yadda saxla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Kredit taksiti: hansı hesabdan ödənəcək -->
+<div id="taksitOdeModal" class="modal">
+  <div class="modal-content">
+    <h2>Taksiti ödə</h2>
+    <p class="hint" id="taksitOdeInfo"></p>
+    <div style="margin-bottom:6px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Hansı hesabdan ödənilsin?</label>
+      <select id="taksitOdeMenbe" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);"></select>
+    </div>
+    <div class="error-text" id="taksitOdeError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('taksitOdeModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="krediBorcuOdeOnayla()">Ödə</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hesablar və Borclar page: Cash / Kredi kartı / Debit bank / Deposit + transfer + Güncel Borclar (birləşdirilib) -->
+<div id="hesablarModal" class="page-screen">
+  <div class="page-inner">
+    <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
+      <button onclick="hesablarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <h2 style="margin:0; flex:1;">Hesablar və Borclar</h2>
+    </div>
+
+    <div class="hesab-add-head" style="margin-top:6px;">
+      <h3>Hesablarım</h3>
+      <button class="hesab-add-btn" onclick="hesabSecModalAc()" title="Hesab əlavə et">+</button>
+    </div>
+    <p class="hint">Hesablarının balansına bax, düzəlt və aralarında transfer et.</p>
+    <div id="hesablarKartlari" class="modal-list" style="gap:10px; flex:none; overflow:visible; max-height:none;"></div>
+    <button class="btn btn-primary" onclick="transferModalAc()" style="width:100%; margin-bottom:14px;">🔁 Hesablar arası transfer</button>
+
+    <div class="history-head" style="margin-top:4px;"><span>Son transferlər</span></div>
+    <div id="hesabTransferTarixce" class="modal-list" style="max-height:160px; flex:none; margin-bottom:14px;"></div>
+
+    <div class="modal-footer" style="justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="hesablarPaneliniKapat()">Bağla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hesab əlavə et: 5 seçim -->
+<div id="hesabSecModal" class="modal">
+  <div class="modal-content">
+    <h2>Hansı hesabı əlavə edirsən?</h2>
+    <p class="hint">Bir hesab növü seç, sonra ondan istəniləni doldur.</p>
+    <div id="hesabSecListesi"></div>
+    <div class="modal-footer" style="justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="modalKapat('hesabSecModal')">Ləğv et</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cash / Debit balance quick-edit modal -->
+<div id="hesabDuzeltModal" class="modal">
+  <div class="modal-content">
+    <h2 id="hesabDuzeltBaslik">Balansı düzəlt</h2>
+    <p class="hint">Bu hesabın hazırkı balansını yaz.</p>
+    <input type="number" step="0.01" id="hesabDuzeltInput" placeholder="0.00">
+    <div class="error-text" id="hesabDuzeltError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('hesabDuzeltModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="hesabDuzeltOnayla()">Yadda saxla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer modal -->
+<div id="transferModal" class="modal">
+  <div class="modal-content">
+    <h2>Transfer et</h2>
+    <p class="hint">Bir hesabdan digərinə məbləğ köçür.</p>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Mənbə hesab</label>
+      <select id="transferMenbe" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
+        <option value="nagd">💵 Cash Hesab</option>
+        <option value="debit">🏦 Debit bank Hesabım</option>
+        <option value="depozit">🏛️ Bank Deposit Hesabım</option>
+        <option value="kredit">💳 Kredi kartı Hesabım</option>
+      </select>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Hədəf hesab</label>
+      <select id="transferHedef" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
+        <option value="debit">🏦 Debit bank Hesabım</option>
+        <option value="depozit">🏛️ Bank Deposit Hesabım</option>
+        <option value="kredit">💳 Kredi kartı Hesabım</option>
+        <option value="nagd">💵 Cash Hesab</option>
+        <option value="krediXett">🧾 Kredit xətt (ödəniş)</option>
+      </select>
+    </div>
+    <div style="margin-bottom:6px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Məbləğ (AZN)</label>
+      <input type="number" step="0.01" min="0" id="transferMebleg" placeholder="Məs: 100">
+    </div>
+    <div class="error-text" id="transferError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('transferModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="transferOnayla()">Transfer et</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // v12: bütün rəqəmlər sıfırlanıb — köhnə yerli data görməzdən gəlinir.
+  // Öz məlumatlarını "Backup bərpa et" düyməsi ilə (və ya Drive bağlısansa avtomatik) geri qaytara bilərsən.
+  const STORAGE_KEY = 'gider-takibi-data-v12';
+
+  // ==================== Google Drive avtomatik backup ====================
+  // 1) Google Cloud Console-da OAuth Client ID yarat (Web application tipi) və aşağıya yapışdır.
+  // 2) Bu faylı http(s):// üzərindən aç (file:// işləmir) — o ünvanı Client ID-nin
+  //    "Authorized JavaScript origins" siyahısına əlavə etməlisən.
+  const GOOGLE_DRIVE_CLIENT_ID = '444366545812-nhf3dk5dc68hi0ok6e6v0npvvu0t8veq.apps.googleusercontent.com';
+  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+  const DRIVE_FILE_PREFIX = 'gider-takibi-backup';
+
+  let driveTokenClient = null;
+  let driveAccessToken = null;
+  let driveTokenBitisZamani = 0; // ms epoch
+  let driveBagli = localStorage.getItem('drive_bagli') === '1';
+  let driveSonSync = localStorage.getItem('drive_son_sync') || null;
+  let driveSyncGedirmi = false;
+  let driveGeriCagirisFn = null;
+  let sonDeyisiklikVaxti = null; // yerli son dəyişiklik vaxtı (ISO) - Drive ilə müqayisə üçün
+
+  // ==================== Tema (Dark mode) ====================
+  function temaTetbiqEt(tema) {
+    document.documentElement.setAttribute('data-theme', tema === 'dark' ? 'dark' : 'light');
+    const lbl = document.getElementById('temaLabel');
+    if (lbl) lbl.innerHTML = tema === 'dark'
+      ? '<span class="ayarlar-ikon">☀️</span><span class="ayarlar-metin">İşıqlı rejim</span>'
+      : '<span class="ayarlar-ikon">🌙</span><span class="ayarlar-metin">Qaranlıq rejim</span>';
+  }
+  function temaDeyis() {
+    const cari = localStorage.getItem('tema') === 'dark' ? 'dark' : 'light';
+    const yeni = cari === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('tema', yeni);
+    temaTetbiqEt(yeni);
+  }
+  (function temaIlkYukleme() {
+    const saxlanan = localStorage.getItem('tema');
+    const tema = saxlanan ? saxlanan : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    temaTetbiqEt(tema);
+  })();
+  // ==================== /Tema ====================
+
+  // ==================== Tətbiq kilidi (Face ID / Touch ID / PIN) ====================
+  let kilidVar = localStorage.getItem('kilit_aktiv') === '1';
+  let kilidCredentialId = localStorage.getItem('kilit_webauthn_id') || null;
+  let kilidPin = localStorage.getItem('kilit_pin') || null;
+
+  function kilidYoxla() {
+    if (!kilidVar) return;
+    const ekran = document.getElementById('kilidEkrani');
+    const faceBtn = document.getElementById('kilidFaceBtn');
+    const pinWrap = document.getElementById('kilidPinWrap');
+    const hint = document.getElementById('kilidHint');
+    ekran.classList.add('active');
+    if (kilidCredentialId && window.PublicKeyCredential) {
+      faceBtn.style.display = 'block';
+      pinWrap.style.display = 'none';
+      hint.innerText = 'Davam etmək üçün Face ID / Touch ID ilə təsdiqlə.';
+      setTimeout(kilidWebAuthnDogrula, 350); // avtomatik sına — bəzi brauzerlər düymə klikini gözləyəcək
+    } else {
+      faceBtn.style.display = 'none';
+      pinWrap.style.display = 'block';
+      hint.innerText = 'Davam etmək üçün PIN kodunu yaz.';
+    }
+  }
+
+  function kilidAc() {
+    document.getElementById('kilidEkrani').classList.remove('active');
+    document.getElementById('kilidError').innerText = '';
+  }
+
+  async function kilidWebAuthnDogrula() {
+    const errEl = document.getElementById('kilidError');
+    errEl.innerText = '';
+    if (!kilidCredentialId || !window.PublicKeyCredential) {
+      document.getElementById('kilidPinWrap').style.display = 'block';
+      return;
+    }
+    try {
+      const idBytes = Uint8Array.from(atob(kilidCredentialId), c => c.charCodeAt(0));
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      await navigator.credentials.get({
+        publicKey: { challenge, allowCredentials: [{ id: idBytes, type: 'public-key' }], userVerification: 'required', timeout: 60000 }
+      });
+      kilidAc();
+    } catch (e) {
+      errEl.innerText = 'Təsdiqlənmədi. Yenidən sına və ya PIN istifadə et.';
+      if (kilidPin) document.getElementById('kilidPinWrap').style.display = 'block';
+    }
+  }
+
+  function kilidPinIleAc() {
+    const val = document.getElementById('kilidPinInput').value.trim();
+    if (kilidPin && val === kilidPin) {
+      document.getElementById('kilidPinInput').value = '';
+      kilidAc();
+    } else {
+      document.getElementById('kilidError').innerText = 'Yanlış PIN.';
+    }
+  }
+
+  function kilidAyarGoster() {
+    const sw = document.getElementById('kilidAyarSwitch');
+    const lbl = document.getElementById('kilidAyarLabel');
+    if (!sw || !lbl) return;
+    sw.classList.toggle('on', kilidVar);
+    lbl.innerHTML = kilidVar
+      ? '<span class="ayarlar-ikon">🔒</span><span class="ayarlar-metin">Tətbiq kilidi (aktiv)</span>'
+      : '<span class="ayarlar-ikon">🔒</span><span class="ayarlar-metin">Tətbiq kilidi (Face ID / PIN)</span>';
+    const errEl = document.getElementById('kilidAyarError');
+    if (errEl) errEl.innerText = '';
+  }
+
+  function kilidToggle() {
+    if (kilidVar) {
+      confirmAc('Kilidi söndür', 'Tətbiq kilidini deaktiv etmək istəyirsən?', () => {
+        kilidVar = false; kilidCredentialId = null; kilidPin = null;
+        localStorage.removeItem('kilit_aktiv');
+        localStorage.removeItem('kilit_webauthn_id');
+        localStorage.removeItem('kilit_pin');
+        kilidAyarGoster();
+      });
+    } else {
+      kilidKurulumBaslat();
+    }
+  }
+
+  async function kilidKurulumBaslat() {
+    const errEl = document.getElementById('kilidAyarError');
+    errEl.innerText = '';
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      errEl.innerText = 'Face ID/Touch ID üçün tətbiq https:// üzərindən açılmalıdır. Hələlik PIN qurulur.';
+      pinAyarlaModalAc();
+      return;
+    }
+    if (window.PublicKeyCredential) {
+      try {
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if (available) {
+          const challenge = crypto.getRandomValues(new Uint8Array(32));
+          const userId = crypto.getRandomValues(new Uint8Array(16));
+          const cred = await navigator.credentials.create({
+            publicKey: {
+              challenge,
+              rp: { name: 'Günlük Xərclər' },
+              user: { id: userId, name: 'istifadeci', displayName: 'Tətbiq istifadəçisi' },
+              pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+              // residentKey: 'discouraged' -> iOS bunu "passkey" kimi yox, adi bir WebAuthn açarı kimi
+              // qeydə alır. Bu sayədə hər dəfə "Giriş Yap / Geçiş Anahtarını Kullan" marka ekranı
+              // çıxmır, çağırış birbaşa Face ID/Touch ID istəyinə keçir.
+              authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+              timeout: 60000
+            }
+          });
+          kilidCredentialId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+          localStorage.setItem('kilit_webauthn_id', kilidCredentialId);
+          kilidVar = true;
+          localStorage.setItem('kilit_aktiv', '1');
+          kilidAyarGoster();
+          return;
+        }
+      } catch (e) {
+        console.warn('WebAuthn qurulmadı, PIN-ə keçilir:', e);
+      }
+    }
+    pinAyarlaModalAc();
+  }
+
+  function pinAyarlaModalAc() {
+    document.getElementById('pinAyarlaInput').value = '';
+    document.getElementById('pinAyarlaError').innerText = '';
+    modalAc('pinAyarlaModal');
+  }
+  function pinAyarlaOnayla() {
+    const val = document.getElementById('pinAyarlaInput').value.trim();
+    if (!/^\d{4}$/.test(val)) {
+      document.getElementById('pinAyarlaError').innerText = '4 rəqəmli bir PIN yaz.';
+      return;
+    }
+    kilidPin = val;
+    localStorage.setItem('kilit_pin', val);
+    kilidVar = true;
+    localStorage.setItem('kilit_aktiv', '1');
+    modalKapat('pinAyarlaModal');
+    kilidAyarGoster();
+  }
+  // Tətbiq 30 saniyədən uzun arxa planda qalıbsa, geri qayıdanda kilid yenidən açılır.
+  // (Əvvəl kilid yalnız səhifə tam yüklənəndə çıxırdı — PWA arxa plandan qayıdanda çıxmırdı.)
+  let gizliBaslangic = null;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { gizliBaslangic = Date.now(); return; }
+    if (kilidVar && gizliBaslangic && (Date.now() - gizliBaslangic) > 30000) kilidYoxla();
+    gizliBaslangic = null;
+    gunDeyisdiYoxla();
+  });
+  // ==================== /Tətbiq kilidi ====================
+
+  function driveLog(msg) {
+    console.log('[Drive]', msg);
+    const el = document.getElementById('driveDebug');
+    if (el) el.innerText = msg;
+  }
+
+  function driveTokenClientHazirla() {
+    if (driveTokenClient) return;
+    if (typeof google === 'undefined' || !google.accounts) return; // GIS hələ yüklənməyib
+    driveTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_DRIVE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: (resp) => {
+        if (resp && resp.access_token) {
+          driveAccessToken = resp.access_token;
+          driveTokenBitisZamani = Date.now() + (Number(resp.expires_in || 3600) - 60) * 1000;
+          driveBagli = true;
+          localStorage.setItem('drive_bagli', '1');
+          const cb = driveGeriCagirisFn; driveGeriCagirisFn = null;
+          driveMenyuGuncelle();
+          if (cb) cb();
+        } else {
+          driveSyncGedirmi = false; driveGeriCagirisFn = null; // düzəliş: pəncərə bağlananda "Əməliyyat gedir…" ilişib qalmasın
+          driveMenyuGuncelle('Giriş alınmadı, yenidən sına.', true);
+        }
+      },
+      error_callback: () => { driveSyncGedirmi = false; driveGeriCagirisFn = null; driveMenyuGuncelle('Giriş alınmadı, yenidən sına.', true); }
+    });
+  }
+
+  function driveTokenGerekliyse(sessiz, sonra, cehd) {
+    cehd = cehd || 0;
+    driveTokenClientHazirla();
+    if (!driveTokenClient) {
+      if (cehd >= 25) { // ~10 saniyə gözlədik — Google kitabxanası yüklənməyib (internet yoxdur)
+        driveSyncGedirmi = false; driveGeriCagirisFn = null;
+        driveMenyuGuncelle('Google-a qoşulmaq alınmadı, internetini yoxla.', true);
+        return;
+      }
+      driveLog('GIS kitabxanası hələ hazır deyil, gözlənilir…'); setTimeout(() => driveTokenGerekliyse(sessiz, sonra, cehd + 1), 400); return;
+    }
+    if (driveAccessToken && Date.now() < driveTokenBitisZamani) { driveLog('Mövcud token istifadə olunur (yenisi lazım deyil).'); sonra(); return; }
+    driveLog(sessiz ? 'Sakit token sorğusu göndərilir (istifadəçi görməyəcək)…' : 'Google giriş pəncərəsi açılır…');
+    driveGeriCagirisFn = sonra;
+    driveTokenClient.requestAccessToken({ prompt: sessiz ? '' : 'consent' });
+  }
+
+  function driveBaglan() {
+    if (GOOGLE_DRIVE_CLIENT_ID.indexOf('BURAYA_OZ_CLIENT_ID') === 0) {
+      alert('Əvvəlcə kodun içindəki GOOGLE_DRIVE_CLIENT_ID sətrinə öz Google Client ID-ni yazmalısan.');
+      return;
+    }
+    driveTokenGerekliyse(false, () => driveMenyuGuncelle());
+  }
+
+  function driveBaglantiKes() {
+    confirmAc('Drive bağlantısını kəs', 'Drive bağlantısı kəsilsin? Drive-dakı fayl silinmir.', () => {
+      driveBagli = false; driveAccessToken = null; driveTokenBitisZamani = 0;
+      localStorage.setItem('drive_bagli', '0');
+      driveMenyuGuncelle();
+      menuKapat();
+    });
+  }
+
+  function driveMenyuGuncelle(mesaj, xetaMi) {
+    const statusEl = document.getElementById('driveStatus');
+    const subEl = document.getElementById('driveSub');
+    const btnsEl = document.getElementById('driveBtns');
+    if (!statusEl) return;
+    if (!driveBagli) {
+      statusEl.className = 'drive-status' + (xetaMi ? ' err' : '');
+      statusEl.innerText = xetaMi ? ('⚠️ ' + mesaj) : '☁️ Google Drive-a bağlı deyil';
+      subEl.innerText = 'Bağlansan, "Göndər" və "Çək" düymələri ilə məlumatını özün idarə edə biləcəksən.';
+      btnsEl.innerHTML = '<button onclick="driveBaglan()">Bağlan</button>';
+      return;
+    }
+    if (driveSyncGedirmi) {
+      statusEl.className = 'drive-status';
+      statusEl.innerText = '☁️ Əməliyyat gedir…';
+    } else if (xetaMi) {
+      statusEl.className = 'drive-status err';
+      statusEl.innerText = '⚠️ ' + mesaj;
+    } else {
+      statusEl.className = 'drive-status ok';
+      statusEl.innerText = '✅ Drive-a bağlı';
+    }
+    subEl.innerText = driveSonSync ? ('Son əməliyyat: ' + driveSonSync) : 'Hələ göndərilməyib/çəkilməyib.';
+    btnsEl.innerHTML = '<button onclick="driveManualGonder()">📤 Drive-a göndər</button><button onclick="driveManualCek()">📥 Drive-dan çək</button><button onclick="driveBaglantiKes()">Bağlantını kəs</button>';
+  }
+
+  function driveBackupVerisi() {
+    return { kategoriler, giderler, anaHesap, kreditLimit, krediBorcu, nagdBakiye, debitBakiye, depozitBakiye, hesabTransferleri, gunlukLimit, hesabEklenib, backupTarixi: sonDeyisiklikVaxti || new Date().toISOString() };
+  }
+
+  function driveYeniBackupAdi() {
+    const s = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return `${DRIVE_FILE_PREFIX}_${s.getFullYear()}-${pad(s.getMonth() + 1)}-${pad(s.getDate())}_${pad(s.getHours())}-${pad(s.getMinutes())}.json`;
+  }
+
+  function driveTarixSaatFormat(iso) {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2, '0');
+    return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear() + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  async function driveFayliOxu(fileId) {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+      headers: { Authorization: 'Bearer ' + driveAccessToken }
+    });
+    if (!res.ok) throw new Error('download-failed:' + res.status);
+    return await res.json();
+  }
+
+  function driveVerisiniTetbiqEt(parsed) {
+    kategoriler = parsed.kategoriler || varsayilanKategoriler;
+    giderler = parsed.giderler || [];
+    anaHesap = (typeof parsed.anaHesap === 'number') ? parsed.anaHesap : null;
+    kreditLimit = (typeof parsed.kreditLimit === 'number') ? parsed.kreditLimit : null;
+    krediBorcu = parsed.krediBorcu || krediBorcuKohnaBackupdanCixar(parsed.aylikXerclar);
+    nagdBakiye = (typeof parsed.nagdBakiye === 'number') ? parsed.nagdBakiye : 0;
+    debitBakiye = (typeof parsed.debitBakiye === 'number') ? parsed.debitBakiye : 0;
+    depozitBakiye = (typeof parsed.depozitBakiye === 'number') ? parsed.depozitBakiye : 0;
+    hesabTransferleri = parsed.hesabTransferleri || [];
+    gunlukLimit = (typeof parsed.gunlukLimit === 'number') ? parsed.gunlukLimit : null;
+    hesabEklenib = parsed.hesabEklenib || { nagd: false, debit: false, depozit: false };
+    sonDeyisiklikVaxti = parsed.backupTarixi || new Date().toISOString();
+    // QƏSDƏN localStorage-a YAZILMIR — yeganə mənbə Firestore-dur.
+  }
+
+  // Drive-dakı bütün "gider-takibi-backup_*" fayllarını (ən yenidən köhnəyə) qaytarır.
+  async function driveBackupFayllariniListele() {
+    const q = encodeURIComponent(`name contains '${DRIVE_FILE_PREFIX}' and trashed=false`);
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name,createdTime)&orderBy=createdTime desc`, {
+      headers: { Authorization: 'Bearer ' + driveAccessToken }
+    });
+    if (!res.ok) throw new Error('list-failed');
+    const data = await res.json();
+    return data.files || [];
+  }
+
+  // Hər göndərişdə köhnəni əvəz etmək əvəzinə tarix/saat möhürlü YENİ fayl yaradır.
+  async function driveYukleEt() {
+    const data = driveBackupVerisi();
+    const boundary = 'gidertakibi_' + Date.now();
+    const metadata = { name: driveYeniBackupAdi(), mimeType: 'application/json' };
+    const body =
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+      `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(data)}\r\n` +
+      `--${boundary}--`;
+    const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + driveAccessToken, 'Content-Type': `multipart/related; boundary="${boundary}"` },
+      body
+    });
+    if (!res.ok) throw new Error('upload-failed:' + res.status);
+    return await res.json();
+  }
+
+  function driveSonSyncQeydEt() {
+    const simdi = new Date();
+    driveSonSync = simdi.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + simdi.toLocaleDateString('az-AZ');
+    localStorage.setItem('drive_son_sync', driveSonSync);
+  }
+
+  // İstifadəçi özü basanda işə düşür — heç bir avtomatik/sakit gözləmə yoxdur.
+  // Token artıq yaddaşdadırsa dərhal davam edir; deyilsə, bir dəfə görünən Google
+  // pəncərəsi açılır (bu, istifadəçi kliki ilə açıldığı üçün brauzer bunu bloklamır).
+  // Hər göndəriş köhnə backup-ın üstünə yazmır — tarix/saat möhürü ilə YENİ fayl yaradır.
+  function driveManualGonder() {
+    if (!driveBagli) { driveBaglan(); return; }
+    if (driveSyncGedirmi) return;
+    driveSyncGedirmi = true;
+    driveMenyuGuncelle();
+    driveTokenGerekliyse(false, async () => {
+      try {
+        await driveYukleEt();
+        driveSonSyncQeydEt();
+        driveSyncGedirmi = false;
+        driveMenyuGuncelle();
+      } catch (e) {
+        driveSyncGedirmi = false;
+        driveMenyuGuncelle('Göndərmə alınmadı: ' + (e && e.message ? e.message : e), true);
+      }
+    });
+  }
+
+  // Drive-dakı bütün backupları siyahılayır ki, istifadəçi hansını çəkəcəyini özü seçsin.
+  function driveManualCek() {
+    if (!driveBagli) { driveBaglan(); return; }
+    if (driveSyncGedirmi) return;
+    driveSyncGedirmi = true;
+    driveMenyuGuncelle();
+    driveTokenGerekliyse(false, async () => {
+      try {
+        const fayllar = await driveBackupFayllariniListele();
+        driveSyncGedirmi = false;
+        driveMenyuGuncelle();
+        if (!fayllar.length) {
+          driveMenyuGuncelle('Drive-da hələ heç bir backup tapılmadı.', true);
+          return;
+        }
+        driveBackupSecimGoster(fayllar);
+      } catch (e) {
+        driveSyncGedirmi = false;
+        driveMenyuGuncelle('Siyahı alınmadı: ' + (e && e.message ? e.message : e), true);
+      }
+    });
+  }
+
+  function driveBackupSecimGoster(fayllar) {
+    const konteyner = document.getElementById('driveBackupSecListesi');
+    if (!konteyner) return;
+    konteyner.innerHTML = '';
+    fayllar.forEach(f => {
+      const item = document.createElement('div');
+      item.className = 'modal-item';
+      item.style.cursor = 'pointer';
+      item.innerHTML = `<div class="field-row between"><span>🗓️ ${escapeHtml(driveTarixSaatFormat(f.createdTime))}</span><span style="color:var(--navy-soft); font-size:12px; font-weight:600;">Seç →</span></div>`;
+      item.onclick = () => driveBackupSecildi(f.id, f.createdTime);
+      konteyner.appendChild(item);
+    });
+    modalAc('driveBackupSecModal');
+  }
+
+  function driveBackupSecildi(fileId, createdTime) {
+    modalKapat('driveBackupSecModal');
+    confirmAc('Bu backup tətbiq edilsin?', driveTarixSaatFormat(createdTime) + ' tarixli backup cari məlumatının üstünə yazılsın? Bu geri qaytarıla bilməz.', () => {
+      driveSyncGedirmi = true;
+      driveMenyuGuncelle();
+      driveTokenGerekliyse(false, async () => {
+        try {
+          const remote = await driveFayliOxu(fileId);
+          if (!remote || typeof remote !== 'object' || Array.isArray(remote)) throw new Error('etibarsız backup faylı');
+          driveVerisiniTetbiqEt(remote);
+          veriKaydet(); // bərpa olunan məlumat buluda da yazılsın
+          ekraniGuncelle();
+          const hesablarModalEl = document.getElementById('hesablarModal');
+          if (hesablarModalEl && hesablarModalEl.classList.contains('active') && typeof hesablarGoster === 'function') {
+            hesablarGoster();
+            if (typeof krediBorcuGoster === 'function') krediBorcuGoster();
+          }
+          driveSonSyncQeydEt();
+          driveSyncGedirmi = false;
+          driveMenyuGuncelle();
+        } catch (e) {
+          driveSyncGedirmi = false;
+          driveMenyuGuncelle('Tətbiq alınmadı: ' + (e && e.message ? e.message : e), true);
+        }
+      });
+    });
+  }
+  // ==================== /Google Drive ====================
+
+  // ==================== Firebase: anlıq (real-time) sinxronizasiya ====================
+  // Drive-dan fərqli olaraq bura POLLING (nə vaxtsa yoxlamaq) YOX — Firestore
+  // dəyişikliyi ANINDA (adətən 1 saniyədən az) digər açıq cihazlara "itələyir".
+  // Təhlükəsizlik: giriş şifrə ilə deyil, uzun/rastgele "Sync Key" ilədir — key-i
+  // yalnız öz cihazlarına yaz, kimsə ilə paylaşma (onu bilən, məlumatına baxa bilər).
+  // Bu bölmədə artıq HEÇ BİR açar/layihə adı kodun daxilində saxlanılmır.
+  // Hər istifadəçi "Anlıq sinxronizasiya" düyməsinə basanda öz Firebase
+  // layihəsinin konfiqini (apiKey, authDomain, projectId) daxil edir — bu
+  // dəyərlər YALNIZ həmin cihazın brauzer yaddaşında (localStorage) qalır,
+  // fayla yazılmır, deməli GitHub-a və ya başqa heç bir yerə getmir.
+  function firebaseConfigOxu() {
+    return {
+      apiKey: localStorage.getItem('fb_apiKey') || '',
+      authDomain: localStorage.getItem('fb_authDomain') || '',
+      projectId: localStorage.getItem('fb_projectId') || ''
+    };
+  }
+  let firebaseConfig = firebaseConfigOxu();
+
+  let firestoreDb = null;
+  let firebaseHazir = false;
+  let firebaseUnsubscribe = null;
+  let firebaseYazTimer = null;
+  let senkronKey = localStorage.getItem('firebase_sync_key') || null;
+  let cihazId = localStorage.getItem('device_id') || null;
+  if (!cihazId) {
+    cihazId = 'cihaz_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('device_id', cihazId);
+  }
+
+  function uzunRastgeleKod(uzunluq) {
+    const bytes = crypto.getRandomValues(new Uint8Array(uzunluq));
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').slice(0, uzunluq);
+  }
+
+  // TƏHLÜKƏSİZLİK: Firebase SDK eyni adla ikinci dəfə initializeApp çağırılmağa icazə
+  // vermir. Ona görə hər başlatmadan əvvəl köhnə [DEFAULT] app-i (varsa) silirik.
+  function firebaseBaslat() {
+    return new Promise((resolve) => {
+      if (!firebaseConfig.apiKey) { resolve(false); return; } // key silinib — heç bir hesaba avtomatik qoşulma yoxdur
+      if (typeof firebase === 'undefined') { resolve(false); return; } // internet yoxdursa SDK yüklənməyib
+      try {
+        if (firebase.apps && firebase.apps.length) {
+          firebase.app().delete()
+            .then(() => _firebaseYenidenBaslat(resolve))
+            .catch((e) => { console.warn('Köhnə Firebase app silinmədi:', e); _firebaseYenidenBaslat(resolve); });
+        } else {
+          _firebaseYenidenBaslat(resolve);
+        }
+      } catch (e) {
+        console.warn('Firebase başlatma xətası:', e);
+        resolve(false);
+      }
+    });
+  }
+
+  function _firebaseYenidenBaslat(resolve) {
+    try {
+      firebase.initializeApp(firebaseConfig);
+      firestoreDb = firebase.firestore();
+      firebase.auth().signInAnonymously().then(() => {
+        firebaseHazir = true;
+        if (senkronKey) firebaseDinlemeyeBasla(); // yavaş şəbəkədə vaxt aşımından sonra da gec-tez qoşulsun
+        firebasePanelGuncelle();
+        resolve(true);
+      }).catch((e) => {
+        console.warn('Firebase giriş xətası:', e);
+        firebasePanelGuncelle('Bağlantı alınmadı.', true);
+        resolve(false);
+      });
+    } catch (e) {
+      console.warn('Firebase init xətası:', e);
+      resolve(false);
+    }
+  }
+
+  function firebasePanelGuncelle(mesaj, xetaMi) {
+    const statusEl = document.getElementById('firebaseStatus');
+    const subEl = document.getElementById('firebaseSub');
+    const keyGosterimEl = document.getElementById('firebaseKeyGosterim');
+    const btnsEl = document.getElementById('firebaseBtns');
+    if (!statusEl) return;
+
+    if (xetaMi) {
+      statusEl.innerText = '⚠️ ' + (mesaj || 'Xəta baş verdi.');
+    } else if (senkronKey) {
+      statusEl.innerText = '⚡ Anlıq sinxronizasiya aktiv';
+    } else {
+      statusEl.innerText = '⚡ Anlıq sinxronizasiya bağlı deyil';
+    }
+
+    if (senkronKey) {
+      subEl.innerText = 'Bu Sync Key-i digər cihazına da (bir dəfə) daxil et ki, ikisi avtomatik sinxronlaşsın.';
+      keyGosterimEl.style.display = 'block';
+      keyGosterimEl.innerText = senkronKey;
+      btnsEl.innerHTML = '<button onclick="senkronKeyKopyala()">📋 Kopyala</button><button onclick="senkronKeySil()">Bağlantını kəs</button>';
+    } else {
+      subEl.innerText = 'Sync Key olmadan məlumat yadda saxlanmır — səhifə yenilənəndə silinir. Telefon və kompüter arasında sinxron üçün Sync Key yarat və ya daxil et.';
+      keyGosterimEl.style.display = 'none';
+      btnsEl.innerHTML = '<button onclick="senkronKeyOlustur()">🔑 Yeni Sync Key yarat</button><button onclick="senkronKeyGirModalAc()">📋 Var olan Key-i gir</button>';
+    }
+
+    // İkinci sıra: bağlıdırsa "hamısını kopyala", deyilsə "hamısını yapışdır"
+    const btns2El = document.getElementById('firebaseBtns2');
+    if (btns2El) {
+      if (senkronKey && firebaseConfig.apiKey) {
+        btns2El.innerHTML = '<button id="firebaseHamisiBtn" onclick="firebaseHamisiniKopyala()">📦 Hamısını kopyala (4 məlumat)</button>';
+      } else {
+        btns2El.innerHTML = '<button onclick="firebaseHamisiModalAc()">📦 4 məlumatı birdən yapışdır</button>';
+      }
+    }
+  }
+
+  let firebaseKonfiqGozleyenEmeliyyat = null; // konfiq yadda saxlanandan sonra hansı əməliyyata davam ediləcək
+
+  function firebaseKonfiqModalAc(sonraEmeliyyat) {
+    firebaseKonfiqGozleyenEmeliyyat = sonraEmeliyyat || null;
+    document.getElementById('firebaseKonfiqApiKey').value = firebaseConfig.apiKey || '';
+    document.getElementById('firebaseKonfiqAuthDomain').value = firebaseConfig.authDomain || '';
+    document.getElementById('firebaseKonfiqProjectId').value = firebaseConfig.projectId || '';
+    document.getElementById('firebaseKonfiqError').innerText = '';
+    modalAc('firebaseKonfiqModal');
+  }
+
+  function firebaseKonfiqKaydet() {
+    const errEl = document.getElementById('firebaseKonfiqError');
+    const apiKey = document.getElementById('firebaseKonfiqApiKey').value.trim();
+    const authDomain = document.getElementById('firebaseKonfiqAuthDomain').value.trim();
+    const projectId = document.getElementById('firebaseKonfiqProjectId').value.trim();
+    if (!apiKey || !authDomain || !projectId) {
+      errEl.innerText = 'Hər üç sahəni doldur: apiKey, authDomain, projectId.';
+      return;
+    }
+    localStorage.setItem('fb_apiKey', apiKey);
+    localStorage.setItem('fb_authDomain', authDomain);
+    localStorage.setItem('fb_projectId', projectId);
+    firebaseConfig = firebaseConfigOxu();
+    // Əvvəlki konfiqlə artıq başlanmış Firebase App varsa, yenisi ilə yenidən başlamaq üçün sıfırla.
+    // Köhnə app faktiki olaraq firebaseBaslat() içində silinəcək (tək mərkəzli yer).
+    firebaseHazir = false;
+    firestoreDb = null;
+    modalKapat('firebaseKonfiqModal');
+
+    const davamEt = firebaseKonfiqGozleyenEmeliyyat;
+    firebaseKonfiqGozleyenEmeliyyat = null;
+    if (davamEt === 'olustur') senkronKeyOlustur();
+    else if (davamEt === 'gir') senkronKeyGirModalAc();
+  }
+
+  function senkronKeyOlustur() {
+    if (!firebaseConfig.apiKey) { firebaseKonfiqModalAc('olustur'); return; }
+    senkronKey = uzunRastgeleKod(32);
+    localStorage.setItem('firebase_sync_key', senkronKey);
+    veriMenbeGuvenli = true; // tamamilə yeni key — cari yerli vəziyyəti bilə-bilə buluda göndəririk
+    bazaRev = 0; yerliSurum = 0; yazilmisSurum = 0; // yeni key = hələ heç bir bulud sənədi yoxdur
+    firebasePanelGuncelle();
+    // Firebase hələ hazır deyilsə, əvvəlcə başlat, sonra dinlə və yaz.
+    firebaseBaslat().then(() => {
+      firebaseDinlemeyeBasla();
+      firebaseYazEt(); // yerli məlumatı dərhal göndər ki, ilk andan Sync Key işlək olsun
+    });
+  }
+
+  function senkronKeyKopyala() {
+    if (!senkronKey) return;
+    navigator.clipboard.writeText(senkronKey).then(() => {
+      firebasePanelGuncelle('Kopyalandı!');
+      setTimeout(() => firebasePanelGuncelle(), 1500);
+    }).catch(() => alert('Kopyalanmadı, əl ilə seçib kopyala: ' + senkronKey));
+  }
+
+  function senkronKeySil() {
+    confirmAc('Sinxronizasiyanı kəs', 'Bu cihazı Sync Key-dən ayırmaq istəyirsən? Digər cihazlar öz Key-lərini saxlayacaq.', () => {
+      if (firebaseUnsubscribe) { firebaseUnsubscribe(); firebaseUnsubscribe = null; }
+      senkronKey = null;
+      bazaRev = 0; yerliSurum = 0; yazilmisSurum = 0;
+      localStorage.removeItem('firebase_sync_key');
+      firebasePanelGuncelle();
+    });
+  }
+
+  function senkronKeyGirModalAc() {
+    if (!firebaseConfig.apiKey) { firebaseHamisiModalAc(); return; }
+    document.getElementById('senkronKeyGirInput').value = '';
+    document.getElementById('senkronKeyGirError').innerText = '';
+    modalAc('senkronKeyGirModal');
+  }
+
+  async function senkronKeyGirOnayla() {
+    const errEl = document.getElementById('senkronKeyGirError');
+    if (!firebaseConfig.apiKey) { errEl.innerText = 'Əvvəlcə öz Firebase layihə konfiqini daxil et.'; return; }
+    const val = document.getElementById('senkronKeyGirInput').value.trim();
+    if (!val) {
+      errEl.innerText = 'Sync Key yaz.';
+      return;
+    }
+    await senkronKeyIleBaglan(val, errEl, 'senkronKeyGirModal');
+  }
+
+  // Sync Key ilə bağlanmanın ortaq məntiqi (həm "Sync Key gir", həm "Hamısını yapışdır" istifadə edir).
+  // Write-guard (veriMenbeGuvenli) məntiqi olduğu kimi saxlanılıb.
+  async function senkronKeyIleBaglan(val, errEl, modalId) {
+    // TƏHLÜKƏSİZLİK: yeni key təsdiqlənənə (bulud verisi HƏQİQƏTƏN oxunana) qədər
+    // yazma qadağandır. Əvvəllər burada sadəcə passiv onSnapshot dinləməsi
+    // başladılırdı — əgər ilk snapshot gecikirdisə/səssizcə xəta verirdisə, ekran
+    // boş qalır və növbəti hər hansı bir toxunuş bu boşluğu buluda yazıb əsl
+    // datanı silirdi. İndi əvvəlcə AKTİV, gözlənilən bir oxuma edirik.
+    veriMenbeGuvenli = false;
+    errEl.innerText = 'Buluddan yüklənir...';
+
+    try {
+      if (!firebaseHazir) {
+        const hazir = await vaxtAsimiIle(firebaseBaslat(), 15000);
+        if (!hazir || !firestoreDb) {
+          errEl.innerText = 'Buluda qoşulmadı, internetini yoxla və yenidən cəhd et.';
+          return;
+        }
+      }
+
+      const snap = await firestoreDb.collection('syncs').doc(val).get();
+
+      // Yalnız oxuma HƏQİQƏTƏN uğurlu olduqdan sonra key-i təsdiqləyib saxlayırıq.
+      senkronKey = val;
+      localStorage.setItem('firebase_sync_key', senkronKey);
+
+      if (snap.exists && snap.data() && snap.data().data) {
+        driveVerisiniTetbiqEt(snap.data().data);
+        bazaRev = Number(snap.data().rev) || 0;
+      } else {
+        // Sənəd həqiqətən boşdursa (yeni/səhv key) — indi bunu bilə-bilə boşa keçirik.
+        yerliVeriniYukle();
+        bazaRev = 0;
+      }
+      yazilmisSurum = yerliSurum;
+      veriMenbeGuvenli = true;
+
+      modalKapat(modalId);
+      ekraniGuncelle();
+      firebasePanelGuncelle();
+      firebaseDinlemeyeBasla();
+    } catch (e) {
+      console.warn('Sync Key ilə oxuma xətası:', e);
+      errEl.innerText = 'Buluddan oxuma alınmadı, yenidən cəhd et.';
+    }
+  }
+
+  // ==================== 4 məlumatı BİR DƏFƏYƏ kopyala / yapışdır ====================
+  // Format (oxunaqlı, hər sətir ayrı):
+  //   apiKey: ...
+  //   authDomain: ...
+  //   projectId: ...
+  //   syncKey: ...
+  // JSON əvəzinə bu format seçilib: iPhone-un "ağıllı dırnaqları" JSON-u pozur, bu format isə pozulmur.
+  // Ayırıcı həm etiketlərlə (apiKey: ...), həm də Firebase konsolunun verdiyi blokla (apiKey: "..."),
+  // həm də etiketsiz (məlumatın formasına görə) işləyir.
+  function firebaseHamisiAyir(metn) {
+    const s = String(metn || '')
+      .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g, '"')
+      .replace(/[\u2018\u2019\u201A\u201B]/g, "'");
+    const netice = { apiKey: '', authDomain: '', projectId: '', syncKey: '' };
+    const etiket = {
+      apiKey: 'api[\\s_-]*key',
+      authDomain: 'auth[\\s_-]*domain',
+      projectId: 'project[\\s_-]*id',
+      syncKey: 'sync[\\s_-]*key'
+    };
+    Object.keys(etiket).forEach((ad) => {
+      const m = s.match(new RegExp('["\']?' + etiket[ad] + '["\']?\\s*[:=]\\s*["\']?([^"\'\\s,;{}]+)', 'i'));
+      if (m) netice[ad] = m[1].trim();
+    });
+    // Etiketsiz yapışdırılıbsa: məlumatı formasına görə tanı
+    s.split(/[\s,;"'{}]+/).filter(Boolean).forEach((t) => {
+      if (!netice.apiKey && /^AIza[0-9A-Za-z_-]{20,}$/.test(t)) netice.apiKey = t;
+      else if (!netice.authDomain && /^[a-z0-9-]+\.(firebaseapp\.com|web\.app)$/i.test(t)) netice.authDomain = t;
+      else if (!netice.syncKey && /^[0-9a-f]{32}$/i.test(t)) netice.syncKey = t;
+    });
+    // projectId tapılmayıbsa, standart authDomain-dən (layihe.firebaseapp.com) çıxar
+    if (!netice.projectId && netice.authDomain) {
+      const m = netice.authDomain.match(/^([a-z0-9-]+)\.(firebaseapp\.com|web\.app)$/i);
+      if (m) netice.projectId = m[1];
+    }
+    return netice;
+  }
+
+  function firebaseHamisiModalAc() {
+    document.getElementById('firebaseHamisiInput').value = '';
+    document.getElementById('firebaseHamisiError').innerText = '';
+    modalAc('firebaseHamisiModal');
+  }
+
+  async function firebaseHamisiBuferdenOxu() {
+    const errEl = document.getElementById('firebaseHamisiError');
+    try {
+      const metn = await navigator.clipboard.readText();
+      document.getElementById('firebaseHamisiInput').value = metn;
+      errEl.innerText = '';
+    } catch (e) {
+      errEl.innerText = 'Buferə giriş icazəsi verilmədi — yuxarıdakı sahəyə uzun basıb "Yapışdır" seç.';
+    }
+  }
+
+  function firebaseHamisiniKopyala() {
+    if (!firebaseConfig.apiKey || !senkronKey) return;
+    const metn =
+      'apiKey: ' + firebaseConfig.apiKey + '\n' +
+      'authDomain: ' + firebaseConfig.authDomain + '\n' +
+      'projectId: ' + firebaseConfig.projectId + '\n' +
+      'syncKey: ' + senkronKey;
+    const btn = document.getElementById('firebaseHamisiBtn');
+    navigator.clipboard.writeText(metn).then(() => {
+      if (btn) btn.innerText = '✅ Kopyalandı — indi digər cihazda yapışdır';
+      setTimeout(() => firebasePanelGuncelle(), 2500);
+    }).catch(() => prompt('Avtomatik kopyalanmadı. Mətni seçib kopyala:', metn));
+  }
+
+  async function firebaseHamisiOnayla() {
+    const errEl = document.getElementById('firebaseHamisiError');
+    const n = firebaseHamisiAyir(document.getElementById('firebaseHamisiInput').value);
+    const eksik = ['apiKey', 'authDomain', 'projectId'].filter((k) => !n[k]);
+    if (eksik.length) {
+      errEl.innerText = 'Tapılmadı: ' + eksik.join(', ') + '. Məlumatı tam kopyaladığından əmin ol.';
+      return;
+    }
+
+    // Konfiqi bu cihazın localStorage-ına yaz (fayla/GitHub-a getmir)
+    const evvelki = firebaseConfig;
+    localStorage.setItem('fb_apiKey', n.apiKey);
+    localStorage.setItem('fb_authDomain', n.authDomain);
+    localStorage.setItem('fb_projectId', n.projectId);
+    firebaseConfig = firebaseConfigOxu();
+    const deyisdi = evvelki.apiKey !== firebaseConfig.apiKey ||
+                    evvelki.authDomain !== firebaseConfig.authDomain ||
+                    evvelki.projectId !== firebaseConfig.projectId;
+    if (deyisdi) { // yalnız konfiq həqiqətən dəyişibsə Firebase-i sıfırla
+      firebaseHazir = false;
+      firestoreDb = null;
+    }
+
+    if (!n.syncKey) {
+      // Yalnız konfiq yapışdırılıb — Sync Key ayrıca yaradılar/daxil edilər
+      modalKapat('firebaseHamisiModal');
+      firebasePanelGuncelle();
+      return;
+    }
+    await senkronKeyIleBaglan(n.syncKey, errEl, 'firebaseHamisiModal');
+  }
+  // ==================== /4 məlumat ====================
+
+  // ==== Sənəd nömrəsi (rev) ilə çakışmasız sinxronizasiya ====
+  // ƏVVƏLKİ MƏNTİQ (cihaz saatı ilə "kim daha təzədir" müqayisəsi + hər ekran yenilənməsində yazma)
+  // iki cihaz arasında sonsuz yazma dövrünə və xərc itkisinə səbəb olurdu. İndi:
+  //  • Buluddakı sənəddə tam ədəd "rev" var; hər uğurlu yazma onu 1 artırır.
+  //  • Yazma Firestore TRANSACTION ilə gedir: bulud "rev"i bizim bildiyimizdən (bazaRev) fərqlidirsə,
+  //    başqa cihaz arada yazıb deməkdir — üstünə YAZMIRIQ, onun versiyasını yükləyib istifadəçiyə xəbər veririk.
+  //  • Uzaqdan gələn məlumat tətbiq olunanda buluda HEÇ NƏ yazılmır (əks-səda / ping-pong yoxdur).
+  //  • Yazma yalnız real istifadəçi dəyişikliyindən sonra baş verir (veriKaydet()).
+  let bazaRev = 0;          // buluddan son tətbiq etdiyimiz / yazdığımız sənədin nömrəsi
+  let yerliSurum = 0;       // hər real yerli dəyişiklikdə artır
+  let yazilmisSurum = 0;    // buluda çatmış son yerli sürüm
+  let yazmaGedir = false;
+  let yazmaTekrarGerek = false;
+  let yazmaTekrarTimer = null;
+
+  function yerliDeyisiklikVar() { return yerliSurum !== yazilmisSurum; }
+
+  // Ekranda görünən qısa bildiriş. (Sinxron xəbərdarlıqları əvvəl yalnız Ayarlar → System içində, bağlı bölmədə yazılırdı —
+  // istifadəçi dəyişikliyinin buluda getmədiyini heç görmürdü.) 'acar' verilsə eyni bildiriş 10 saniyədə bir dəfədən çox çıxmır.
+  const toastSonVaxt = {};
+  function toastGoster(mesaj, acar) {
+    if (acar) {
+      if (toastSonVaxt[acar] && Date.now() - toastSonVaxt[acar] < 10000) return;
+      toastSonVaxt[acar] = Date.now();
+    }
+    const el = document.createElement('div');
+    el.className = 'toast-msg';
+    el.setAttribute('role', 'status');
+    el.style.cssText = 'position:fixed; left:50%; transform:translateX(-50%); bottom:calc(88px + env(safe-area-inset-bottom, 0px)); ' +
+      'max-width:90%; z-index:99999; padding:11px 16px; border-radius:12px; font-size:13px; font-weight:600; line-height:1.35; text-align:center; ' +
+      'background:var(--navy); color:#fff; box-shadow:0 8px 24px var(--shadow); border:1px solid var(--gold);';
+    el.innerText = mesaj;
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; }, 6000);
+    setTimeout(() => el.remove(), 6400);
+  }
+
+  // Buluddan gələn məlumat tətbiq edildikdən sonra ekranı yeniləyir (heç nə yazmır).
+  function buludVerisiTetbiqSonrasi() {
+    modalKapat('islemFormModal'); // açıq redaktə forması köhnə sıra nömrəsinə baxa bilər — bağla
+    ekraniGuncelle();
+    const hesablarModalEl = document.getElementById('hesablarModal');
+    if (hesablarModalEl && hesablarModalEl.classList.contains('active') && typeof hesablarGoster === 'function') {
+      hesablarGoster();
+    }
+    driveSonSyncQeydEt();
+  }
+
+  function firebaseDinlemeyeBasla() {
+    if (!firebaseHazir || !senkronKey || !firestoreDb) return;
+    if (firebaseUnsubscribe) { firebaseUnsubscribe(); firebaseUnsubscribe = null; }
+    firebaseUnsubscribe = firestoreDb.collection('syncs').doc(senkronKey).onSnapshot((snap) => {
+      if (!snap.exists) return;
+      if (snap.metadata.hasPendingWrites) return; // öz yazdığımızın əks-sədasıdır, gözlə
+      const remote = snap.data();
+      if (!remote || !remote.data) return;
+      const remoteRev = Number(remote.rev) || 0;
+      const ilkBaglanti = !veriMenbeGuvenli;
+      // Bulud vəziyyəti hələ təsdiqlənməyibsə (yavaş bağlantı) — nömrədən asılı olmayaraq qəbul edirik.
+      if (!ilkBaglanti && remoteRev <= bazaRev) return; // öz yazımızın əks-sədası və ya köhnə məlumat
+      // Yazılmamış yerli dəyişiklik / gedən yazma varsa toxunmuruq: yazma anındakı transaction çakışmanı özü aşkarlayır.
+      if (yazmaGedir || yerliDeyisiklikVar()) return;
+      driveVerisiniTetbiqEt(remote.data);
+      bazaRev = remoteRev;
+      yazilmisSurum = yerliSurum;
+      veriMenbeGuvenli = true;
+      buludVerisiTetbiqSonrasi();
+      if (ilkBaglanti) avtomatikBackupZamanlayiciBasla();
+    }, (err) => {
+      console.warn('Firestore dinləmə xətası:', err);
+      firebasePanelGuncelle('Dinləmə kəsildi.', true);
+    });
+  }
+
+  // Real dəyişiklikdən ~600ms sonra (debounce) buluda yazır.
+  function firebaseYazPlanla() {
+    if (!firebaseHazir || !senkronKey || !veriMenbeGuvenli) return;
+    clearTimeout(firebaseYazTimer);
+    firebaseYazTimer = setTimeout(firebaseYazEt, 600);
+  }
+
+  async function firebaseYazEt() {
+    if (!firebaseHazir || !senkronKey || !firestoreDb) return;
+    if (yazmaGedir) { yazmaTekrarGerek = true; return; }
+    yazmaGedir = true;
+    yazmaTekrarGerek = false;
+    let konflikt = null, yeniRev = bazaRev, yazilanSurum = yerliSurum;
+    try {
+      const ref = firestoreDb.collection('syncs').doc(senkronKey);
+      await firestoreDb.runTransaction(async (tx) => {
+        konflikt = null; // transaction təkrarlana bilər
+        const snap = await tx.get(ref);
+        const bulud = snap.exists ? snap.data() : null;
+        const budRev = bulud ? (Number(bulud.rev) || 0) : 0;
+        if (bulud && bulud.data && budRev !== bazaRev) { konflikt = bulud; return; } // başqa cihaz arada yazıb
+        yazilanSurum = yerliSurum;
+        yeniRev = budRev + 1;
+        tx.set(ref, {
+          data: driveBackupVerisi(),
+          cihazId,
+          rev: yeniRev,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      if (konflikt) {
+        // Bizim yazmamız başqa cihazın daha yeni dəyişikliyinin üstünə düşərdi — onun versiyasını yükləyirik.
+        driveVerisiniTetbiqEt(konflikt.data);
+        bazaRev = Number(konflikt.rev) || 0;
+        yazilmisSurum = yerliSurum;
+        veriMenbeGuvenli = true;
+        buludVerisiTetbiqSonrasi();
+        firebasePanelGuncelle('Başqa cihazda daha yeni dəyişiklik var — o yükləndi. Son əməliyyatını yoxla, lazımsa təkrarla.', true);
+        toastGoster('⚠️ Başqa cihazda daha yeni dəyişiklik var — o yükləndi. Son əməliyyatını yoxla, lazımsa təkrarla.');
+      } else {
+        bazaRev = yeniRev;
+        yazilmisSurum = yazilanSurum;
+      }
+    } catch (e) {
+      console.warn('Firestore yazma xətası:', e);
+      firebasePanelGuncelle('Göndərmə alınmadı — yenidən cəhd olunur.', true);
+      toastGoster('⚠️ Dəyişiklik buluda göndərilmədi — internetini yoxla, avtomatik yenidən cəhd olunur.', 'yazma-xeta');
+      yazmaGedir = false;
+      clearTimeout(yazmaTekrarTimer);
+      yazmaTekrarTimer = setTimeout(firebaseYazPlanla, 5000);
+      return;
+    }
+    yazmaGedir = false;
+    if (!konflikt && (yerliDeyisiklikVar() || yazmaTekrarGerek)) firebaseYazPlanla(); // yazma zamanı yeni dəyişiklik olub
+  }
+
+  // ==== Saatlıq avtomatik snapshot backup ====
+  // 'syncs/{key}' sənədi HƏMİŞƏ ən son vəziyyəti göstərir (üzərinə yazılır) —
+  // əvvəlki halların tarixçəsini saxlamır. Bu bölmə isə hər ~1 saatda bir
+  // ayrıca, tarixli bir sənəd yaradıb 'backups/{key}/versions/' altında saxlayır,
+  // beləki lazım olsa köhnə bir ana qayıtmaq mümkün olsun. Manuel JSON endirməyə
+  // ehtiyac qalmır.
+  const AVTOMATIK_BACKUP_ARALIGI_MS = 60 * 60 * 1000; // 1 saat
+  const AVTOMATIK_BACKUP_SAXLAMA_SAYI = 48; // ~2 gün, sonra ən köhnələr silinir
+
+  function sonAvtomatikBackupVaxtiOxu() {
+    if (!senkronKey) return 0;
+    const v = localStorage.getItem('son_avtomatik_backup_' + senkronKey);
+    return v ? parseInt(v, 10) : 0;
+  }
+  function sonAvtomatikBackupVaxtiYaz(ms) {
+    if (!senkronKey) return;
+    localStorage.setItem('son_avtomatik_backup_' + senkronKey, String(ms));
+  }
+
+  async function avtomatikBackupYarat() {
+    if (!firebaseHazir || !senkronKey || !firestoreDb) return;
+    try {
+      const indi = new Date();
+      const docId = indi.toISOString();
+      await firestoreDb.collection('backups').doc(senkronKey).collection('versions').doc(docId).set({
+        data: driveBackupVerisi(),
+        backupTarixi: docId,
+        cihazId
+      });
+      sonAvtomatikBackupVaxtiYaz(indi.getTime());
+      avtomatikBackupKohnelerTemizle();
+    } catch (e) {
+      console.warn('Avtomatik backup xətası:', e);
+    }
+  }
+
+  // Yalnız son N snapshotu saxlayır, qalanları silir ki, Firestore-da yer boş qalmasın.
+  // QEYD: bu sorğu üçün Firestore Console-da composite index lazımdır:
+  //   Collection ID: versions (Collection group: aktiv)
+  //   Field: backupTarixi — Descending
+  // Əks halda sorğu səssizcə xəta verəcək (console.warn ilə) və köhnə backup-lar
+  // yığılıb qalacaq.
+  async function avtomatikBackupKohnelerTemizle() {
+    if (!firebaseHazir || !senkronKey || !firestoreDb) return;
+    try {
+      const snap = await firestoreDb.collection('backups').doc(senkronKey).collection('versions')
+        .orderBy('backupTarixi', 'desc').get();
+      if (snap.size <= AVTOMATIK_BACKUP_SAXLAMA_SAYI) return;
+      const silinecekler = snap.docs.slice(AVTOMATIK_BACKUP_SAXLAMA_SAYI);
+      for (const d of silinecekler) { await d.ref.delete(); }
+    } catch (e) {
+      console.warn('Köhnə backup təmizləmə xətası (index yaradılmayıbsa normaldır):', e);
+    }
+  }
+
+  function avtomatikBackupKontrolEt() {
+    if (!firebaseHazir || !senkronKey || !firestoreDb || !veriMenbeGuvenli) return; // təsdiqlənməmiş (boş) vəziyyəti backup etmə
+    const kecenVaxt = Date.now() - sonAvtomatikBackupVaxtiOxu();
+    if (kecenVaxt >= AVTOMATIK_BACKUP_ARALIGI_MS) avtomatikBackupYarat();
+  }
+  let avtomatikBackupInterval = null;
+  function avtomatikBackupZamanlayiciBasla() {
+    avtomatikBackupKontrolEt(); // açılışda / bağlantıdan sonra 1 saatdan çox keçibsə dərhal backup al
+    if (!avtomatikBackupInterval) avtomatikBackupInterval = setInterval(avtomatikBackupKontrolEt, 15 * 60 * 1000);
+  }
+  // ==================== /Saatlıq avtomatik snapshot backup ====================
+  // ==================== /Firebase ====================
+
+  const APP_VERSION = '2.1'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
+  let aktifDonem = 'gunluk';
+  let goruntulenenTarix = new Date(); goruntulenenTarix.setHours(0, 0, 0, 0);
+  let kategoriler = [];
+  let giderler = [];
+  let anaHesap = null; // borc (kredit kartı balansı, mənfi ədəd kimi saxlanılır)
+  let kreditLimit = null; // kredit kartının limiti
+  let krediBorcu = null; // taksitli kredit (ayrıca bölmə) — istifadəçi "Düzəlt" ilə özü təyin edir
+  let nagdBakiye = 0; // Cash Hesab
+  let debitBakiye = 0; // Debit bank Hesabım
+  let depozitBakiye = 0; // Bank Deposit Hesabım
+  let hesabTransferleri = []; // hesablar arası transfer tarixçəsi
+  let gunlukLimit = null; // gündəlik xərc limiti — istifadəçi "Ayarlar" bölməsindən özü təyin edir, invented default yoxdur
+  let hesabEklenib = { nagd: false, debit: false, depozit: false }; // hansı hesablar "+" ilə əlavə edilib
+  let veriYuklendi = false;
+  // TƏHLÜKƏSİZLİK QIFILI: true YALNIZ bulud vəziyyəti QƏTİ şəkildə təsdiqlənəndə olur —
+  // ya həqiqi data uğurla oxunub, ya da sənədin HƏQİQƏTƏN boş (yeni key) olduğu təsdiqlənib,
+  // ya da ümumiyyətlə heç bir Sync Key yoxdur (təklikdə iş rejimi). Bağlantı xətası/vaxt
+  // aşımı zamanı FALSE olaraq qalır ki, ekranda görünən (yalançı) boş vəziyyət səhvən
+  // Firestore-a yazılıb əsl buludda olan datanı silməsin. veriKaydet() bu bayrağı yoxlayır.
+  let veriMenbeGuvenli = false;
+  let aylikGunlukChart = null; // Chart.js: aylıq hesabat — günlük xərclər dairəsi
+  let aylikSabitChart = null; // Chart.js: aylıq hesabat — aylıq sabit xərclər dairəsi
+  let aylikTrendChart = null; // Chart.js: günlük xərc trendi (xətt)
+  let dashUmumiBorcChart = null; // Chart.js: dashboard — ümumi borc dairəvi diaqramı
+  let dashKrediKartChart = null; // Chart.js: dashboard — kredit kartı limiti dairəvi diaqramı
+  let dashKrediBorcuChart = null; // Chart.js: dashboard — kredit borcu (taksit) dairəvi diaqramı
+
+  function cssVar(ad) {
+    return getComputedStyle(document.documentElement).getPropertyValue(ad).trim();
+  }
+  // 20 rəng: ilk 8-i köhnə palitradır (mövcud kateqoriyaların rəngi seçili qalsın deyə eyni saxlanılıb).
+  const renkPaleti = [
+    '#1f2a44','#c99a3a','#3d7068','#8b5f8f','#b5533f','#4a6fa5','#7a8450','#a35c7a',
+    '#2b7a56','#d97b3a','#c0435a','#5aa5b5','#6b5bb5','#8a6d4b','#e0a3b8','#9fbf5a',
+    '#e6c84f','#7d3c5e','#b8a9d9','#86c5a3'
+  ];
+
+  // Kateqoriya "aylıq sabit xərc"dirsə true (tik aktivdir); tiksiz / tapılmayan kateqoriya = günlük xərc.
+  function kategoriAylikdirmi(ad) {
+    const k = kategoriler.find(x => x.ad === ad);
+    return !!(k && k.aylik);
+  }
+
+  const varsayilanKategoriler = [
+    { ad: 'Bus', sabitTutar: null, renk: '#1f2a44', ikon: '🚌' },
+    { ad: 'Metro', sabitTutar: null, renk: '#c99a3a', ikon: '🚇' },
+    { ad: 'Coffee', sabitTutar: null, renk: '#3d7068', ikon: '☕️' },
+    { ad: 'Sigaret', sabitTutar: null, renk: '#8b5f8f', ikon: '🚬' },
+    { ad: 'Market', sabitTutar: null, renk: '#b5533f', ikon: '🛒' },
+    { ad: 'Breakfast', sabitTutar: null, renk: '#4a6fa5', ikon: '🥐' },
+    { ad: 'Dinner', sabitTutar: null, renk: '#7a8450', ikon: '🍔' },
+    { ad: 'Lunch', sabitTutar: null, renk: '#a35c7a', ikon: '🍽️' }
+  ];
+
+  const varsayilanGiderler = [];
+
+  function idUret() {
+    return 'ay_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  // Aylıq xərclər bölməsi ləğv olunub. Köhnə backuplarda kredit borcu bəzən həmin
+  // siyahının içində saxlanılırdı — mövcud krediBorcu yoxdursa, oradan çıxarırıq.
+  function krediBorcuKohnaBackupdanCixar(eskiAylikXerclar) {
+    if (!Array.isArray(eskiAylikXerclar)) return null;
+    const KREDI_BORCU_ID = 'kredi_borcu_2026_09';
+    const eski = eskiAylikXerclar.find(x => x.id === KREDI_BORCU_ID);
+    if (!eski) return null;
+    return {
+      id: KREDI_BORCU_ID, ad: 'Kredi Borcu', aylikMebleg: (typeof eski.tutar === 'number') ? eski.tutar : 0,
+      baslangic: eski.baslangic || null, bitis: eski.bitis || null, taksitSayi: eski.taksitSayi || 0,
+      odenmisTaksitSayi: eski.odenmisTaksitSayi || 0
+    };
+  }
+
+  // Firebase-dən oxuna bilmədikdə (key yoxdursa, ya da bağlantı alınmadısa) tətbiq
+  // ARTIQ heç bir yerli keşə müraciət ETMİR — sadəcə boş/defolt vəziyyətlə açılır.
+  // Bu, "yalnız Firebase-dən qidalanma" tələbinin dəqiq icrasıdır: köhnə, sinxron
+  // olmamış yerli məlumat heç vaxt ekrana çıxıb çaşdırmayacaq.
+  function yerliVeriniYukle() {
+    kategoriler = varsayilanKategoriler;
+    giderler = varsayilanGiderler.map(g => ({ ...g }));
+    anaHesap = null;
+    kreditLimit = null;
+    krediBorcu = null;
+    nagdBakiye = 0;
+    debitBakiye = 0;
+    depozitBakiye = 0;
+    hesabTransferleri = [];
+    gunlukLimit = null;
+    hesabEklenib = { nagd: false, debit: false, depozit: false };
+    sonDeyisiklikVaxti = null;
+  }
+
+  // Vaxt aşımı ilə bir promise-i "yarışdırır" — Firebase həddindən artıq uzun
+  // çəkərsə (məs. şəbəkə problemi), tətbiq əbədi "Yüklənir..." ekranında qalmasın.
+  function vaxtAsimiIle(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise((resolve) => setTimeout(() => resolve(false), ms))
+    ]);
+  }
+
+  // ==== Məlumat mənbəyi: Firebase (Firestore) ====
+  // TƏHLÜKƏSİZLİK QAYDASI: tətbiq HEÇ VAXT özbaşına yeni Sync Key yaratmır və
+  // Firestore-a yazmır. Yalnız bu CİHAZDA daha əvvəl əl ilə yaradılmış/daxil
+  // edilmiş bir Sync Key varsa (localStorage-da saxlanılıb) həmin key ilə
+  // Firebase-dən oxumağa çalışır. Yəni linki başqası açsa, ona heç bir key
+  // verilmir və sənin datana avtomatik toxunulmur — sadəcə boş/yerli vəziyyət
+  // görünür. Sync yalnız "Yeni Sync Key yarat" və ya "Var olan Key-i gir"
+  // düymələrinə əl ilə basdıqda başlayır.
+  async function veriYukle() {
+    let firebaseDenGeldi = false;
+    let senedTesdiqlenmisBosdur = false; // Firebase-ə çatdıq VƏ sənəd HƏQİQƏTƏN boşdur
+    try {
+      const hazir = await vaxtAsimiIle(firebaseBaslat(), 15000);
+      if (hazir && firestoreDb && senkronKey) {
+        const snap = await firestoreDb.collection('syncs').doc(senkronKey).get();
+        if (snap.exists && snap.data() && snap.data().data) {
+          driveVerisiniTetbiqEt(snap.data().data);
+          bazaRev = Number(snap.data().rev) || 0;
+          firebaseDenGeldi = true;
+        } else {
+          senedTesdiqlenmisBosdur = true;
+        }
+      }
+    } catch (e) {
+      console.warn('Firebase-dən oxuma xətası:', e);
+    }
+
+    if (!firebaseDenGeldi) {
+      yerliVeriniYukle();
+      // TƏHLÜKƏSİZLİK: boş vəziyyəti buluda YALNIZ o halda yazırıq ki, Firebase-ə
+      // çatıb sənədin HƏQİQƏTƏN boş (yeni key) olduğunu təsdiqləmiş olaq. Əks halda
+      // (bağlantı xətası/vaxt aşımı) heç nə yazmırıq — real buludda olan datanı
+      // təsadüfən boşla əvəz etməmək üçün.
+      if (senedTesdiqlenmisBosdur) { bazaRev = 0; veriMenbeGuvenli = true; firebaseYazEt(); }
+      else if (senkronKey) { firebasePanelGuncelle('Buluda qoşulmadı — yenidən cəhd et.', true); veriMenbeGuvenli = false; }
+      else { veriMenbeGuvenli = true; } // Sync Key ümumiyyətlə yoxdur — təklikdə rejim qəsdən icazəlidir
+    } else {
+      veriMenbeGuvenli = true;
+    }
+
+    yazilmisSurum = yerliSurum;
+    veriYuklendi = true;
+    appIskeletiOlustur();
+    ekraniGuncelle();
+    driveMenyuGuncelle();
+    firebasePanelGuncelle();
+    if (firebaseHazir && senkronKey) {
+      firebaseDinlemeyeBasla();
+      avtomatikBackupZamanlayiciBasla();
+    }
+  }
+
+  async function veriKaydet() {
+    try {
+      sonDeyisiklikVaxti = new Date().toISOString();
+      // TƏHLÜKƏSİZLİK QIFILI: bulud vəziyyəti hələ təsdiqlənməyibsə (bağlantı
+      // gözlənilir/uğursuzdur), Firestore-a HEÇ NƏ yazma — əks halda ekranda
+      // görünən müvəqqəti boş vəziyyət əsl buludda olan datanın üzərinə yazılıb
+      // onu silə bilər. İstifadəçiyə də xəbər ver ki, dəyişiklik itməsin.
+      if (senkronKey && !veriMenbeGuvenli) {
+        console.warn('Yadda saxlama bloklandı: bulud mənbəyi hələ təsdiqlənməyib (bağlantı gözlənilir).');
+        firebasePanelGuncelle('Bulud hələ təsdiqlənməyib — dəyişiklik göndərilmədi, bağlantını yoxla.', true);
+        toastGoster('⚠️ Bulud hələ təsdiqlənməyib — dəyişiklik göndərilmədi. İnterneti yoxla və səhifəni yenilə.', 'blok');
+        return;
+      }
+      // QƏSDƏN localStorage-a YAZILMIR — məlumatın YEGANƏ mənbəyi Firestore-dur.
+      yerliSurum++;
+      firebaseYazPlanla();
+    } catch (e) {
+      console.error('Yadda saxlama xətası:', e);
+    }
+  }
+
+  // ---- Backup: JSON endir / bərpa et ----
+  function backupIndir() {
+    const data = { kategoriler, giderler, anaHesap, kreditLimit, krediBorcu, nagdBakiye, debitBakiye, depozitBakiye, hesabTransferleri, gunlukLimit, hesabEklenib, backupTarixi: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const tarixEtiket = new Date().toISOString().slice(0, 10);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gider-backup-${tarixEtiket}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    menuKapat();
+  }
+
+  function backupBerpaEt(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('etibarsız backup');
+        confirmAc('Backup bərpa et', 'Mövcud bütün data bu fayldakı ilə əvəz olunacaq. Davam edilsin?', () => {
+          kategoriler = parsed.kategoriler || varsayilanKategoriler;
+          giderler = parsed.giderler || [];
+          anaHesap = (typeof parsed.anaHesap === 'number') ? parsed.anaHesap : null;
+          kreditLimit = (typeof parsed.kreditLimit === 'number') ? parsed.kreditLimit : null;
+          krediBorcu = parsed.krediBorcu || krediBorcuKohnaBackupdanCixar(parsed.aylikXerclar);
+          nagdBakiye = (typeof parsed.nagdBakiye === 'number') ? parsed.nagdBakiye : 0;
+          debitBakiye = (typeof parsed.debitBakiye === 'number') ? parsed.debitBakiye : 0;
+          depozitBakiye = (typeof parsed.depozitBakiye === 'number') ? parsed.depozitBakiye : 0;
+          hesabTransferleri = parsed.hesabTransferleri || [];
+          gunlukLimit = (typeof parsed.gunlukLimit === 'number') ? parsed.gunlukLimit : null;
+          hesabEklenib = parsed.hesabEklenib || { nagd: false, debit: false, depozit: false };
+          veriKaydet();
+          ekraniGuncelle();
+          menuKapat();
+        });
+      } catch (err) {
+        alert('Fayl oxuna bilmədi. Düzgün JSON backup faylı seçdiyinə əmin ol.');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  function appIskeletiOlustur() {
+    const appEl = document.getElementById('app');
+    if (!appEl) return;
+    appEl.innerHTML = `
+      <div class="top" style="justify-content:center;">
+        <h1>Günlük Xərclər</h1>
+      </div>
+      <div class="date-nav">
+        <button class="date-nav-arrow" id="tarixGeriBtn" onclick="tarixDeyis(-1)">‹</button>
+        <div class="date-nav-label" id="tarixEtiketi">Bugün · 05.09.2026</div>
+        <button class="date-nav-arrow" id="tarixIrəliBtn" onclick="tarixDeyis(1)">›</button>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label" id="donemBaslik">Bugünkü ümumi xərc</div>
+        <div class="summary-amount" id="toplamTutar">—</div>
+        <div class="summary-sub" id="donemAlt"></div>
+        <div id="progressCubuk" class="progress-bar-container"></div>
+        <div id="breakdown" class="breakdown"></div>
+      </div>
+      <div class="daily-limit-card" id="gunlukLimitKart">
+        <div class="daily-limit-head">
+          <span class="lbl" id="gunlukLimitLbl">Günlük limit</span>
+          <span class="pct" id="gunlukLimitYuzde">—</span>
+        </div>
+        <div class="daily-limit-bar-bg"><div class="daily-limit-bar-fill" id="gunlukLimitBar" style="width:0%"></div></div>
+        <div class="daily-limit-foot">
+          <span>Xərclənib: <b id="gunlukLimitXerc">—</b></span>
+          <span class="qalan" id="gunlukLimitQalan">—</span>
+        </div>
+      </div>
+      <div class="insight-strip">
+        <div class="insight-box">
+          <div class="k">Günlük ortalama</div>
+          <div class="v" id="insightOrtalama">—</div>
+        </div>
+        <div class="insight-box">
+          <div class="k">Ən çox xərc</div>
+          <div class="v" id="insightTopKategori">—</div>
+        </div>
+      </div>
+      <div id="butonlarKonteyneri" class="grid-buttons"></div>
+      <button class="dashed-btn" onclick="islemFormModalAc(null)">🕓 Köhnə tarixli xərc əlavə et</button>
+    `;
+  }
+
+  function donemeGoreFiltrele() {
+    return giderler.filter(g => {
+      if (g.aylikRef) return false; // aylıq xərclər / kredit borcu ödəmələri yalnız kredit kartına yansıyır
+      const t = new Date(g.tamTarix);
+      return t.toDateString() === goruntulenenTarix.toDateString();
+    });
+  }
+
+  // YEREL (cihazın saat qurşağı ilə) YYYY-MM-DD. toISOString() UTC verir — Bakıda 00:00–04:00 arası dünəni göstərirdi.
+  function yerliTarixStr(d) {
+    const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  // Tətbiq gecə yarısını keçib açıq qalıbsa, "Bugün" avtomatik yenilənsin.
+  let sonBilinenGun = yerliTarixStr(new Date());
+  function gunDeyisdiYoxla() {
+    const indiGun = yerliTarixStr(new Date());
+    if (indiGun === sonBilinenGun) return;
+    const bugunGoruntulenirdi = (yerliTarixStr(goruntulenenTarix) === sonBilinenGun);
+    sonBilinenGun = indiGun;
+    if (bugunGoruntulenirdi) { const b = new Date(); b.setHours(0, 0, 0, 0); goruntulenenTarix = b; }
+    ekraniGuncelle();
+  }
+  setInterval(gunDeyisdiYoxla, 60000);
+
+  function gunSayisi() {
+    return 1;
+  }
+
+  function tarixBugunmu(tarix) {
+    const bugun = new Date(); bugun.setHours(0, 0, 0, 0);
+    return tarix.toDateString() === bugun.toDateString();
+  }
+
+  function tarixDunenmi(tarix) {
+    const dunen = new Date(); dunen.setDate(dunen.getDate() - 1); dunen.setHours(0, 0, 0, 0);
+    return tarix.toDateString() === dunen.toDateString();
+  }
+
+  function tarixFormatla(tarix) {
+    return tarix.toLocaleDateString('az-AZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  function tarixDeyis(delta) {
+    const yeni = new Date(goruntulenenTarix);
+    yeni.setDate(yeni.getDate() + delta);
+    const bugun = new Date(); bugun.setHours(0, 0, 0, 0);
+    if (yeni > bugun) return; // gələcəyə keçmək olmaz
+    goruntulenenTarix = yeni;
+    ekraniGuncelle();
+  }
+
+  function gunlukLimitGuncelle(bugunkuToplam) {
+    const limitTeyinEdilib = (typeof gunlukLimit === 'number' && gunlukLimit > 0);
+    const limit = limitTeyinEdilib ? gunlukLimit : 0;
+    const yuzde = limitTeyinEdilib ? (bugunkuToplam / limit) * 100 : 0;
+    const asilib = limitTeyinEdilib && bugunkuToplam > limit;
+    const qalan = limit - bugunkuToplam;
+
+    const lblEl = document.getElementById('gunlukLimitLbl');
+    if (lblEl) {
+      lblEl.innerText = limitTeyinEdilib ? ('Günlük limit: ' + limit.toFixed(2) + ' AZN') : 'Günlük limit təyin edilməyib';
+      lblEl.classList.toggle('over', asilib);
+    }
+
+    const pctEl = document.getElementById('gunlukLimitYuzde');
+    if (pctEl) {
+      pctEl.innerText = limitTeyinEdilib ? ('%' + yuzde.toFixed(0)) : '—';
+      pctEl.classList.toggle('over', asilib);
+    }
+
+    const xercEl = document.getElementById('gunlukLimitXerc');
+    if (xercEl) xercEl.innerText = bugunkuToplam.toFixed(2) + ' AZN';
+
+    const barEl = document.getElementById('gunlukLimitBar');
+    if (barEl) {
+      barEl.style.width = (limitTeyinEdilib ? Math.min(yuzde, 100) : 0) + '%';
+      barEl.classList.toggle('over', asilib);
+    }
+
+    const qalanEl = document.getElementById('gunlukLimitQalan');
+    if (qalanEl) {
+      qalanEl.classList.toggle('over', asilib);
+      qalanEl.innerText = !limitTeyinEdilib
+        ? '—'
+        : (asilib
+          ? ('Limit aşıldı: +' + Math.abs(qalan).toFixed(2) + ' AZN')
+          : ('Qalıq: ' + qalan.toFixed(2) + ' AZN'));
+    }
+
+    const kartEl = document.getElementById('gunlukLimitKart');
+    if (kartEl) kartEl.classList.toggle('over', asilib);
+  }
+
+  function ekraniGuncelle() {
+    if (!veriYuklendi) return;
+    const dashboardModalEl = document.getElementById('dashboardModal');
+    if (dashboardModalEl && dashboardModalEl.classList.contains('active') && typeof dashboardDairaviDiaqramlariCiz === 'function') {
+      dashboardDairaviDiaqramlariCiz();
+    }
+    const tarixBugun = tarixBugunmu(goruntulenenTarix);
+    const tarixEtiketiEl = document.getElementById('tarixEtiketi');
+    if (tarixEtiketiEl) {
+      tarixEtiketiEl.innerText = (tarixBugun ? 'Bugün' : (tarixDunenmi(goruntulenenTarix) ? 'Dünən' : '')) + (tarixBugun || tarixDunenmi(goruntulenenTarix) ? ' · ' : '') + tarixFormatla(goruntulenenTarix);
+    }
+    const ireliBtn = document.getElementById('tarixIrəliBtn');
+    if (ireliBtn) ireliBtn.disabled = tarixBugun;
+    const donemBaslikEl = document.getElementById('donemBaslik');
+    if (donemBaslikEl) {
+      donemBaslikEl.innerText = tarixBugun ? 'Bugünkü ümumi xərc' : (tarixDunenmi(goruntulenenTarix) ? 'Dünənki ümumi xərc' : tarixFormatla(goruntulenenTarix) + ' tarixli xərc');
+    }
+    const butonlarKonteynerEl = document.getElementById('butonlarKonteyneri');
+    if (butonlarKonteynerEl) butonlarKonteynerEl.style.display = tarixBugun ? '' : 'none';
+
+    const filtrelenmis = donemeGoreFiltrele();
+    let toplam = 0;
+    const katToplam = {};
+    kategoriler.forEach(k => katToplam[k.ad] = 0);
+    filtrelenmis.forEach(g => {
+      toplam += g.tutar;
+      katToplam[g.kategori] = (katToplam[g.kategori] || 0) + g.tutar;
+    });
+
+    const toplamTutarEl = document.getElementById('toplamTutar');
+    if (toplamTutarEl) toplamTutarEl.innerText = toplam.toFixed(2) + ' AZN';
+    const donemAltEl = document.getElementById('donemAlt');
+    if (donemAltEl) donemAltEl.innerText = filtrelenmis.length + ' əməliyyat';
+
+    const progressEl = document.getElementById('progressCubuk');
+    const breakdownEl = document.getElementById('breakdown');
+    if (progressEl) progressEl.innerHTML = '';
+    if (breakdownEl) breakdownEl.innerHTML = '';
+
+    let topKategoriAd = null, topKategoriTutar = 0;
+    if (toplam > 0) {
+      kategoriler.forEach(kat => {
+        const tutar = katToplam[kat.ad] || 0;
+        if (tutar > 0) {
+          const yuzde = (tutar / toplam) * 100;
+          const parca = document.createElement('div');
+          parca.style.background = kat.renk; parca.style.height = '100%'; parca.style.width = yuzde + '%';
+          if (progressEl) progressEl.appendChild(parca);
+          const row = document.createElement('div');
+          row.className = 'breakdown-row';
+          row.innerHTML = `<span><span class="dot" style="background:${escapeHtml(kat.renk)}"></span>${escapeHtml(kat.ikon)} ${escapeHtml(kat.ad)}</span><span>${tutar.toFixed(2)} AZN · %${yuzde.toFixed(0)}</span>`;
+          if (breakdownEl) breakdownEl.appendChild(row);
+          if (tutar > topKategoriTutar) { topKategoriTutar = tutar; topKategoriAd = kat.ad; }
+        }
+      });
+      // Silinmiş kateqoriyaların xərcləri cəmə daxildir — bölgüdə "Digər" kimi göstər ki, faizlər cəmə uyğun gəlsin.
+      const gosterilen = kategoriler.reduce((a, k) => a + (katToplam[k.ad] || 0), 0);
+      const digerTutar = toplam - gosterilen;
+      if (digerTutar > 0.004) {
+        const yuzdeD = (digerTutar / toplam) * 100;
+        const parcaD = document.createElement('div');
+        parcaD.style.background = '#8d96a8'; parcaD.style.height = '100%'; parcaD.style.width = yuzdeD + '%';
+        if (progressEl) progressEl.appendChild(parcaD);
+        const rowD = document.createElement('div');
+        rowD.className = 'breakdown-row';
+        rowD.innerHTML = `<span><span class="dot" style="background:#8d96a8"></span>📦 Digər</span><span>${digerTutar.toFixed(2)} AZN · %${yuzdeD.toFixed(0)}</span>`;
+        if (breakdownEl) breakdownEl.appendChild(rowD);
+      }
+    } else {
+      if (progressEl) progressEl.innerHTML = '<div style="width:100%; background:rgba(255,255,255,0.12); height:100%;"></div>';
+      if (breakdownEl) breakdownEl.innerHTML = '<div class="breakdown-empty">Bu dövrdə xərc yoxdur.</div>';
+    }
+
+    const insightOrtEl = document.getElementById('insightOrtalama');
+    if (insightOrtEl) insightOrtEl.innerText = (toplam / gunSayisi()).toFixed(2) + ' AZN';
+    const insightTopEl = document.getElementById('insightTopKategori');
+    if (insightTopEl) insightTopEl.innerText = topKategoriAd ? topKategoriAd : '—';
+
+    const bugunkuToplam = giderler
+      .filter(g => !g.aylikRef && !kategoriAylikdirmi(g.kategori) && new Date(g.tamTarix).toDateString() === goruntulenenTarix.toDateString()) // günlük limitə yalnız GÜNLÜK xərclər (tiksiz kateqoriyalar) daxildir
+      .reduce((acc, g) => acc + g.tutar, 0);
+    gunlukLimitGuncelle(bugunkuToplam);
+
+    const butonlarEl = document.getElementById('butonlarKonteyneri');
+    if (butonlarEl) {
+      butonlarEl.innerHTML = '';
+      const kategoriDugmesiYarat = (kat, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-btn';
+        btn.style.background = kat.renk;
+        const altYazi = kat.sabitTutar !== null ? kat.sabitTutar.toFixed(2) + ' AZN' : 'Tutar soruşulur';
+        btn.innerHTML = `<span class="name">${escapeHtml(kat.ikon)} ${escapeHtml(kat.ad)}</span><span class="sub">${escapeHtml(altYazi)}</span>`;
+        btn.onclick = () => kategoriyeTikla(index); // index = kateqoriyanın ƏSL sıra nömrəsi (qruplaşdırma bunu dəyişmir)
+        return btn;
+      };
+      // Yuxarıda günlük xərclər (tiksizlər), sonra xətt, sonra aylıq sabit xərclər (tiklilər)
+      const gunlukIndeksler = [], aylikIndeksler = [];
+      kategoriler.forEach((kat, index) => (kat.aylik ? aylikIndeksler : gunlukIndeksler).push(index));
+      gunlukIndeksler.forEach(i => butonlarEl.appendChild(kategoriDugmesiYarat(kategoriler[i], i)));
+      if (gunlukIndeksler.length && aylikIndeksler.length) {
+        const ayirici = document.createElement('div');
+        ayirici.className = 'grid-ayirici';
+        ayirici.innerHTML = '<span>📌 Aylıq sabit xərclər</span>';
+        butonlarEl.appendChild(ayirici);
+      }
+      aylikIndeksler.forEach(i => butonlarEl.appendChild(kategoriDugmesiYarat(kategoriler[i], i)));
+    }
+
+    // Geriyə tarixli düzəlişlər/əlavələr sonra da xronoloji sıralı görünsün deyə,
+    // hər ekran yeniləməsində əməliyyatları tarixə görə (yenidən köhnəyə) sırala.
+    // tamTarix yoxdursa (köhnə backup), sıralamanı pozmasın deyə yoxla.
+    giderler.sort((a, b) => {
+      const ta = a.tamTarix ? new Date(a.tamTarix).getTime() : 0;
+      const tb = b.tamTarix ? new Date(b.tamTarix).getTime() : 0;
+      return tb - ta;
+    });
+
+    const gosterilecekGiderSayisi = giderler.filter(g => !g.aylikRef).length;
+    let listeHtml = '';
+    if (gosterilecekGiderSayisi === 0) {
+      listeHtml = '<p class="empty-note">Hələ heç bir xərc əlavə olunmayıb.</p>';
+    } else {
+      giderler.forEach((g, index) => {
+        if (g.aylikRef) return; // aylıq xərclər / kredit borcu ödəmələri yalnız kredit kartına yansıyır
+        listeHtml += `<li class="list-item"><div><span class="cat">${escapeHtml(g.kategori)}${g.sebeb ? ' — ' + escapeHtml(g.sebeb) : ''}</span><span class="time">${escapeHtml(g.tarix)}</span></div>
+          <div class="right"><span class="amt">${g.tutar.toFixed(2)} AZN</span><button onclick="islemFormModalAc(${index})" title="Düzəlt" style="color:var(--navy-soft);">✏️</button><button onclick="giderSilOnayla(${index})" title="Sil">✕</button></div></li>`;
+      });
+    }
+    const listeEl = document.getElementById('giderListesi');
+    if (listeEl) listeEl.innerHTML = listeHtml;
+    const sonEmeliyyatlarEl = document.getElementById('sonEmeliyyatlarListesi');
+    if (sonEmeliyyatlarEl) sonEmeliyyatlarEl.innerHTML = listeHtml;
+    // DİQQƏT: burada artıq veriKaydet() YOXDUR. Ekran yeniləmək buluda yazmamalıdır —
+    // əks halda iki cihaz bir-birinin yazısını sonsuz təkrar yazırdı. Yazma yalnız real dəyişiklik edən yerlərdə çağırılır.
+  }
+
+  function kategoriSebebSorulsun(kat) {
+    return !!(kat && kat.sebebSoruş);
+  }
+
+  function kategoriyeTikla(index) {
+    const kat = kategoriler[index];
+    if (!kat) return;
+    if (kat.sabitTutar !== null && !kategoriSebebSorulsun(kat)) {
+      giderEkle(kat.ad, kat.sabitTutar);
+    } else {
+      amountModalAc(index);
+    }
+  }
+
+  function giderEkle(kategori, tutar, sebeb) {
+    const simdi = new Date();
+    const kayit = {
+      kategori, tutar,
+      tamTarix: simdi.toISOString(),
+      tarix: simdi.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + simdi.toLocaleDateString('az-AZ')
+    };
+    if (sebeb) kayit.sebeb = sebeb;
+    giderler.unshift(kayit);
+    if (typeof anaHesap === 'number') anaHesap -= tutar;
+    veriKaydet();
+    ekraniGuncelle();
+  }
+
+  // ---- Xərci düzəlt / köhnə tarixli xərc əlavə et ----
+  // Yalnız adi (manual) xərclər üçündür — kredit taksiti / transfer kimi avtomatik
+  // qeydlərin tarixi bu formadan dəyişdirilmir.
+  let islemFormIndex = null; // null = yeni (köhnə tarixli) əlavə, ədəd = mövcud qeydin index-i
+
+  function islemKategoriSecenekleriDoldur(seciliAd) {
+    const sel = document.getElementById('islemFormKategori');
+    if (!sel) return;
+    sel.innerHTML = kategoriler.map(k =>
+      `<option value="${escapeHtml(k.ad)}" ${k.ad === seciliAd ? 'selected' : ''}>${escapeHtml(k.ikon)} ${escapeHtml(k.ad)}</option>`
+    ).join('');
+    if (seciliAd && !kategoriler.some(k => k.ad === seciliAd)) {
+      sel.innerHTML += `<option value="${escapeHtml(seciliAd)}" selected>💰 ${escapeHtml(seciliAd)} (silinib)</option>`;
+    }
+  }
+
+  // Seçilən tarixi (YYYY-MM-DD) saat.dəqiqə.saniyə-ni orijinal (və ya indiki) andan alaraq birləşdirir.
+  function tamTarixQur(tarixStr, saatMenbeIso) {
+    const [yy, mm, dd] = tarixStr.split('-').map(Number);
+    const saatMenbe = saatMenbeIso ? new Date(saatMenbeIso) : new Date();
+    return new Date(yy, mm - 1, dd, saatMenbe.getHours(), saatMenbe.getMinutes(), saatMenbe.getSeconds());
+  }
+
+  function islemFormModalAc(index) {
+    islemFormIndex = (typeof index === 'number') ? index : null;
+    const duzeltMi = islemFormIndex !== null;
+    const g = duzeltMi ? giderler[islemFormIndex] : null;
+
+    const baslikEl = document.getElementById('islemFormBaslik');
+    if (baslikEl) baslikEl.innerText = duzeltMi ? 'Xərci düzəlt' : 'Köhnə tarixli xərc əlavə et';
+    islemKategoriSecenekleriDoldur(duzeltMi && g ? g.kategori : (kategoriler[0] ? kategoriler[0].ad : ''));
+    const tutarEl = document.getElementById('islemFormTutar');
+    if (tutarEl) tutarEl.value = duzeltMi && g ? g.tutar : '';
+    const sebebEl = document.getElementById('islemFormSebeb');
+    if (sebebEl) sebebEl.value = duzeltMi && g ? (g.sebeb || '') : '';
+
+    const tarixInput = document.getElementById('islemFormTarix');
+    if (tarixInput) {
+      const bugunStr = yerliTarixStr(new Date());
+      tarixInput.max = bugunStr;
+      tarixInput.value = (duzeltMi && g && g.tamTarix) ? yerliTarixStr(new Date(g.tamTarix)) : bugunStr;
+    }
+
+    const errEl = document.getElementById('islemFormError');
+    if (errEl) errEl.innerText = '';
+    const silBtn = document.getElementById('islemFormSilBtn');
+    if (silBtn) silBtn.style.display = duzeltMi ? 'inline-block' : 'none';
+    modalAc('islemFormModal');
+  }
+
+  function islemFormOnayla() {
+    const errEl = document.getElementById('islemFormError');
+    const kategori = document.getElementById('islemFormKategori').value;
+    const tutarVal = document.getElementById('islemFormTutar').value;
+    const tutar = parseFloat((tutarVal || '').replace(',', '.'));
+    const sebeb = document.getElementById('islemFormSebeb').value.trim();
+    const tarixVal = document.getElementById('islemFormTarix').value;
+    const bugunStr = yerliTarixStr(new Date());
+
+    if (!kategori) { if (errEl) errEl.innerText = 'Kateqoriya seç.'; return; }
+    if (isNaN(tutar) || tutar <= 0) { if (errEl) errEl.innerText = 'Düzgün bir məbləğ yaz.'; return; }
+    if (!tarixVal) { if (errEl) errEl.innerText = 'Tarix seç.'; return; }
+    if (tarixVal > bugunStr) { if (errEl) errEl.innerText = 'Gələcək tarix seçilə bilməz.'; return; }
+
+    if (islemFormIndex !== null) {
+      const g = giderler[islemFormIndex];
+      if (!g) { modalKapat('islemFormModal'); return; }
+      if (typeof anaHesap === 'number') anaHesap += g.tutar; // köhnə məbləği geri qaytar
+      const dt = tamTarixQur(tarixVal, g.tamTarix);
+      g.kategori = kategori;
+      g.tutar = tutar;
+      if (sebeb) g.sebeb = sebeb; else delete g.sebeb;
+      g.tamTarix = dt.toISOString();
+      g.tarix = dt.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + dt.toLocaleDateString('az-AZ');
+      if (typeof anaHesap === 'number') anaHesap -= tutar;
+    } else {
+      const dt = tamTarixQur(tarixVal, null);
+      const kayit = {
+        kategori, tutar, tamTarix: dt.toISOString(),
+        tarix: dt.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + dt.toLocaleDateString('az-AZ')
+      };
+      if (sebeb) kayit.sebeb = sebeb;
+      giderler.unshift(kayit);
+      if (typeof anaHesap === 'number') anaHesap -= tutar;
+    }
+    modalKapat('islemFormModal');
+    veriKaydet();
+    ekraniGuncelle();
+  }
+
+  function islemFormSilOnayla() {
+    if (islemFormIndex === null) return;
+    const index = islemFormIndex;
+    modalKapat('islemFormModal');
+    giderSilOnayla(index);
+  }
+
+  // ---- Amount modal ----
+  // TƏHLÜKƏSİZLİK: kateqoriyanı INDEX yerinə ADI ilə izləyirik. Səbəb: modal açıq
+  // ikən istifadəçi kateqoriyaları sürüşdürə/silə bilər — o halda index köhnəlir və
+  // xərc səhv kateqoriyaya düşərdi. Ad ilə izlədikdə bu mümkün deyil.
+  let amountModalKategoriAdi = null;
+
+  function amountModalAc(index) {
+    const kat = kategoriler[index];
+    if (!kat) return;
+    amountModalKategoriAdi = kat.ad;
+    const sebebSorulsun = kategoriSebebSorulsun(kat);
+    const titleEl = document.getElementById('amountModalTitle');
+    if (titleEl) titleEl.innerText = kat.ad + ' üçün tutar';
+    const inputEl = document.getElementById('amountInput');
+    if (inputEl) inputEl.value = kat.sabitTutar !== null ? kat.sabitTutar : '';
+    const errEl = document.getElementById('amountError');
+    if (errEl) errEl.innerText = '';
+    const reasonWrap = document.getElementById('amountReasonWrap');
+    const reasonInput = document.getElementById('amountReasonInput');
+    if (reasonWrap) reasonWrap.style.display = sebebSorulsun ? 'block' : 'none';
+    if (reasonInput) reasonInput.value = '';
+    modalAc('amountModal');
+    setTimeout(() => { if (inputEl) inputEl.focus(); }, 50);
+  }
+
+  function amountModalOnayla() {
+    // Adı ilə tap — sıra nömrəsi dəyişsə də, düzgün kateqoriyanı tapır.
+    const kat = kategoriler.find(k => k.ad === amountModalKategoriAdi);
+    const errEl = document.getElementById('amountError');
+    if (!kat) {
+      if (errEl) errEl.innerText = 'Kateqoriya tapılmadı.';
+      return;
+    }
+    const sebebSorulsun = kategoriSebebSorulsun(kat);
+    const val = document.getElementById('amountInput').value;
+    const tutar = parseFloat((val || '').replace(',', '.'));
+    if (isNaN(tutar) || tutar <= 0) {
+      if (errEl) errEl.innerText = 'Zəhmət olmasa düzgün bir məbləğ daxil et.';
+      return;
+    }
+    let sebeb = '';
+    if (sebebSorulsun) {
+      sebeb = document.getElementById('amountReasonInput').value.trim();
+      if (!sebeb) {
+        if (errEl) errEl.innerText = 'Zəhmət olmasa səbəbini yaz.';
+        return;
+      }
+    }
+    giderEkle(kat.ad, tutar, sebeb);
+    modalKapat('amountModal');
+    amountModalKategoriAdi = null;
+  }
+
+  // ---- Credit card modal (limit + faktiki qalıq) ----
+  function balanceModalAc() {
+    document.getElementById('cardLimitInput').value = typeof kreditLimit === 'number' ? kreditLimit : '';
+    document.getElementById('cardBalanceInput').value = typeof anaHesap === 'number' ? anaHesap : '';
+    document.getElementById('balanceError').innerText = '';
+    modalAc('balanceModal');
+    setTimeout(() => document.getElementById('cardLimitInput').focus(), 50);
+  }
+  function balanceModalOnayla() {
+    const limitVal = document.getElementById('cardLimitInput').value;
+    const balansVal = document.getElementById('cardBalanceInput').value;
+    const limit = parseFloat((limitVal || '').replace(',', '.'));
+    const balans = parseFloat((balansVal || '').replace(',', '.'));
+    if (limitVal.trim() !== '' && (isNaN(limit) || limit < 0)) {
+      document.getElementById('balanceError').innerText = 'Limit düzgün bir rəqəm olmalıdır.';
+      return;
+    }
+    if (isNaN(balans)) {
+      document.getElementById('balanceError').innerText = 'Faktiki qalıq düzgün bir rəqəm olmalıdır.';
+      return;
+    }
+    kreditLimit = limitVal.trim() !== '' ? limit : null;
+    anaHesap = balans;
+    modalKapat('balanceModal');
+    veriKaydet();
+    ekraniGuncelle();
+    const hesablarAcik = document.getElementById('hesablarModal');
+    if (hesablarAcik && hesablarAcik.classList.contains('active')) hesablarGoster(); // "+" ilə əlavə edilən kart dərhal görünsün
+    if (document.getElementById('dashboardModal').classList.contains('active')) dashboardPaneliniAc();
+  }
+
+  // ---- New category modal ----
+  function yeniKategoriModalAc() {
+    document.getElementById('newCatName').value = '';
+    document.getElementById('newCatFixed').value = '';
+    const aylikTikSifir = document.getElementById('newCatAylik'); if (aylikTikSifir) aylikTikSifir.checked = false;
+    document.getElementById('newCatError').innerText = '';
+    modalAc('newCatModal');
+  }
+  function yeniKategoriOnayla() {
+    const ad = document.getElementById('newCatName').value.trim();
+    if (!ad) {
+      document.getElementById('newCatError').innerText = 'Kateqoriya adı boş ola bilməz.';
+      return;
+    }
+    if (kategoriler.some(k => k.ad.toLocaleLowerCase('az-AZ') === ad.toLocaleLowerCase('az-AZ'))) {
+      document.getElementById('newCatError').innerText = 'Bu adda kateqoriya artıq var.';
+      return;
+    }
+    const fixedVal = document.getElementById('newCatFixed').value;
+    let sabitTutar = null;
+    if (fixedVal.trim() !== '') {
+      const p = parseFloat(fixedVal.replace(',', '.'));
+      if (!isNaN(p) && p > 0) sabitTutar = p;
+    }
+    // Yeni kateqoriyaya hələ heç bir kateqoriyanın istifadə etmədiyi ilk rəngi ver (20 rəngdən)
+    const istifadeOlunanRenkler = new Set(kategoriler.map(k => k.renk));
+    const bosRenk = renkPaleti.find(r => !istifadeOlunanRenkler.has(r)) || renkPaleti[kategoriler.length % renkPaleti.length];
+    const aylikTikEl = document.getElementById('newCatAylik');
+    kategoriler.push({ ad, sabitTutar, renk: bosRenk, ikon: '💰', aylik: !!(aylikTikEl && aylikTikEl.checked) });
+    modalKapat('newCatModal');
+    veriKaydet();
+    ekraniGuncelle();
+    if (document.getElementById('yonetimModal').classList.contains('active')) modalListesiniDoldur();
+  }
+
+  // ---- Confirm modal ----
+  function confirmAc(title, text, onConfirm) {
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmText').innerText = text;
+    const btn = document.getElementById('confirmActionBtn');
+    const yeniBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(yeniBtn, btn);
+    yeniBtn.addEventListener('click', () => { onConfirm(); modalKapat('confirmModal'); });
+    modalAc('confirmModal');
+  }
+  function giderSilOnayla(index) {
+    const hedef = giderler[index]; // sıra nömrəsi yox, qeydin özünü izləyirik (arada sinxron olsa səhv qeyd silinməsin)
+    confirmAc('Xərci sil', 'Bu qeydi silmək istədiyinə əminsən?', () => {
+      const idx = giderler.indexOf(hedef);
+      if (!hedef || idx === -1) { alert('Siyahı arada yeniləndi. Yenidən sına.'); ekraniGuncelle(); return; }
+      if (typeof anaHesap === 'number' && typeof hedef.tutar === 'number') anaHesap += hedef.tutar;
+      giderler.splice(idx, 1);
+      veriKaydet();
+      ekraniGuncelle();
+    });
+  }
+  function listeyiTemizleOnayla() {
+    confirmAc('Hamısını sil', 'Bütün xərc tarixçəsini silmək istədiyinə əminsən? Bu geri alınmır.', () => {
+      if (typeof anaHesap === 'number') {
+        const geriQaytar = giderler.filter(g => !g.aylikRef).reduce((acc, g) => acc + (typeof g.tutar === 'number' ? g.tutar : 0), 0);
+        anaHesap += geriQaytar;
+      }
+      giderler = giderler.filter(g => !!g.aylikRef);
+      veriKaydet();
+      ekraniGuncelle();
+    });
+  }
+  function kategoriSilOnayla(index) {
+    if (kategoriler.length <= 1) { confirmAc('Mümkün deyil', 'Ən azı bir kateqoriya qalmalıdır.', () => {}); return; }
+    confirmAc('Kateqoriyanı sil', kategoriler[index].ad + ' kateqoriyasını silmək istədiyinə əminsən?', () => {
+      kategoriler.splice(index, 1); veriKaydet(); modalListesiniDoldur(); ekraniGuncelle();
+    });
+  }
+
+  // ---- Management modal ----
+  function yonetimPaneliniAc() { modalListesiniDoldur(); modalAc('yonetimModal'); }
+  function yonetimPaneliniKapat() { modalKapat('yonetimModal'); ekraniGuncelle(); ayarlarPaneliniAc(); }
+
+  function modalListesiniDoldur() {
+    const konteyner = document.getElementById('kategoriDuzenlemeListesi');
+    if (!konteyner) return;
+    konteyner.innerHTML = '';
+    kategoriler.forEach((kat, index) => {
+      const item = document.createElement('div');
+      item.className = 'modal-item siralana-bilen';
+      item.dataset.origIndex = index;
+      const renkler = renkPaleti.map(r =>
+        `<span class="swatch ${kat.renk === r ? 'selected' : ''}" style="background:${escapeHtml(r)}" onclick="kategoriRenkGuncelle(${index}, '${escapeHtml(r)}')"></span>`
+      ).join('');
+      item.innerHTML = `
+        <div class="field-row">
+          <span class="drag-handle" onpointerdown="kategoriSurukleBasla(event, this.closest('.modal-item'))">☰</span>
+          <input type="text" value="${escapeHtml(kat.ikon)}" onchange="kategoriIkonGuncelle(${index}, this.value)" style="width:52px; text-align:center;">
+          <input type="text" value="${escapeHtml(kat.ad)}" onchange="kategoriAdGuncelle(${index}, this.value)" style="flex:1;">
+          <button onclick="kategoriSilOnayla(${index})" style="background:none; border:none; cursor:pointer; font-size:14px;">🗑</button>
+        </div>
+        <label class="field-row" style="gap:8px; font-size:13px; font-weight:600; color:var(--ink); border-top:1px solid var(--line); padding-top:8px; cursor:pointer;">
+          <input type="checkbox" ${kat.aylik ? 'checked' : ''} onchange="kategoriAylikToggle(${index}, this.checked)" style="width:auto;">
+          <span>📌 Aylıq sabit xərc <span style="font-weight:400; color:var(--muted);">(tiksiz = günlük)</span></span>
+        </label>
+        <div class="field-row" style="font-size:12px; color:var(--muted); gap:6px;">
+          <span>Sabit tutar:</span>
+          <input type="number" step="0.01" value="${kat.sabitTutar !== null ? kat.sabitTutar : ''}" placeholder="Soruş" onchange="kategoriSabitTutarGuncelle(${index}, this.value)" style="width:78px;">
+        </div>
+        <div class="renk-grid">${renkler}</div>
+        <label class="field-row" style="gap:6px; font-size:12px; color:var(--muted); padding-top:2px; cursor:pointer;">
+          <input type="checkbox" ${kat.sebebSoruş ? 'checked' : ''} onchange="kategoriSebebToggle(${index}, this.checked)" style="width:auto;">
+          <span>Əlavə edərkən səbəb də soruşulsun</span>
+        </label>
+      `;
+      konteyner.appendChild(item);
+    });
+  }
+
+  // Ad dəyişəndə köhnə xərclərin kateqoriya adı da yenilənir (əks halda tarixçə bölgüdən itirdi). Təkrar ad qadağandır.
+  window.kategoriAdGuncelle = (i, val) => {
+    const kat = kategoriler[i];
+    const yeniAd = (val || '').trim();
+    if (!kat || !yeniAd || yeniAd === kat.ad) { modalListesiniDoldur(); return; }
+    const kicik = (x) => x.toLocaleLowerCase('az-AZ');
+    if (kategoriler.some((k, j) => j !== i && kicik(k.ad) === kicik(yeniAd))) {
+      alert('Bu adda kateqoriya artıq var.');
+      modalListesiniDoldur();
+      return;
+    }
+    const kohneAd = kat.ad;
+    giderler.forEach(g => { if (g.kategori === kohneAd) g.kategori = yeniAd; });
+    if (amountModalKategoriAdi === kohneAd) amountModalKategoriAdi = yeniAd;
+    kat.ad = yeniAd;
+    veriKaydet();
+  };
+  window.kategoriIkonGuncelle = (i, val) => { if (val.trim() && kategoriler[i]) { kategoriler[i].ikon = val.trim(); veriKaydet(); } };
+  window.kategoriSabitTutarGuncelle = (i, val) => {
+    if (!kategoriler[i]) return;
+    if (val.trim() === '') kategoriler[i].sabitTutar = null;
+    else { const p = parseFloat(val.replace(',', '.')); kategoriler[i].sabitTutar = (!isNaN(p) && p >= 0) ? p : null; }
+    veriKaydet();
+  };
+  window.kategoriRenkGuncelle = (i, renk) => { if (kategoriler[i]) { kategoriler[i].renk = renk; veriKaydet(); } modalListesiniDoldur(); };
+  window.kategoriSebebToggle = (i, checked) => { if (kategoriler[i]) { kategoriler[i].sebebSoruş = checked; veriKaydet(); } };
+  window.kategoriAylikToggle = (i, checked) => { if (kategoriler[i]) { kategoriler[i].aylik = !!checked; veriKaydet(); } };
+
+  // ---- Kateqoriyaların sürüşdürülərək sıralanması (drag-to-reorder) ----
+  // Barmaqla/mouse ilə "☰" işarəsindən tutub yuxarı-aşağı çəkməklə kateqoriyaların
+  // sırasını dəyişməyə imkan verir. Bu sıra tətbiqin hər yerində (xərc əlavə etmə,
+  // dashboard və s.) kateqoriyaların göstərilmə ardıcıllığını təyin edir.
+  let siralamaSurukleEl = null;
+  let siralamaKonteyner = null;
+
+  window.kategoriSurukleBasla = function(ev, item) {
+    ev.preventDefault();
+    if (!item) return;
+    siralamaSurukleEl = item;
+    siralamaKonteyner = item.parentElement;
+    item.classList.add('siralanan');
+    document.addEventListener('pointermove', kategoriSurukleHereket);
+    document.addEventListener('pointerup', kategoriSurukleBitir, { once: true });
+    document.addEventListener('pointercancel', kategoriSurukleBitir, { once: true });
+  };
+
+  function kategoriSurukleHereket(ev) {
+    if (!siralamaSurukleEl || !siralamaKonteyner) return;
+    ev.preventDefault();
+    const clientY = ev.clientY;
+    const digerleri = [...siralamaKonteyner.querySelectorAll('.modal-item:not(.siralanan)')];
+    // Sürüklənən element hansı qonşunun ortasından keçibsə, onun yerini tutur.
+    let hedef = null;
+    for (const digeri of digerleri) {
+      const qutu = digeri.getBoundingClientRect();
+      const orta = qutu.top + qutu.height / 2;
+      if (clientY < orta) { hedef = digeri; break; }
+    }
+    if (hedef) {
+      siralamaKonteyner.insertBefore(siralamaSurukleEl, hedef);
+    } else {
+      siralamaKonteyner.appendChild(siralamaSurukleEl);
+    }
+  }
+
+  function kategoriSurukleBitir() {
+    document.removeEventListener('pointermove', kategoriSurukleHereket);
+    document.removeEventListener('pointerup', kategoriSurukleBitir);
+    document.removeEventListener('pointercancel', kategoriSurukleBitir);
+    if (!siralamaSurukleEl || !siralamaKonteyner) return;
+    siralamaSurukleEl.classList.remove('siralanan');
+    // DOM-dakı yeni sıraya görə kategoriler massivini yenidən qururuq.
+    const yeniSira = [...siralamaKonteyner.children].map((el) => kategoriler[Number(el.dataset.origIndex)]).filter(Boolean);
+    kategoriler = yeniSira;
+    siralamaSurukleEl = null;
+    siralamaKonteyner = null;
+    veriKaydet();
+    modalListesiniDoldur();
+  }
+
+  // ---- Dedicated installment loan (Kredit Borcu) ----
+  function tarixFormat(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return d + '.' + m + '.' + y;
+  }
+
+  // Bir tarixə (iso) ay əlavə edib yeni iso tarix qaytarır
+  function tarixAyEkle(iso, ayFarki) {
+    const [y, m, d] = iso.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, (m - 1) + ayFarki, d));
+    const yyyy = dt.getUTCFullYear();
+    const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getUTCDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Kredit borcunu (aylıq məbləğ / taksit sayı / başlanğıc tarixi) istifadəçinin özünün düzəltməsi
+  function krediBorcuDuzeltModalAc() {
+    const k = krediBorcu || {};
+    document.getElementById('krediBorcuDuzeltMebleg').value = (typeof k.aylikMebleg === 'number') ? k.aylikMebleg : '';
+    document.getElementById('krediBorcuDuzeltSayi').value = (typeof k.taksitSayi === 'number' && k.taksitSayi > 0) ? k.taksitSayi : '';
+    document.getElementById('krediBorcuDuzeltBaslangic').value = k.baslangic || '';
+    document.getElementById('krediBorcuDuzeltError').innerText = '';
+    modalAc('krediBorcuDuzeltModal');
+  }
+
+  function krediBorcuDuzeltOnayla() {
+    const meblegVal = document.getElementById('krediBorcuDuzeltMebleg').value;
+    const sayiVal = document.getElementById('krediBorcuDuzeltSayi').value;
+    const baslangicVal = document.getElementById('krediBorcuDuzeltBaslangic').value;
+    const errEl = document.getElementById('krediBorcuDuzeltError');
+
+    const mebleg = parseFloat((meblegVal || '').replace(',', '.'));
+    const sayi = parseInt(sayiVal, 10);
+
+    if (isNaN(mebleg) || mebleg <= 0) {
+      errEl.innerText = 'Aylıq taksit məbləğini düzgün yaz.';
+      return;
+    }
+    if (isNaN(sayi) || sayi <= 0) {
+      errEl.innerText = 'Taksit sayısını düzgün yaz.';
+      return;
+    }
+    if (!baslangicVal) {
+      errEl.innerText = 'Başlanğıc tarixini seç.';
+      return;
+    }
+
+    if (!krediBorcu) {
+      krediBorcu = {
+        id: 'kredi_borcu_' + idUret(), ad: 'Kredi Borcu',
+        odenmisTaksitSayi: 0, elaveOdenis: 0
+      };
+    }
+    krediBorcu.aylikMebleg = mebleg;
+    krediBorcu.taksitSayi = sayi;
+    krediBorcu.baslangic = baslangicVal;
+    krediBorcu.bitis = tarixAyEkle(baslangicVal, sayi - 1);
+    if (krediBorcu.odenmisTaksitSayi > sayi) krediBorcu.odenmisTaksitSayi = sayi;
+
+    veriKaydet();
+    modalKapat('krediBorcuDuzeltModal');
+    krediBorcuGoster();
+    ekraniGuncelle();
+  }
+
+  // Kredit xəttinin (taksitli kredit) hazırkı qalıq borcu — hesablar arası birbaşa
+  // ödənişlər (elaveOdenis) buradan düşülür, amma mənfi olmur.
+  function krediBorcuQalanHesabla() {
+    if (!krediBorcu) return 0;
+    const xam = (krediBorcu.taksitSayi - krediBorcu.odenmisTaksitSayi) * krediBorcu.aylikMebleg;
+    return Math.max(0, xam - (krediBorcu.elaveOdenis || 0));
+  }
+
+  // Kredit xətt kartı indi "Hesablarım" siyahısında (hesablarGoster() içində) göstərilir —
+  // krediBorcuGoster() sadəcə o siyahını yenidən çəkir.
+  function krediBorcuGoster() {
+    hesablarGoster();
+  }
+
+  // ---- Bu ayın taksitini ödə: hansı hesabdan ödənəcəyini istifadəçi seçir ----
+  const TAKSIT_MENBE_SIRA = ['nagd', 'debit', 'depozit', 'kredit'];
+
+  // Bir hesab tipinin ödəniş üçün istifadə edilə bilən məbləği
+  function hesabMovcudMebleg(tip) {
+    if (tip === 'kredit') {
+      const limit = (typeof kreditLimit === 'number') ? kreditLimit : 0;
+      const borc = (typeof anaHesap === 'number') ? anaHesap : 0;
+      return limit + borc; // kredit kartında istifadə edilə bilən limit
+    }
+    return hesabBakiyesiOxu(tip);
+  }
+
+  function taksitMenbeVarMi(tip) {
+    if (tip === 'kredit') return typeof kreditLimit === 'number';
+    return !!hesabEklenib[tip];
+  }
+
+  function krediBorcuOdeModalAc() {
+    if (!krediBorcu) return;
+    if (krediBorcu.odenmisTaksitSayi >= krediBorcu.taksitSayi) return;
+    const sel = document.getElementById('taksitOdeMenbe');
+    const errEl = document.getElementById('taksitOdeError');
+    errEl.innerText = '';
+    sel.innerHTML = '';
+    TAKSIT_MENBE_SIRA.filter(taksitMenbeVarMi).forEach((tip) => {
+      const opt = document.createElement('option');
+      opt.value = tip;
+      const bilgi = (tip === 'kredit')
+        ? 'istifadə edilə bilən: ' + hesabMovcudMebleg(tip).toFixed(2) + ' AZN'
+        : hesabMovcudMebleg(tip).toFixed(2) + ' AZN';
+      opt.textContent = hesabIkonu(tip) + ' ' + hesabAdi(tip) + ' — ' + bilgi;
+      sel.appendChild(opt);
+    });
+    const nomre = krediBorcu.odenmisTaksitSayi + 1;
+    document.getElementById('taksitOdeInfo').innerText =
+      nomre + '/' + krediBorcu.taksitSayi + '-ci taksit · ' + krediBorcu.aylikMebleg.toFixed(2) + ' AZN';
+    if (!sel.options.length) errEl.innerText = 'Əvvəlcə ödəniş üçün ən azı bir hesab əlavə et (➕).';
+    modalAc('taksitOdeModal');
+  }
+
+  function krediBorcuOdeOnayla() {
+    if (!krediBorcu) return;
+    const errEl = document.getElementById('taksitOdeError');
+    const menbeTip = document.getElementById('taksitOdeMenbe').value;
+    const tutar = krediBorcu.aylikMebleg;
+
+    if (!menbeTip) {
+      errEl.innerText = 'Ödəniş üçün hesab seç.';
+      return;
+    }
+    if (krediBorcu.odenmisTaksitSayi >= krediBorcu.taksitSayi) {
+      errEl.innerText = 'Bütün taksitlər artıq ödənilib.';
+      return;
+    }
+    if (tutar > hesabMovcudMebleg(menbeTip)) {
+      errEl.innerText = (menbeTip === 'kredit')
+        ? 'Kredi kartında kifayət qədər istifadə edilə bilən limit yoxdur.'
+        : hesabAdi(menbeTip) + ' hesabında kifayət qədər balans yoxdur.';
+      return;
+    }
+
+    hesabBakiyesiDeyis(menbeTip, -tutar);
+    krediBorcu.odenmisTaksitSayi += 1;
+
+    // Ödəniş "Son transferlər" tarixçəsinə yazılır; oradakı ✕ ilə geri qaytarıla bilər.
+    const simdi = new Date();
+    hesabTransferleri.unshift({
+      menbeTip, hedefTip: 'krediXett', tutar, taksit: true,
+      tarix: simdi.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + simdi.toLocaleDateString('az-AZ')
+    });
+
+    veriKaydet();
+    modalKapat('taksitOdeModal');
+    hesablarGoster();
+    ekraniGuncelle();
+  }
+
+  function modalAc(id) { const el = document.getElementById(id); if (el) el.classList.add('active'); }
+  function modalKapat(id) { const el = document.getElementById(id); if (el) el.classList.remove('active'); }
+
+  // ---- Alt naviqasiya (bottom tab bar) ----
+  function menuAc() {} // köhnə hamburger menyusundan qalan çağırışlar üçün zərərsiz boş funksiya
+  function menuKapat() {} // eyni səbəbdən boş funksiya
+
+  function navAktifGuncelle(secilen) {
+    const el1 = document.getElementById('navDashboard'); if (el1) el1.classList.toggle('active', secilen === 'dashboard');
+    const el2 = document.getElementById('navAylikHesabat'); if (el2) el2.classList.toggle('active', secilen === 'aylikHesabat');
+    const el3 = document.getElementById('navAna'); if (el3) el3.classList.toggle('active', secilen === 'ana');
+    const el4 = document.getElementById('navHesablar'); if (el4) el4.classList.toggle('active', secilen === 'hesablar');
+    const el5 = document.getElementById('navAyarlar'); if (el5) el5.classList.toggle('active', secilen === 'ayarlar');
+  }
+
+  // Alt paneldəki 5 ikondan biri seçiləndə çağırılır: əvvəlcə açıq olan bütün
+  // tam-ekran səhifələri bağlayır, sonra seçilən sekməni açır (ya da 'ana' üçün
+  // heç nə açmır — çünki o, #app konteynerinin özüdür).
+  function sekmeSec(sekme) {
+    // Bütün tam-ekran səhifələri (əsas sekmələr VƏ Ayarlar altındakı alt-səhifələr —
+    // Kateqoriyalar, Son əməliyyatlar) bağlayırıq ki, alt paneldən hansı sekməyə
+    // keçid edilsə, əvvəlki (alt-)səhifə arxada açıq qalıb üst-üstə düşməsin.
+    document.querySelectorAll('.page-screen').forEach((el) => el.classList.remove('active'));
+    navAktifGuncelle(sekme);
+    if (sekme === 'dashboard') dashboardPaneliniAc();
+    else if (sekme === 'aylikHesabat') aylikHesabatPaneliniAc();
+    else if (sekme === 'hesablar') hesablarPaneliniAc();
+    else if (sekme === 'ayarlar') ayarlarPaneliniAc();
+    else ekraniGuncelle();
+  }
+
+  function dashboardPaneliniAc() {
+    dashboardDairaviDiaqramlariCiz();
+    modalAc('dashboardModal');
+  }
+
+  // ---- Dashboard: 3 dairəvi (doughnut) diaqram — Chart.js ilə ----
+  function dairaviCiz(canvasId, mevcudChart, parcalar, legendId, vahid, emptyMesaj) {
+    if (mevcudChart) mevcudChart.destroy();
+    const canvasEl = document.getElementById(canvasId);
+    const legendEl = document.getElementById(legendId);
+    if (!canvasEl || !legendEl) return null;
+    const dolu = parcalar.filter(p => p.tutar > 0);
+    const pulVahididirmi = (vahid || '').indexOf('AZN') !== -1;
+    const deyerYaz = (v) => pulVahididirmi ? v.toFixed(2) : Math.round(v).toString();
+    legendEl.innerHTML = '';
+    if (dolu.length === 0) {
+      legendEl.innerHTML = `<div class="pie-empty">${escapeHtml(emptyMesaj || 'Məlumat yoxdur.')}</div>`;
+      return new Chart(canvasEl.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['Boş'], datasets: [{ data: [1], backgroundColor: [cssVar('--line') || '#e3e7ee'], borderWidth: 0 }] },
+        options: { cutout: '68%', animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+      });
+    }
+    dolu.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'pie-legend-row';
+      row.innerHTML = `<span class="lbl"><span class="dot" style="background:${escapeHtml(p.renk)}"></span>${escapeHtml(p.ad)}</span><span class="amt">${deyerYaz(p.tutar)}${escapeHtml(vahid)}</span>`;
+      legendEl.appendChild(row);
+    });
+    return new Chart(canvasEl.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: dolu.map(p => p.ad),
+        datasets: [{ data: dolu.map(p => p.tutar), backgroundColor: dolu.map(p => p.renk), borderWidth: 2, borderColor: cssVar('--panel') || '#fff' }]
+      },
+      options: {
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${ctx.label}: ${deyerYaz(ctx.parsed)}${vahid}`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function dashboardDairaviDiaqramlariCiz() {
+    if (typeof Chart === 'undefined') {
+      // Chart.js CDN yüklənməyibsə (internet yoxdursa) istifadəçiyə xəbər ver.
+      ['dashUmumiBorcLegend', 'dashKrediKartLegend', 'dashKrediBorcuLegend'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div class="pie-empty">📶 Qrafik üçün internet lazımdır.</div>';
+      });
+      ['dashUmumiBorcMerkez', 'dashKrediKartMerkez', 'dashKrediBorcuMerkez'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = '—';
+      });
+      return;
+    }
+
+    // 1. Ümumi borc: Kredit kartı borcu + Deposit borcu + Kredit borcu (xətt)
+    const kkBorcu = (typeof anaHesap === 'number' && anaHesap < 0) ? Math.abs(anaHesap) : 0;
+    const depozitBorcu = (hesabEklenib.depozit && typeof depozitBakiye === 'number' && depozitBakiye < 0) ? Math.abs(depozitBakiye) : 0;
+    const krediBorcuQalan = krediBorcuQalanHesabla();
+    const umumiCemi = kkBorcu + depozitBorcu + krediBorcuQalan;
+    document.getElementById('dashUmumiBorcMerkez').innerText = umumiCemi > 0 ? umumiCemi.toFixed(2) : '0.00';
+    dashUmumiBorcChart = dairaviCiz('dashUmumiBorcCanvas', dashUmumiBorcChart, [
+      { ad: 'Kredit kartı borcu', tutar: kkBorcu, renk: '#c99a3a' },
+      { ad: 'Deposit borcu', tutar: depozitBorcu, renk: '#b5533f' },
+      { ad: 'Kredit borcu (xətt)', tutar: krediBorcuQalan, renk: '#4a6fa5' }
+    ], 'dashUmumiBorcLegend', ' AZN', 'Borc yoxdur.');
+
+    // 2. Kredit kartı: istifadə olunan / istifadə edilə bilən qalıq
+    const limitDeger = (typeof kreditLimit === 'number') ? kreditLimit : 0;
+    const hesapDeger = typeof anaHesap === 'number' ? anaHesap : 0;
+    const istifade = hesapDeger < 0 ? Math.abs(hesapDeger) : 0;
+    const qalanLimit = Math.max(0, limitDeger + hesapDeger);
+    document.getElementById('dashKrediKartMerkez').innerText = (typeof kreditLimit === 'number') ? limitDeger.toFixed(2) : '—';
+    dashKrediKartChart = dairaviCiz('dashKrediKartCanvas', dashKrediKartChart, (typeof kreditLimit === 'number') ? [
+      { ad: 'İstifadə olunan', tutar: istifade, renk: '#c0435a' },
+      { ad: 'İstifadə edilə bilən', tutar: qalanLimit, renk: '#1f2a44' }
+    ] : [], 'dashKrediKartLegend', ' AZN', 'Kredit kartı hələ əlavə edilməyib.');
+
+    // 3. Kredit borcu (taksitli kredit xətt): ödənilmiş / qalan taksit sayı
+    document.getElementById('dashKrediBorcuMerkez').innerText = krediBorcu ? (krediBorcu.odenmisTaksitSayi + '/' + krediBorcu.taksitSayi) : '—';
+    dashKrediBorcuChart = dairaviCiz('dashKrediBorcuCanvas', dashKrediBorcuChart, krediBorcu ? [
+      { ad: 'Ödənilib', tutar: krediBorcu.odenmisTaksitSayi, renk: '#2b7a56' },
+      { ad: 'Qalıb', tutar: krediBorcu.taksitSayi - krediBorcu.odenmisTaksitSayi, renk: '#c7cfe0' }
+    ] : [], 'dashKrediBorcuLegend', ' taksit', 'Kredit xətt hələ əlavə edilməyib.');
+  }
+
+  // ==== Ayarlar: Günlük limit + Kateqoriyalar + Son əməliyyatlar + İşıq rejimi ====
+  // Keşi (cache) və service worker-i təmizləyib son versiyanı yenidən yükləyir —
+  // istifadəçi hər dəfə ana ekrandan silib-yenidən əlavə etməsin deyə.
+  async function tetbiqiYenile() {
+    try {
+      if ('caches' in window) {
+        const adlar = await caches.keys();
+        await Promise.all(adlar.map((ad) => caches.delete(ad)));
+      }
+      if ('serviceWorker' in navigator) {
+        const qeydler = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(qeydler.map((r) => r.unregister()));
+      }
+    } catch (e) {
+      console.warn('Keş təmizləmə xətası:', e);
+    }
+    // location.reload(true) müasir brauzerlərdə artıq HTTP keşini bypass etmir.
+    // Bunun əvəzinə unikal sorğu parametrli TAM YENİ URL-ə keçirik — brauzer
+    // bunu fərqli resurs sayıb məcburi şəkildə şəbəkədən yükləyir.
+    const bazaUrl = location.origin + location.pathname;
+    location.replace(bazaUrl + '?yenile=' + Date.now());
+  }
+
+  function ayarlarPaneliniAc() {
+    document.getElementById('gunlukLimitInput').value = (typeof gunlukLimit === 'number') ? gunlukLimit : '';
+    document.getElementById('gunlukLimitError').innerText = '';
+    kilidAyarGoster();
+    driveMenyuGuncelle();
+    firebasePanelGuncelle();
+    const versEl = document.getElementById('tetbiqVersiyaGoster');
+    if (versEl) versEl.innerText = APP_VERSION;
+    modalAc('ayarlarModal');
+  }
+  function ayarlarPaneliniKapat() {
+    modalKapat('ayarlarModal');
+    navAktifGuncelle('ana');
+    ekraniGuncelle();
+  }
+  function gunlukLimitYadSaxla() {
+    const val = document.getElementById('gunlukLimitInput').value;
+    const limit = parseFloat((val || '').replace(',', '.'));
+    if (isNaN(limit) || limit < 0) {
+      document.getElementById('gunlukLimitError').innerText = 'Düzgün bir məbləğ yaz.';
+      return;
+    }
+    gunlukLimit = limit;
+    veriKaydet();
+    ekraniGuncelle();
+    document.getElementById('gunlukLimitError').innerText = '';
+  }
+  function ayarlarKateqoriyalarAc() {
+    modalKapat('ayarlarModal');
+    yonetimPaneliniAc();
+  }
+  function ayarlarSonEmeliyyatlarAc() {
+    modalKapat('ayarlarModal');
+    sonEmeliyyatlarPaneliniAc();
+  }
+  // "System" bölməsi: Google Drive + Firebase + Yedək faylı bir başlığın altında,
+  // açılıb-bağlanan (collapsible) qrup kimi.
+  function sistemBolmesiToggle() {
+    const kutu = document.getElementById('sistemBolmesi');
+    const ox = document.getElementById('sistemBaslikOx');
+    const acilir = kutu.style.display === 'none';
+    kutu.style.display = acilir ? 'block' : 'none';
+    ox.style.transform = acilir ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+
+  // ==== Aylıq xülasə: "Bu ay hara pul gedir?" ====
+  function aylikHesabatVerisi() {
+    const indi = new Date();
+    const buAy = indi.getMonth(), buIl = indi.getFullYear();
+    let kecenAy = buAy - 1, kecenIl = buIl;
+    if (kecenAy < 0) { kecenAy = 11; kecenIl -= 1; }
+    const buAyToplam = {}, kecenAyToplam = {};
+    let buAyCemi = 0;
+    giderler.forEach(g => {
+      if (g.aylikRef) return;
+      const t = new Date(g.tamTarix);
+      if (t.getFullYear() === buIl && t.getMonth() === buAy) {
+        buAyToplam[g.kategori] = (buAyToplam[g.kategori] || 0) + g.tutar;
+        buAyCemi += g.tutar;
+      } else if (t.getFullYear() === kecenIl && t.getMonth() === kecenAy) {
+        kecenAyToplam[g.kategori] = (kecenAyToplam[g.kategori] || 0) + g.tutar;
+      }
+    });
+    return { buAyToplam, kecenAyToplam, buAyCemi };
+  }
+
+  // Rəqəmi qısa yaz: 300 → "300", 312.5 → "312.5", 312.456 → "312.46"
+  function qisaRaqem(n) { return String(+Number(n).toFixed(2)); }
+
+  // Aylıq hesabatdakı dairəvi (doughnut) qrafik + ortasındakı yazı.
+  // cfg: { canvasId, bosMesajId, merkezId, dilimler:[{ad,ikon,renk,tutar}], qalan, merkezHtml, bosYazi, evvelki }
+  // "qalan" > 0 olarsa, ayrılmış məbləğdən qalan hissə açıq boz dilim kimi çəkilir.
+  function aylikDonutCiz(cfg) {
+    const canvas = document.getElementById(cfg.canvasId);
+    if (!canvas) return null;
+    const sarici = canvas.parentElement;
+    const bosMesaj = document.getElementById(cfg.bosMesajId);
+    const merkez = document.getElementById(cfg.merkezId);
+    if (cfg.evvelki) { cfg.evvelki.destroy(); }
+
+    const goster = (mesaj) => {
+      sarici.style.display = 'none';
+      if (bosMesaj) { bosMesaj.style.display = 'block'; bosMesaj.innerText = mesaj; }
+    };
+    if (typeof Chart === 'undefined') { goster('📶 Qrafik üçün internet lazımdır.'); return null; }
+
+    const dilimler = cfg.dilimler.filter(d => d.tutar > 0);
+    const qalan = cfg.qalan > 0 ? cfg.qalan : 0;
+    if (!dilimler.length && !qalan) { goster(cfg.bosYazi); return null; }
+
+    sarici.style.display = '';
+    if (bosMesaj) bosMesaj.style.display = 'none';
+    if (merkez) merkez.innerHTML = cfg.merkezHtml;
+
+    const labels = dilimler.map(d => d.ikon + ' ' + d.ad);
+    const data = dilimler.map(d => Number(d.tutar.toFixed(2)));
+    const renkler = dilimler.map(d => d.renk);
+    if (qalan) {
+      labels.push('Qalıq');
+      data.push(Number(qalan.toFixed(2)));
+      renkler.push(cssVar('--line') || '#e3e7ee');
+    }
+    return new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data, backgroundColor: renkler, borderColor: cssVar('--panel') || '#ffffff', borderWidth: 2 }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '64%',
+        plugins: {
+          legend: { display: false }, // rəng izahı aşağıdakı siyahıdadır
+          tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.parsed.toFixed(2)} AZN` } }
+        }
+      }
+    });
+  }
+
+  // Dairənin altındakı kateqoriya siyahısı (rəng zolağı ilə)
+  function aylikSiyahiDoldur(elId, siraliKat, cemi) {
+    const listEl = document.getElementById(elId);
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    const maxTutar = siraliKat.reduce((m, k) => Math.max(m, k.tutar), 0);
+    siraliKat.forEach(k => {
+      const barYuzde = maxTutar > 0 ? (k.tutar / maxTutar) * 100 : 0;
+      const cemYuzde = cemi > 0 ? (k.tutar / cemi) * 100 : 0;
+      const row = document.createElement('div');
+      row.className = 'hesabat-row';
+      row.innerHTML = `<div class="hesabat-row-top"><span>${escapeHtml(k.ikon)} ${escapeHtml(k.ad)}</span><span>${k.tutar.toFixed(2)} AZN · %${cemYuzde.toFixed(0)}</span></div>
+        <div class="hesabat-bar-bg"><div class="hesabat-bar-fill" style="width:${barYuzde}%; background:${escapeHtml(k.renk)};"></div></div>`;
+      listEl.appendChild(row);
+    });
+  }
+
+  // Bu ayın gün-gün xərc trendini xətt qrafik kimi göstərir.
+  function aylikTrendChartGoster() {
+    const canvas = document.getElementById('aylikTrendCanvas');
+    if (!canvas) return;
+    if (typeof Chart === 'undefined') return;
+    if (aylikTrendChart) { aylikTrendChart.destroy(); aylikTrendChart = null; }
+
+    const indi = new Date();
+    const buIl = indi.getFullYear(), buAy = indi.getMonth();
+    const buGunSayi = indi.getDate();
+    const gunlukToplamlar = new Array(buGunSayi).fill(0);
+    giderler.forEach(g => {
+      if (g.aylikRef) return;
+      if (kategoriAylikdirmi(g.kategori)) return; // günlük trend: aylıq sabit xərcləri (Azercell, bərbər...) qatmırıq
+      const t = new Date(g.tamTarix);
+      if (t.getFullYear() === buIl && t.getMonth() === buAy) {
+        const gunIndex = t.getDate() - 1;
+        if (gunIndex >= 0 && gunIndex < buGunSayi) gunlukToplamlar[gunIndex] += g.tutar;
+      }
+    });
+
+    const navyRengi = cssVar('--navy') || '#1f2a44';
+    const muted = cssVar('--muted') || '#6b7688';
+    const lineRengi = cssVar('--line') || '#e3e7ee';
+
+    aylikTrendChart = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: gunlukToplamlar.map((_, i) => String(i + 1)),
+        datasets: [{
+          label: 'Günlük xərc',
+          data: gunlukToplamlar.map(v => Number(v.toFixed(2))),
+          borderColor: navyRengi,
+          backgroundColor: navyRengi + '33',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y.toFixed(2)} AZN` } }
+        },
+        scales: {
+          x: { ticks: { color: muted, font: { size: 10 } }, grid: { color: lineRengi } },
+          y: { ticks: { color: muted, font: { size: 10 } }, grid: { color: lineRengi }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function aylikHesabatPaneliniAc() { aylikHesabatGoster(); modalAc('aylikHesabatModal'); }
+  function aylikHesabatPaneliniKapat() { modalKapat('aylikHesabatModal'); navAktifGuncelle('ana'); }
+
+  function aylikHesabatGoster() {
+    const { buAyToplam, kecenAyToplam, buAyCemi } = aylikHesabatVerisi();
+    document.getElementById('aylikHesabatCemi').innerText = buAyCemi.toFixed(2) + ' AZN';
+
+    // Kateqoriyaları günlük (tiksiz) və aylıq sabit (tikli) qruplara böl
+    const butunKat = kategoriler
+      .map(k => ({ ad: k.ad, ikon: k.ikon, renk: k.renk, aylik: !!k.aylik, tutar: buAyToplam[k.ad] || 0 }))
+      .filter(k => k.tutar > 0)
+      .sort((a, b) => b.tutar - a.tutar);
+    const gunlukKat = butunKat.filter(k => !k.aylik);
+    const sabitKat = butunKat.filter(k => k.aylik);
+
+    // Yekunlar (silinmiş / adı dəyişmiş kateqoriyaların xərcləri də günlük sayılır)
+    let gunlukCemi = 0, sabitCemi = 0;
+    Object.keys(buAyToplam).forEach(ad => {
+      if (kategoriAylikdirmi(ad)) sabitCemi += buAyToplam[ad]; else gunlukCemi += buAyToplam[ad];
+    });
+    const digerTutar = Math.round((gunlukCemi - gunlukKat.reduce((acc, k) => acc + k.tutar, 0)) * 100) / 100;
+    if (digerTutar > 0) gunlukKat.push({ ad: 'Digər', ikon: '📦', renk: '#8d96a8', tutar: digerTutar });
+
+    const altEl = document.getElementById('aylikHesabatAlt');
+    if (altEl) altEl.innerText = 'Günlük: ' + gunlukCemi.toFixed(2) + ' AZN · Aylıq sabit: ' + sabitCemi.toFixed(2) + ' AZN';
+
+    // ---- 1-ci dairə: günlük xərclər (ay üzrə ayrılan məbləğə qarşı) ----
+    const indi = new Date();
+    const aydakiGunSayi = new Date(indi.getFullYear(), indi.getMonth() + 1, 0).getDate(); // 30 gün → 600, 31 gün → 620 (limit 20 olsa)
+    const limitVar = (typeof gunlukLimit === 'number' && gunlukLimit > 0);
+    const ayButcesi = limitVar ? gunlukLimit * aydakiGunSayi : 0;
+    let gunlukMerkez;
+    if (limitVar) {
+      const yuzde = ayButcesi > 0 ? (gunlukCemi / ayButcesi) * 100 : 0;
+      const asib = gunlukCemi > ayButcesi;
+      const yaz = qisaRaqem(gunlukCemi) + ' / ' + qisaRaqem(ayButcesi);
+      const yazOlcu = yaz.length <= 9 ? 20 : (yaz.length <= 12 ? 17 : 14);
+      gunlukMerkez = `<div class="t">Günlük xərclər · AZN</div><div class="b ${asib ? 'over' : ''}" style="font-size:${yazOlcu}px;">${escapeHtml(yaz)}</div><div class="s ${asib ? 'over' : ''}">%${yuzde.toFixed(0)} istifadə olunub</div>`;
+    } else {
+      gunlukMerkez = `<div class="t">Günlük xərclər · AZN</div><div class="b" style="font-size:20px;">${escapeHtml(qisaRaqem(gunlukCemi))}</div><div class="s">Limit təyin edilməyib</div>`;
+    }
+    aylikGunlukChart = aylikDonutCiz({
+      canvasId: 'aylikGunlukCanvas', bosMesajId: 'aylikGunlukBosMesaj', merkezId: 'aylikGunlukMerkez',
+      dilimler: gunlukKat, qalan: limitVar ? Math.max(0, ayButcesi - gunlukCemi) : 0,
+      merkezHtml: gunlukMerkez, bosYazi: 'Bu ay hələ günlük xərc yoxdur.', evvelki: aylikGunlukChart
+    });
+    const gunlukCaptionEl = document.getElementById('aylikGunlukCaption');
+    if (gunlukCaptionEl) {
+      gunlukCaptionEl.innerText = limitVar
+        ? aydakiGunSayi + ' gün × ' + qisaRaqem(gunlukLimit) + ' AZN = ' + qisaRaqem(ayButcesi) + ' AZN ay üzrə ayrılıb'
+        : 'Ayarlardan günlük limit təyin et — ay üzrə ayrılan məbləğ burada görünəcək.';
+    }
+    aylikSiyahiDoldur('aylikGunlukListesi', gunlukKat, gunlukCemi);
+
+    // ---- 2-ci dairə: aylıq sabit xərclər ----
+    const sabitMerkez = `<div class="t">Aylıq sabit · AZN</div><div class="b" style="font-size:20px;">${escapeHtml(qisaRaqem(sabitCemi))}</div><div class="s">${sabitKat.length} kateqoriya</div>`;
+    const hecBiriAylikDeyil = !kategoriler.some(k => k.aylik);
+    aylikSabitChart = aylikDonutCiz({
+      canvasId: 'aylikSabitCanvas', bosMesajId: 'aylikSabitBosMesaj', merkezId: 'aylikSabitMerkez',
+      dilimler: sabitKat, qalan: 0, merkezHtml: sabitMerkez,
+      bosYazi: hecBiriAylikDeyil
+        ? 'Heç bir kateqoriya aylıq sabit kimi işarələnməyib. Ayarlar → Kateqoriyalar bölməsində 📌 tikini aktiv et.'
+        : 'Bu ay aylıq sabit xərc yoxdur.',
+      evvelki: aylikSabitChart
+    });
+    aylikSiyahiDoldur('aylikSabitListesi', sabitKat, sabitCemi);
+
+    aylikTrendChartGoster();
+
+    const trendEl = document.getElementById('aylikHesabatTrend');
+    if (trendEl) {
+      trendEl.innerHTML = '';
+      if (Object.keys(kecenAyToplam).length === 0) {
+        trendEl.innerHTML = '<div class="breakdown-empty">Müqayisə üçün keçən ay üzrə məlumat yoxdur.</div>';
+      } else {
+        const hamiKatAdlari = new Set([...Object.keys(buAyToplam), ...Object.keys(kecenAyToplam)]);
+        const trendSiyahi = [];
+        hamiKatAdlari.forEach(ad => {
+          const kat = kategoriler.find(k => k.ad === ad);
+          const bu = buAyToplam[ad] || 0;
+          const kecen = kecenAyToplam[ad] || 0;
+          if (bu === 0 && kecen === 0) return;
+          let deyisim, yeni = false, bitib = false;
+          if (kecen === 0) { yeni = true; deyisim = 100; }
+          else if (bu === 0) { bitib = true; deyisim = -100; }
+          else { deyisim = ((bu - kecen) / kecen) * 100; }
+          trendSiyahi.push({ ad, ikon: kat ? kat.ikon : '💰', deyisim, yeni, bitib });
+        });
+        trendSiyahi.sort((a, b) => Math.abs(b.deyisim) - Math.abs(a.deyisim));
+        trendSiyahi.forEach(t => {
+          let etiket, sinif;
+          if (t.yeni) { etiket = 'Yeni'; sinif = 'trend-new'; }
+          else if (t.bitib) { etiket = 'Kəsildi'; sinif = 'trend-down'; }
+          else { etiket = (t.deyisim > 0 ? '↑ ' : '↓ ') + Math.abs(t.deyisim).toFixed(0) + '%'; sinif = t.deyisim > 0 ? 'trend-up' : 'trend-down'; }
+          const div = document.createElement('div');
+          div.className = 'trend-row';
+          div.innerHTML = `<span>${escapeHtml(t.ikon)} ${escapeHtml(t.ad)}</span><span class="${sinif}">${escapeHtml(etiket)}</span>`;
+          trendEl.appendChild(div);
+        });
+      }
+    }
+  }
+
+  // ==== Son əməliyyatlar (tam tarixçə) ====
+  function sonEmeliyyatlarPaneliniAc() { ekraniGuncelle(); modalAc('sonEmeliyyatlarModal'); }
+  function sonEmeliyyatlarPaneliniKapat() { modalKapat('sonEmeliyyatlarModal'); ayarlarPaneliniAc(); }
+
+  // ==== Hesablar: Cash / Kredi kartı / Debit bank + transfer ====
+  function hesabAdi(tip) {
+    if (tip === 'nagd') return 'Cash Hesab';
+    if (tip === 'debit') return 'Debit bank Hesabım';
+    if (tip === 'depozit') return 'Bank Deposit Hesabım';
+    if (tip === 'kredit') return 'Kredi kartı Hesabım';
+    if (tip === 'krediXett') return 'Kredit xətt';
+    return tip;
+  }
+  function hesabIkonu(tip) {
+    if (tip === 'nagd') return '💵';
+    if (tip === 'debit') return '🏦';
+    if (tip === 'depozit') return '🏛️';
+    if (tip === 'kredit') return '💳';
+    if (tip === 'krediXett') return '🧾';
+    return '💰';
+  }
+
+  // ---- "+" ilə hesab əlavə etmə: 5 seçim ----
+  const HESAB_SEC_SIYAHI = [
+    { tip: 'nagd', ikon: '💵', ad: 'Cash Hesab', izah: 'Yalnız məbləğ (yalnız +)' },
+    { tip: 'debit', ikon: '🏦', ad: 'Debit Card Hesab', izah: 'Yalnız məbləğ (yalnız +)' },
+    { tip: 'depozit', ikon: '🏛️', ad: 'Deposit Hesabım', izah: 'Yalnız məbləğ (+ və ya -)' },
+    { tip: 'kredit', ikon: '💳', ad: 'Kredit Kart Hesab', izah: 'Limit + istifadə edilə bilən qalıq (- və ya 0)' },
+    { tip: 'krediXett', ikon: '🧾', ad: 'Kredit xətt', izah: 'Ay sayı, başlanğıc tarixi, ödənilməli məbləğ (yalnız -)' }
+  ];
+
+  function hesabSecModalAc() {
+    const konteyner = document.getElementById('hesabSecListesi');
+    if (!konteyner) return;
+    konteyner.innerHTML = '';
+    HESAB_SEC_SIYAHI.forEach(h => {
+      const eklenib = (h.tip === 'kredit') ? (typeof kreditLimit === 'number')
+        : (h.tip === 'krediXett') ? !!krediBorcu
+        : !!hesabEklenib[h.tip];
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'hesab-sec-item';
+      btn.onclick = () => hesabSecEt(h.tip);
+      btn.innerHTML = `<span class="ic">${escapeHtml(h.ikon)}</span><span style="flex:1;">${escapeHtml(h.ad)}${eklenib ? ' ✓' : ''}<small>${eklenib ? 'Artıq əlavə edilib — düzəltmək üçün seç' : escapeHtml(h.izah)}</small></span>`;
+      konteyner.appendChild(btn);
+    });
+    modalAc('hesabSecModal');
+  }
+
+  function hesabSecEt(tip) {
+    modalKapat('hesabSecModal');
+    if (tip === 'nagd' || tip === 'debit' || tip === 'depozit') {
+      hesabDuzeltModalAc(tip);
+    } else if (tip === 'kredit') {
+      balanceModalAc();
+    } else if (tip === 'krediXett') {
+      krediBorcuDuzeltModalAc();
+    }
+  }
+
+  function hesablarPaneliniAc() {
+    hesablarGoster();
+    krediBorcuGoster();
+    modalAc('hesablarModal');
+  }
+  function hesablarPaneliniKapat() {
+    modalKapat('hesablarModal');
+    navAktifGuncelle('ana');
+    ekraniGuncelle();
+  }
+
+  function hesablarGoster() {
+    const konteyner = document.getElementById('hesablarKartlari');
+    if (!konteyner) return;
+    const limit = (typeof kreditLimit === 'number') ? kreditLimit : 0;
+    const borc = (typeof anaHesap === 'number') ? anaHesap : 0;
+    const muvcud = limit + borc; // istifadə edilə bilən limit
+
+    let html = '';
+    if (hesabEklenib.nagd) {
+      html += `
+      <div class="modal-item">
+        <div class="field-row between">
+          <div class="field-row"><span style="font-size:18px;">💵</span><b>Cash Hesab</b></div>
+          <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('nagd')" style="padding:5px 10px;">Düzəlt</button>
+        </div>
+        <div style="font-size:19px; font-weight:700; color:var(--navy);">${nagdBakiye.toFixed(2)} AZN</div>
+      </div>`;
+    }
+    if (hesabEklenib.debit) {
+      html += `
+      <div class="modal-item">
+        <div class="field-row between">
+          <div class="field-row"><span style="font-size:18px;">🏦</span><b>Debit bank Hesabım</b></div>
+          <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('debit')" style="padding:5px 10px;">Düzəlt</button>
+        </div>
+        <div style="font-size:19px; font-weight:700; color:var(--navy);">${debitBakiye.toFixed(2)} AZN</div>
+      </div>`;
+    }
+    if (hesabEklenib.depozit) {
+      html += `
+      <div class="modal-item">
+        <div class="field-row between">
+          <div class="field-row"><span style="font-size:18px;">🏛️</span><b>Bank Deposit Hesabım</b></div>
+          <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('depozit')" style="padding:5px 10px;">Düzəlt</button>
+        </div>
+        <div style="font-size:19px; font-weight:700; color:${depozitBakiye < 0 ? 'var(--danger)' : 'var(--navy)'};">${depozitBakiye.toFixed(2)} AZN</div>
+      </div>`;
+    }
+    if (typeof kreditLimit === 'number') {
+      html += `
+      <div class="modal-item">
+        <div class="field-row between">
+          <div class="field-row"><span style="font-size:18px;">💳</span><b>Kredi kartı Hesabım</b></div>
+          <button class="btn btn-ghost" onclick="hesablarPaneliniKapat(); balanceModalAc();" style="padding:5px 10px;">Düzəlt</button>
+        </div>
+        <div style="font-size:19px; font-weight:700; color:${borc < 0 ? 'var(--danger)' : 'var(--navy)'};">${borc.toFixed(2)} AZN</div>
+        <div style="font-size:12px; color:var(--muted);">Limit: ${limit.toFixed(2)} AZN · İstifadə edilə bilən: ${muvcud.toFixed(2)} AZN</div>
+      </div>`;
+    }
+    if (krediBorcu) {
+      const qalan = krediBorcuQalanHesabla();
+      const bitib = krediBorcu.odenmisTaksitSayi >= krediBorcu.taksitSayi;
+      let btnText = 'Bu ayın taksitini ödə';
+      let btnDisabled = false;
+      if (bitib) { btnText = '🎉 Kredit bağlanıb'; btnDisabled = true; }
+      const elaveText = (krediBorcu.elaveOdenis > 0) ? ` · əlavə ödəniş: -${krediBorcu.elaveOdenis.toFixed(2)} AZN` : '';
+      html += `
+      <div class="modal-item">
+        <div class="field-row between">
+          <div class="field-row"><span style="font-size:18px;">🧾</span><b>Kredit xətt</b></div>
+          <button class="btn btn-ghost" onclick="krediBorcuDuzeltModalAc()" style="padding:5px 10px;">Düzəlt</button>
+        </div>
+        <div style="font-size:19px; font-weight:700; color:${qalan > 0 ? 'var(--danger)' : 'var(--navy)'};">${qalan > 0 ? '-' : ''}${qalan.toFixed(2)} AZN</div>
+        <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">${krediBorcu.odenmisTaksitSayi}/${krediBorcu.taksitSayi} taksit ödənilib · Aylıq: ${krediBorcu.aylikMebleg.toFixed(2)} AZN · ${escapeHtml(tarixFormat(krediBorcu.baslangic))}–${escapeHtml(tarixFormat(krediBorcu.bitis))}${elaveText}</div>
+        <button class="btn btn-primary" ${btnDisabled ? 'disabled' : ''} onclick="krediBorcuOdeModalAc()" style="width:100%;">${escapeHtml(btnText)}</button>
+      </div>`;
+    }
+    if (!html) {
+      html = '<p class="empty-note" style="padding:8px 0;">Hələ heç bir hesab əlavə edilməyib. Yuxarıdakı ➕ düyməsindən başla.</p>';
+    }
+    konteyner.innerHTML = html;
+    hesabTransferTarixceGoster();
+  }
+
+  function hesabTransferTarixceGoster() {
+    const konteyner = document.getElementById('hesabTransferTarixce');
+    if (!konteyner) return;
+    if (hesabTransferleri.length === 0) {
+      konteyner.innerHTML = '<p class="empty-note" style="padding:8px 0;">Hələ transfer edilməyib.</p>';
+      return;
+    }
+    konteyner.innerHTML = '';
+    hesabTransferleri.forEach((t, index) => {
+      const row = document.createElement('div');
+      row.className = 'list-item';
+      row.innerHTML = `
+        <div>
+          <span class="cat">${escapeHtml(hesabIkonu(t.menbeTip))} ${escapeHtml(hesabAdi(t.menbeTip))} → ${escapeHtml(hesabIkonu(t.hedefTip))} ${escapeHtml(hesabAdi(t.hedefTip))}${t.taksit ? ' (taksit)' : ''}</span>
+          <span class="time">${escapeHtml(t.tarix)}</span>
+        </div>
+        <div class="right">
+          <span class="amt">${t.tutar.toFixed(2)} AZN</span>
+          <button onclick="transferSilOnayla(${index})">✕</button>
+        </div>
+      `;
+      konteyner.appendChild(row);
+    });
+  }
+
+  let hesabDuzeltTipi = null;
+  function hesabDuzeltModalAc(tip) {
+    hesabDuzeltTipi = tip;
+    document.getElementById('hesabDuzeltBaslik').innerText = hesabAdi(tip) + ' balansı';
+    document.getElementById('hesabDuzeltInput').value = hesabBakiyesiOxu(tip);
+    document.getElementById('hesabDuzeltError').innerText = '';
+    modalAc('hesabDuzeltModal');
+  }
+  function hesabDuzeltOnayla() {
+    const val = document.getElementById('hesabDuzeltInput').value;
+    const p = parseFloat((val || '').replace(',', '.'));
+    const errEl = document.getElementById('hesabDuzeltError');
+    if (isNaN(p)) {
+      errEl.innerText = 'Düzgün rəqəm yaz.';
+      return;
+    }
+    if ((hesabDuzeltTipi === 'nagd' || hesabDuzeltTipi === 'debit') && p < 0) {
+      errEl.innerText = hesabAdi(hesabDuzeltTipi) + ' üçün məbləğ yalnız müsbət (+) ola bilər.';
+      return;
+    }
+    if (hesabDuzeltTipi === 'nagd') { nagdBakiye = p; hesabEklenib.nagd = true; }
+    else if (hesabDuzeltTipi === 'debit') { debitBakiye = p; hesabEklenib.debit = true; }
+    else if (hesabDuzeltTipi === 'depozit') { depozitBakiye = p; hesabEklenib.depozit = true; }
+    veriKaydet();
+    modalKapat('hesabDuzeltModal');
+    hesablarGoster();
+  }
+
+  function hesabBakiyesiOxu(tip) {
+    if (tip === 'nagd') return nagdBakiye;
+    if (tip === 'debit') return debitBakiye;
+    if (tip === 'depozit') return depozitBakiye;
+    if (tip === 'kredit') return (typeof anaHesap === 'number') ? anaHesap : 0;
+    return 0;
+  }
+  function hesabBakiyesiDeyis(tip, deltaMenbe) {
+    // deltaMenbe: mənfi işarəli dəyişiklik menbə üçün, müsbət hədəf üçün eyni funksiyada tutar veriləcək
+    if (tip === 'nagd') nagdBakiye += deltaMenbe;
+    else if (tip === 'debit') debitBakiye += deltaMenbe;
+    else if (tip === 'depozit') depozitBakiye += deltaMenbe;
+    else if (tip === 'kredit') anaHesap = ((typeof anaHesap === 'number') ? anaHesap : 0) + deltaMenbe;
+  }
+
+  // Yalnız "+" ilə əlavə edilmiş hesablar seçilə bilər (əks halda pul görünməyən hesaba düşürdü).
+  function transferHesabVarMi(tip) {
+    if (tip === 'kredit') return typeof kreditLimit === 'number';
+    if (tip === 'krediXett') return !!krediBorcu;
+    return !!hesabEklenib[tip];
+  }
+
+  function transferModalAc() {
+    const menbeler = ['nagd', 'debit', 'depozit', 'kredit'].filter(transferHesabVarMi);
+    const hedefler = ['nagd', 'debit', 'depozit', 'kredit', 'krediXett'].filter(transferHesabVarMi);
+    const doldur = (id, siyahi) => {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '';
+      siyahi.forEach((tip) => {
+        const opt = document.createElement('option');
+        opt.value = tip;
+        opt.textContent = hesabIkonu(tip) + ' ' + hesabAdi(tip) + (tip === 'krediXett' ? ' (ödəniş)' : '');
+        sel.appendChild(opt);
+      });
+    };
+    doldur('transferMenbe', menbeler);
+    doldur('transferHedef', hedefler);
+    const menbeSel = document.getElementById('transferMenbe');
+    const hedefSel = document.getElementById('transferHedef');
+    if (menbeler.indexOf('nagd') !== -1) menbeSel.value = 'nagd';
+    const ferqli = hedefler.filter((t) => t !== menbeSel.value);
+    if (ferqli.length) hedefSel.value = (ferqli.indexOf('kredit') !== -1) ? 'kredit' : ferqli[0];
+    document.getElementById('transferMebleg').value = '';
+    document.getElementById('transferError').innerText = (menbeler.length && ferqli.length)
+      ? '' : 'Transfer üçün ən azı iki hesab əlavə et (Hesablarım → ➕).';
+    modalAc('transferModal');
+  }
+
+  function transferOnayla() {
+    const menbeTip = document.getElementById('transferMenbe').value;
+    const hedefTip = document.getElementById('transferHedef').value;
+    const errEl = document.getElementById('transferError');
+    const tutarVal = document.getElementById('transferMebleg').value;
+    const tutar = parseFloat((tutarVal || '').replace(',', '.'));
+
+    if (!menbeTip || !hedefTip || !transferHesabVarMi(menbeTip) || !transferHesabVarMi(hedefTip)) {
+      errEl.innerText = 'Seçilən hesab hələ əlavə edilməyib.';
+      return;
+    }
+    if (menbeTip === hedefTip) {
+      errEl.innerText = 'Mənbə və hədəf hesab eyni ola bilməz.';
+      return;
+    }
+    if (isNaN(tutar) || tutar <= 0) {
+      errEl.innerText = 'Düzgün məbləğ yaz.';
+      return;
+    }
+    if (hedefTip === 'krediXett' && !krediBorcu) {
+      errEl.innerText = 'Əvvəlcə "Kredit xətt" hesabını ➕ ilə əlavə et.';
+      return;
+    }
+    if (menbeTip !== 'kredit') {
+      const mevcud = hesabBakiyesiOxu(menbeTip);
+      if (tutar > mevcud) {
+        errEl.innerText = hesabAdi(menbeTip) + ' hesabında kifayət qədər balans yoxdur.';
+        return;
+      }
+    } else {
+      const limit = (typeof kreditLimit === 'number') ? kreditLimit : 0;
+      const borc = (typeof anaHesap === 'number') ? anaHesap : 0;
+      const muvcudLimit = limit + borc; // kredit kartında istifadə edilə bilən limit
+      if (tutar > muvcudLimit) {
+        errEl.innerText = 'Kredi kartında kifayət qədər istifadə edilə bilən limit yoxdur.';
+        return;
+      }
+    }
+
+    hesabBakiyesiDeyis(menbeTip, -tutar);
+    if (hedefTip === 'krediXett') {
+      // Kredit xəttinə birbaşa ödəniş: mənbədən məbləğ çıxılır, xəttin qalıq borcundan
+      // eyni məbləğ düşülür (əlavə ödəniş kimi izlənilir — taksit sayı dəyişmir, qalıq stabil görünür).
+      krediBorcu.elaveOdenis = (krediBorcu.elaveOdenis || 0) + tutar;
+    } else {
+      hesabBakiyesiDeyis(hedefTip, tutar);
+    }
+
+    const simdi = new Date();
+    hesabTransferleri.unshift({
+      menbeTip, hedefTip, tutar,
+      tarix: simdi.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + simdi.toLocaleDateString('az-AZ')
+    });
+
+    veriKaydet();
+    modalKapat('transferModal');
+    hesablarGoster();
+    krediBorcuGoster();
+    ekraniGuncelle();
+  }
+
+  function transferSilOnayla(index) {
+    const t = hesabTransferleri[index];
+    if (!t) return;
+    confirmAc('Transferi ləğv et', hesabAdi(t.menbeTip) + ' → ' + hesabAdi(t.hedefTip) + ' (' + t.tutar.toFixed(2) + ' AZN) geri qaytarılsın?', () => {
+      hesabBakiyesiDeyis(t.menbeTip, t.tutar);
+      if (t.taksit) {
+        // Taksit ödənişi geri qaytarılır: ödənilmiş taksit sayı 1 azalır
+        if (krediBorcu && krediBorcu.odenmisTaksitSayi > 0) krediBorcu.odenmisTaksitSayi -= 1;
+      } else if (t.hedefTip === 'krediXett') {
+        if (krediBorcu) krediBorcu.elaveOdenis = Math.max(0, (krediBorcu.elaveOdenis || 0) - t.tutar);
+      } else {
+        hesabBakiyesiDeyis(t.hedefTip, -t.tutar);
+      }
+      hesabTransferleri.splice(index, 1);
+      veriKaydet();
+      hesablarGoster();
+      krediBorcuGoster();
+      ekraniGuncelle();
+    });
+  }
+
+  // veriYukle() özü firebaseBaslat()-ı çağırıb məlumatı Firebase-dən gətirir —
+  // burada ikinci dəfə çağırmırıq (Firebase App-i iki dəfə başlatmaq xəta verər).
+  veriYukle();
+  kilidYoxla();
+
+  // ==== PWA: Service Worker qeydiyyatı ====
+  // Yalnız http(s):// üzərində işləyir; file:// ilə açsan səssizcə keçilir.
+  if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW qeydiyyatı alınmadı:', e));
+    });
+  }
+
+  // "Yenilə" düyməsindən sonra URL-də qalan ?yenile=... parametrini təmizlə.
+  // Yoxsa PWA scope xaricində sayılıb normal browser tab-da açıla bilər.
+  window.addEventListener('load', () => {
+    if (location.search && location.search.indexOf('yenile=') !== -1) {
+      history.replaceState({}, '', location.pathname);
+    }
+  });
+</script>
+</body>
+</html>
