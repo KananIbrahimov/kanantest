@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-maskable-192.png">
-<meta name="theme-color" content="#1f2a44">
+<meta name="theme-color" content="#0b0809">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Xərclər">
@@ -31,57 +31,75 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
+  /* ==== Tema: Black & Merlot ====
+     Əsas (defolt) rejim = qara + merlot ("dark").  İşıqlı rejim = ivory fon üzərində merlot.
+     --brand      : dolğu rəngi (kartlar, düymələr, aktiv tab)
+     --brand-ink  : mətn / ikon kimi istifadə olunan merlot (fonla kontrastlı)
+     --accent-*   : vurğu (proqres zolaqları, balans kartları) */
   :root{
-    --bg: #eef1f6;
+    --bg: #f6f0f1;
     --panel: #ffffff;
-    --panel-alt: #f7f8fb;
-    --ink: #1c2333;
-    --muted: #6b7688;
-    --line: #e3e7ee;
-    --navy: #1f2a44;
-    --navy-soft: #2c3a5c;
-    --gold: #c99a3a;
-    --gold-soft: #f4e6c6;
-    --gold-line: #e8d29c;
-    --gold-ink: #8a6a22;
-    --gold-ink-dark: #4a3a10;
-    --danger: #c0435a;
-    --danger-bg: #fceef0;
-    --danger-bg-soft: #fdf2f4;
+    --panel-alt: #faf5f6;
+    --ink: #1a1214;
+    --muted: #7a6a6e;
+    --faint: #b9a8ac;
+    --line: #eadfe1;
+    --brand: #6d1f33;
+    --brand-deep: #4a1424;
+    --brand-soft: #8a2b44;
+    --brand-ink: #6d1f33;
+    --accent: #b0405c;
+    --accent-soft: #f7e9ed;
+    --accent-line: #e8c7d0;
+    --accent-ink: #8a2b44;
+    --accent-ink-dark: #4a1424;
+    --accent-track: rgba(138,43,68,0.16);
+    --glow: rgba(214,92,124,0.30);
+    --on-brand-1: #ecd0d7;
+    --on-brand-2: #d9aab7;
+    --on-brand-3: #f7e6ea;
+    --danger: #d63a3a;
+    --danger-bg: #fdecec;
+    --danger-bg-soft: #fef3f3;
     --success-bg: #e3f3ec;
     --success-ink: #2b7a56;
-    --input-border: #cdd3de;
+    --input-border: #d9c9cd;
     --swatch-border: #ffffff;
-    --overlay: rgba(20,25,40,0.45);
-    --shadow: rgba(0,0,0,0.12);
+    --overlay: rgba(20,8,12,0.5);
+    --shadow: rgba(40,10,20,0.14);
     --radius-lg: 18px;
     --radius-md: 12px;
     --radius-sm: 8px;
     color-scheme: light;
   }
   [data-theme="dark"] {
-    --bg: #12151f;
-    --panel: #1b2030;
-    --panel-alt: #232a3d;
-    --ink: #e7eaf3;
-    --muted: #929cb5;
-    --line: #2c3448;
-    --navy: #2c3a5c;
-    --navy-soft: #3d4d76;
-    --gold: #d9ac4c;
-    --gold-soft: #3a3320;
-    --gold-line: #574a25;
-    --gold-ink: #e0b95e;
-    --gold-ink-dark: #f0d190;
-    --danger: #e2687e;
-    --danger-bg: #3a212a;
-    --danger-bg-soft: #2c1c22;
-    --success-bg: #1c332a;
+    --bg: #0b0809;
+    --panel: #150f11;
+    --panel-alt: #1d1517;
+    --ink: #f2e9eb;
+    --muted: #a8969b;
+    --faint: #7a666b;
+    --line: #2b2023;
+    --brand: #7d2a3d;
+    --brand-deep: #4d1422;
+    --brand-soft: #9c3a52;
+    --brand-ink: #e39aac;
+    --accent: #c4566f;
+    --accent-soft: #261016;
+    --accent-line: #4b2230;
+    --accent-ink: #e39aac;
+    --accent-ink-dark: #f8d7de;
+    --accent-track: rgba(227,154,172,0.20);
+    --glow: rgba(196,86,111,0.35);
+    --danger: #ff6b5e;
+    --danger-bg: #3a1614;
+    --danger-bg-soft: #2a1210;
+    --success-bg: #14281e;
     --success-ink: #5cc99a;
-    --input-border: #3a4258;
-    --swatch-border: #1b2030;
-    --overlay: rgba(0,0,0,0.6);
-    --shadow: rgba(0,0,0,0.4);
+    --input-border: #3b2b2f;
+    --swatch-border: #150f11;
+    --overlay: rgba(0,0,0,0.72);
+    --shadow: rgba(0,0,0,0.6);
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
@@ -109,11 +127,11 @@
     font-family: Georgia, "Times New Roman", serif;
   }
   .gear-btn {
-    background: var(--panel); border: 1px solid var(--line); color: var(--navy-soft);
+    background: var(--panel); border: 1px solid var(--line); color: var(--brand-ink);
     padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
     cursor: pointer; display: flex; align-items: center; gap: 5px;
   }
-  .gear-btn:hover { border-color: var(--navy-soft); }
+  .gear-btn:hover { border-color: var(--brand-soft); }
 
   /* ==== Alt naviqasiya paneli (bottom tab bar) ==== */
   .bottom-nav {
@@ -133,19 +151,18 @@
   }
   .nav-item:active { background: var(--panel-alt); }
   .nav-item .nav-icon { font-size: 20px; line-height: 1; transition: transform .15s; }
-  .nav-item.active { color: var(--navy); }
+  .nav-item.active { color: var(--brand-ink); }
   .nav-item.active .nav-icon { transform: translateY(-1px); }
-  [data-theme="dark"] .nav-item.active { color: var(--gold); }
 
   .menu-balance-card {
-    background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: var(--radius-lg);
+    background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius-lg);
     padding: 16px 18px; margin: 0 0 16px;
   }
-  .menu-balance-card .k { font-size: 12px; color: var(--gold-ink); font-weight: 600; }
-  .menu-balance-card .v { font-size: 26px; font-weight: 700; color: var(--gold-ink-dark); margin-top: 3px; }
+  .menu-balance-card .k { font-size: 12px; color: var(--accent-ink); font-weight: 600; }
+  .menu-balance-card .v { font-size: 26px; font-weight: 700; color: var(--accent-ink-dark); margin-top: 3px; }
   .menu-balance-card .v.low { color: var(--danger); }
-  .menu-balance-card .v2 { font-size: 12.5px; font-weight: 600; color: var(--gold-ink); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gold-line); }
-  .menu-balance-card .v2 b { color: var(--gold-ink-dark); font-weight: 700; }
+  .menu-balance-card .v2 { font-size: 12.5px; font-weight: 600; color: var(--accent-ink); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--accent-line); }
+  .menu-balance-card .v2 b { color: var(--accent-ink-dark); font-weight: 700; }
 
   .tabs {
     display: flex; background: var(--panel); border: 1px solid var(--line);
@@ -156,38 +173,38 @@
     cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted);
     transition: background .15s, color .15s;
   }
-  .tab-btn.active { background: var(--navy); color: #fff; }
+  .tab-btn.active { background: var(--brand); color: #fff; }
 
   .summary-card {
-    background: var(--navy); color: #fff; border-radius: var(--radius-lg);
+    background: linear-gradient(140deg, var(--brand) 0%, var(--brand-deep) 100%); color: #fff; border-radius: var(--radius-lg);
     padding: 20px 20px 18px; margin-bottom: 14px; position: relative; overflow: hidden;
   }
   .summary-card::after {
     content: ""; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px;
-    border-radius: 50%; background: radial-gradient(circle, rgba(201,154,58,0.25), transparent 70%);
+    border-radius: 50%; background: radial-gradient(circle, var(--glow), transparent 70%);
   }
-  .summary-label { font-size: 12.5px; color: #c7cfe0; font-weight: 500; }
+  .summary-label { font-size: 12.5px; color: var(--on-brand-1); font-weight: 500; }
   .summary-amount { font-size: 32px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
-  .summary-sub { font-size: 12px; color: #9aa6c2; margin-top: 6px; }
+  .summary-sub { font-size: 12px; color: var(--on-brand-2); margin-top: 6px; }
 
   .balance-card {
-    background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: var(--radius-lg);
+    background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius-lg);
     padding: 16px 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
     gap: 10px;
   }
   .balance-card .info { min-width: 0; }
-  .balance-card .k { font-size: 12px; color: var(--gold-ink); font-weight: 600; }
-  .balance-card .v { font-size: 24px; font-weight: 700; color: var(--gold-ink-dark); margin-top: 2px; }
+  .balance-card .k { font-size: 12px; color: var(--accent-ink); font-weight: 600; }
+  .balance-card .v { font-size: 24px; font-weight: 700; color: var(--accent-ink-dark); margin-top: 2px; }
   .balance-card .v.low { color: var(--danger); }
   .balance-card .edit-btn {
-    background: var(--panel); border: 1px solid var(--gold-line); color: var(--gold-ink); font-weight: 600; font-size: 12px;
+    background: var(--panel); border: 1px solid var(--accent-line); color: var(--accent-ink); font-weight: 600; font-size: 12px;
     padding: 7px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap;
   }
-  .balance-card .edit-btn:hover { background: var(--gold-soft); }
+  .balance-card .edit-btn:hover { background: var(--accent-soft); }
   .balance-bar-container {
-    width: 100%; height: 7px; background: rgba(138,106,34,0.18); border-radius: 999px; overflow: hidden; margin-top: 10px;
+    width: 100%; height: 7px; background: var(--accent-track); border-radius: 999px; overflow: hidden; margin-top: 10px;
   }
-  .balance-bar-fill { height: 100%; background: var(--gold-ink); }
+  .balance-bar-fill { height: 100%; background: var(--accent-ink); }
   .balance-card.stacked { flex-direction: column; align-items: stretch; }
   .balance-card.stacked .top-row { display: flex; justify-content: space-between; align-items: center; }
 
@@ -199,13 +216,13 @@
   .daily-limit-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
   .daily-limit-head .lbl { font-size: 12.5px; font-weight: 600; color: var(--muted); }
   .daily-limit-head .lbl.over { color: var(--danger); }
-  .daily-limit-head .pct { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .daily-limit-head .pct { font-size: 13px; font-weight: 700; color: var(--brand-ink); }
   .daily-limit-head .pct.over { color: var(--danger); }
   .daily-limit-bar-bg { width: 100%; height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
-  .daily-limit-bar-fill { height: 100%; background: var(--navy); border-radius: 999px; transition: width .2s, background .2s; }
+  .daily-limit-bar-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width .2s, background .2s; }
   .daily-limit-bar-fill.over { background: var(--danger); }
   .daily-limit-foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
-  .daily-limit-foot .qalan { font-weight: 700; color: var(--navy); }
+  .daily-limit-foot .qalan { font-weight: 700; color: var(--brand-ink); }
   .daily-limit-foot .qalan.over { color: var(--danger); }
 
   .progress-bar-container {
@@ -215,10 +232,10 @@
   .breakdown { display: flex; flex-direction: column; gap: 6px; }
   .breakdown-row {
     display: flex; justify-content: space-between; align-items: center;
-    font-size: 12.5px; color: #dfe4f0;
+    font-size: 12.5px; color: var(--on-brand-3);
   }
   .breakdown-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-  .breakdown-empty { font-size: 12.5px; color: #9aa6c2; text-align: center; padding: 6px 0; }
+  .breakdown-empty { font-size: 12.5px; color: var(--on-brand-2); text-align: center; padding: 6px 0; }
 
   .insight-strip {
     display: flex; gap: 10px; margin-bottom: 18px;
@@ -228,7 +245,7 @@
     padding: 10px 12px;
   }
   .insight-box .k { font-size: 11px; color: var(--muted); font-weight: 500; }
-  .insight-box .v { font-size: 15px; font-weight: 700; margin-top: 2px; color: var(--navy); }
+  .insight-box .v { font-size: 15px; font-weight: 700; margin-top: 2px; color: var(--brand-ink); }
 
   .grid-buttons {
     display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 14px;
@@ -250,14 +267,14 @@
   .grid-ayirici::before, .grid-ayirici::after { content: ''; flex: 1; height: 1px; background: var(--input-border); }
 
   .dashed-btn {
-    width: 100%; margin-bottom: 22px; border: 1.5px dashed #b9c1d1; background: transparent;
+    width: 100%; margin-bottom: 22px; border: 1.5px dashed var(--input-border); background: transparent;
     color: var(--muted); font-weight: 600; padding: 11px; border-radius: var(--radius-md);
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13.5px;
   }
-  .dashed-btn:hover { border-color: var(--navy-soft); color: var(--navy-soft); }
+  .dashed-btn:hover { border-color: var(--brand-soft); color: var(--brand-ink); }
 
   .history-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .history-head span { font-weight: 700; font-size: 14.5px; color: var(--navy); }
+  .history-head span { font-weight: 700; font-size: 14.5px; color: var(--brand-ink); }
   .history-head button { font-size: 12px; color: var(--danger); background: none; border: none; cursor: pointer; font-weight: 600; }
 
   .list-item {
@@ -267,10 +284,10 @@
   .list-item .cat { font-weight: 600; color: var(--ink); }
   .list-item .time { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
   .list-item .right { display: flex; align-items: center; gap: 10px; }
-  .list-item .amt { font-weight: 700; color: var(--navy); }
-  .list-item button { color: #b7bfcf; background: none; border: none; cursor: pointer; font-size: 14px; }
+  .list-item .amt { font-weight: 700; color: var(--brand-ink); }
+  .list-item button { color: var(--faint); background: none; border: none; cursor: pointer; font-size: 14px; }
   .list-item button:hover { color: var(--danger); }
-  .empty-note { color: #9aa3b5; text-align: center; font-size: 13.5px; padding: 18px 0; margin: 0; }
+  .empty-note { color: var(--muted); text-align: center; font-size: 13.5px; padding: 18px 0; margin: 0; }
 
   .modal { position: fixed; inset: 0; background: var(--overlay); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 70; }
   .modal.active { display: flex; }
@@ -293,7 +310,7 @@
   }
   .monthly-item .badge.paid { background: var(--success-bg); color: var(--success-ink); }
   .monthly-item .badge.unpaid { background: var(--danger-bg); color: var(--danger); cursor: pointer; }
-  .monthly-item .del-btn { background: none; border: none; cursor: pointer; font-size: 13px; color: #b7bfcf; }
+  .monthly-item .del-btn { background: none; border: none; cursor: pointer; font-size: 13px; color: var(--faint); }
   .monthly-item .del-btn:hover { color: var(--danger); }
 
   .ay-row {
@@ -304,7 +321,7 @@
     flex: 0 0 34px; width: 34px; border: 1px solid var(--line); background: var(--panel); text-align: center;
     font-size: 16px; padding: 5px 2px; border-radius: 6px; color: var(--ink);
   }
-  .ay-row .icon-input:focus { outline: none; border-color: var(--navy-soft); }
+  .ay-row .icon-input:focus { outline: none; border-color: var(--brand-soft); }
   .ay-row .ay-name-input {
     flex: 1 1 auto; min-width: 0; border: 1px solid transparent; background: transparent;
     font-weight: 600; font-size: 13.5px; padding: 6px 6px; border-radius: 6px; color: var(--ink);
@@ -312,16 +329,16 @@
   .ay-row .ay-name-input:hover, .ay-row .ay-name-input:focus { border-color: var(--line); background: var(--panel); outline: none; }
   .ay-row .ay-amt-input {
     flex: 0 0 72px; width: 72px; border: 1px solid var(--line); background: var(--panel);
-    font-size: 13px; font-weight: 600; padding: 6px 7px; border-radius: 6px; color: var(--navy); text-align: right;
+    font-size: 13px; font-weight: 600; padding: 6px 7px; border-radius: 6px; color: var(--brand-ink); text-align: right;
   }
-  .ay-row .ay-amt-input:focus { outline: none; border-color: var(--navy-soft); }
-  .ay-row .ay-checkbox { flex: 0 0 auto; width: 19px; height: 19px; accent-color: var(--navy); cursor: pointer; margin: 0; }
-  .ay-row .del-btn { flex: 0 0 auto; background: none; border: none; cursor: pointer; font-size: 13px; color: #b7bfcf; padding: 4px; }
+  .ay-row .ay-amt-input:focus { outline: none; border-color: var(--brand-soft); }
+  .ay-row .ay-checkbox { flex: 0 0 auto; width: 19px; height: 19px; accent-color: var(--brand); cursor: pointer; margin: 0; }
+  .ay-row .del-btn { flex: 0 0 auto; background: none; border: none; cursor: pointer; font-size: 13px; color: var(--faint); padding: 4px; }
   .ay-row .taksit-badge { flex: 0 0 auto; font-size: 10px; font-weight: 600; color: var(--muted); white-space: nowrap; }
   .ay-row .del-btn:hover { color: var(--danger); }
   .ay-total-row {
     display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 14.5px;
-    color: var(--navy); background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: var(--radius-md);
+    color: var(--brand-ink); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius-md);
     padding: 10px 14px; margin-bottom: 14px;
   }
   .modal-content { background: var(--panel); width: 100%; max-width: 400px; border-radius: 16px; padding: 22px; box-sizing: border-box; max-height: 88vh; display: flex; flex-direction: column; color: var(--ink); }
@@ -339,15 +356,15 @@
     padding: 8px 10px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; outline: none; width: 100%;
     font-family: inherit; background: var(--panel); color: var(--ink);
   }
-  input:focus { border-color: var(--navy-soft); }
+  input:focus { border-color: var(--brand-soft); }
   .swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid var(--swatch-border); box-shadow: 0 0 0 1px var(--line); }
-  .swatch.selected { box-shadow: 0 0 0 2px var(--navy); }
+  .swatch.selected { box-shadow: 0 0 0 2px var(--brand-ink); }
   /* 20 rəngli palitra: 10-10 iki sıra */
   .renk-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px 4px; justify-items: center; padding-top: 2px; }
   .renk-grid .swatch { width: 22px; height: 22px; }
   .btn { border: none; border-radius: 10px; padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
-  .btn-primary { background: var(--navy); color: #fff; }
-  .btn-primary:hover { background: var(--navy-soft); }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { background: var(--brand-soft); }
   .btn-ghost { background: transparent; color: var(--muted); }
   .btn-danger { background: var(--danger-bg); color: var(--danger); }
   .modal-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
@@ -375,10 +392,10 @@
 
   /* Güncel Borclar: combined debt summary chart */
   .debt-summary-card {
-    background: var(--navy); color: #fff; border-radius: var(--radius-lg);
+    background: linear-gradient(140deg, var(--brand) 0%, var(--brand-deep) 100%); color: #fff; border-radius: var(--radius-lg);
     padding: 18px 18px 16px; margin-bottom: 14px; position: relative; overflow: hidden;
   }
-  .debt-summary-label { font-size: 12.5px; color: #c7cfe0; font-weight: 500; }
+  .debt-summary-label { font-size: 12.5px; color: var(--on-brand-1); font-weight: 500; }
   .debt-summary-amount { font-size: 28px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
   .debt-chart-container {
     width: 100%; height: 12px; background: rgba(255,255,255,0.12); border-radius: 999px;
@@ -387,7 +404,7 @@
   .debt-breakdown { display: flex; flex-direction: column; gap: 6px; }
   .debt-breakdown-row {
     display: flex; justify-content: space-between; align-items: center;
-    font-size: 12.5px; color: #dfe4f0;
+    font-size: 12.5px; color: var(--on-brand-3);
   }
   .debt-breakdown-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
 
@@ -414,7 +431,7 @@
   .hesab-add-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 10px; }
   .hesab-add-head h3 { margin: 0; font-size: 14px; color: var(--ink); }
   .hesab-add-btn {
-    width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--navy);
+    width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--brand);
     color: #fff; font-size: 19px; line-height: 1; cursor: pointer; display: flex;
     align-items: center; justify-content: center; flex: none;
   }
@@ -430,9 +447,9 @@
   .taksit-chart { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; }
   .taksit-bar-col { flex: 1 1 0; min-width: 28px; display: flex; flex-direction: column; align-items: center; }
   .taksit-bar-amt { font-size: 9.5px; color: var(--muted); margin-bottom: 4px; font-weight: 600; white-space: nowrap; }
-  .taksit-bar-amt.paid { color: #2b7a56; }
+  .taksit-bar-amt.paid { color: var(--success-ink); }
   .taksit-bar { width: 100%; max-width: 26px; height: 46px; border-radius: 6px 6px 3px 3px; background: var(--line); transition: background .2s; }
-  .taksit-bar.filled { background: var(--navy); }
+  .taksit-bar.filled { background: var(--accent); }
   .taksit-bar-month { font-size: 9.5px; color: var(--muted); margin-top: 5px; white-space: nowrap; }
 
   .drive-box { background: var(--panel-alt); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 10px 12px; margin: 0 2px 8px; }
@@ -441,8 +458,8 @@
   .drive-box .drive-status.err { color: var(--danger); }
   .drive-box .drive-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
   .drive-box .drive-btns { display: flex; gap: 6px; margin-top: 8px; }
-  .drive-box .drive-btns button { flex: 1; font-size: 11.5px; padding: 7px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; color: var(--navy-soft); }
-  .drive-box .drive-btns button:hover { border-color: var(--navy-soft); }
+  .drive-box .drive-btns button { flex: 1; font-size: 11.5px; padding: 7px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; color: var(--brand-ink); }
+  .drive-box .drive-btns button:hover { border-color: var(--brand-soft); }
 
   /* Ayarlar səhifəsindəki bütün sətir ikonları eyni ölçü/boşluqla düzülsün deyə */
   .ayarlar-ikon { display: inline-flex; align-items: center; justify-content: center; width: 20px; font-size: 15px; margin-right: 8px; flex: 0 0 auto; }
@@ -458,7 +475,7 @@
     font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3;
   }
   button.ayarlar-kutu { cursor: pointer; }
-  button.ayarlar-kutu:hover { border-color: var(--navy-soft); }
+  button.ayarlar-kutu:hover { border-color: var(--brand-soft); }
   .error-text:empty { display: none; margin: 0; min-height: 0; }
 
   .theme-toggle-row {
@@ -471,17 +488,17 @@
   }
   .theme-switch::after {
     content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
-    background: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform .2s;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: transform .2s;
   }
-  [data-theme="dark"] .theme-switch { background: var(--navy); }
+  [data-theme="dark"] .theme-switch { background: var(--brand); }
   [data-theme="dark"] .theme-switch::after { transform: translateX(18px); }
 
   .hesabat-cemi-card {
-    background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: var(--radius-lg);
+    background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius-lg);
     padding: 14px 16px; margin-bottom: 16px;
   }
-  .hesabat-cemi-card .k { font-size: 12.5px; color: var(--gold-ink); font-weight: 600; }
-  .hesabat-cemi-card .v { font-size: 22px; font-weight: 700; color: var(--gold-ink-dark); margin-top: 2px; }
+  .hesabat-cemi-card .k { font-size: 12.5px; color: var(--accent-ink); font-weight: 600; }
+  .hesabat-cemi-card .v { font-size: 22px; font-weight: 700; color: var(--accent-ink-dark); margin-top: 2px; }
   /* Aylıq hesabat: 2 dairəvi qrafik (günlük xərclər / aylıq sabit xərclər) */
   .hesabat-bolme-basliq { font-size: 14px; margin: 18px 0 10px; color: var(--ink); }
   .hesabat-kart { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 16px; }
@@ -504,11 +521,11 @@
   }
   .trend-up { color: var(--danger); }
   .trend-down { color: var(--success-ink); }
-  .trend-new { color: var(--gold-ink); }
+  .trend-new { color: var(--accent-ink); }
 
   .date-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 14px; }
   .date-nav-arrow {
-    background: var(--panel); border: 1px solid var(--line); color: var(--navy-soft); width: 34px; height: 34px;
+    background: var(--panel); border: 1px solid var(--line); color: var(--brand-ink); width: 34px; height: 34px;
     border-radius: 50%; font-size: 17px; line-height: 1; cursor: pointer; flex: 0 0 auto;
     display: flex; align-items: center; justify-content: center;
   }
@@ -531,9 +548,9 @@
   }
   .toggle-switch::after {
     content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
-    background: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform .2s;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: transform .2s;
   }
-  .toggle-switch.on { background: var(--navy); }
+  .toggle-switch.on { background: var(--brand); }
   .toggle-switch.on::after { transform: translateX(18px); }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -805,7 +822,7 @@
 <div id="ayarlarModal" class="page-screen">
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
-      <button onclick="ayarlarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <button onclick="ayarlarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
       <h2 style="margin:0; flex:1;">Ayarlar</h2>
     </div>
 
@@ -887,7 +904,7 @@
 <div id="yonetimModal" class="page-screen">
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
-      <button onclick="yonetimPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <button onclick="yonetimPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
       <h2 style="margin:0; flex:1;">Kateqoriyalar</h2>
     </div>
     <p class="hint">Adını, ikonunu, rəngini, sabit qiymətini və günlük/aylıq növünü dəyiş.</p>
@@ -903,7 +920,7 @@
 <div id="aylikHesabatModal" class="page-screen">
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
-      <button onclick="aylikHesabatPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <button onclick="aylikHesabatPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
       <h2 style="margin:0; flex:1;">Bu ay hara pul gedir?</h2>
     </div>
     <div class="hesabat-cemi-card">
@@ -949,7 +966,7 @@
 <div id="sonEmeliyyatlarModal" class="page-screen">
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
-      <button onclick="sonEmeliyyatlarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <button onclick="sonEmeliyyatlarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
       <h2 style="margin:0; flex:1;">Son əməliyyatlar</h2>
     </div>
     <div class="modal-footer" style="justify-content:flex-end; border-top:none; padding-top:0; margin-bottom:6px;">
@@ -1005,7 +1022,7 @@
 <div id="hesablarModal" class="page-screen">
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
-      <button onclick="hesablarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--navy-soft); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <button onclick="hesablarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
       <h2 style="margin:0; flex:1;">Hesablar və Borclar</h2>
     </div>
 
@@ -1113,6 +1130,9 @@
   // ==================== Tema (Dark mode) ====================
   function temaTetbiqEt(tema) {
     document.documentElement.setAttribute('data-theme', tema === 'dark' ? 'dark' : 'light');
+    // Brauzer / status bar rəngi tema ilə uyğun olsun
+    const metaTema = document.querySelector('meta[name="theme-color"]');
+    if (metaTema) metaTema.setAttribute('content', tema === 'dark' ? '#0b0809' : '#f6f0f1');
     const lbl = document.getElementById('temaLabel');
     if (lbl) lbl.innerHTML = tema === 'dark'
       ? '<span class="ayarlar-ikon">☀️</span><span class="ayarlar-metin">İşıqlı rejim</span>'
@@ -1126,7 +1146,8 @@
   }
   (function temaIlkYukleme() {
     const saxlanan = localStorage.getItem('tema');
-    const tema = saxlanan ? saxlanan : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    // Tema: Black & Merlot — seçim saxlanmayıbsa defolt qaranlıq (sistem rejiminə baxmır)
+    const tema = saxlanan ? saxlanan : 'dark';
     temaTetbiqEt(tema);
   })();
   // ==================== /Tema ====================
@@ -1504,7 +1525,7 @@
       const item = document.createElement('div');
       item.className = 'modal-item';
       item.style.cursor = 'pointer';
-      item.innerHTML = `<div class="field-row between"><span>🗓️ ${escapeHtml(driveTarixSaatFormat(f.createdTime))}</span><span style="color:var(--navy-soft); font-size:12px; font-weight:600;">Seç →</span></div>`;
+      item.innerHTML = `<div class="field-row between"><span>🗓️ ${escapeHtml(driveTarixSaatFormat(f.createdTime))}</span><span style="color:var(--brand-ink); font-size:12px; font-weight:600;">Seç →</span></div>`;
       item.onclick = () => driveBackupSecildi(f.id, f.createdTime);
       konteyner.appendChild(item);
     });
@@ -1918,7 +1939,7 @@
     el.setAttribute('role', 'status');
     el.style.cssText = 'position:fixed; left:50%; transform:translateX(-50%); bottom:calc(88px + env(safe-area-inset-bottom, 0px)); ' +
       'max-width:90%; z-index:99999; padding:11px 16px; border-radius:12px; font-size:13px; font-weight:600; line-height:1.35; text-align:center; ' +
-      'background:var(--navy); color:#fff; box-shadow:0 8px 24px var(--shadow); border:1px solid var(--gold);';
+      'background:var(--brand); color:#fff; box-shadow:0 8px 24px var(--shadow); border:1px solid var(--accent);';
     el.innerText = mesaj;
     document.body.appendChild(el);
     setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; }, 6000);
@@ -2119,7 +2140,7 @@
   }
   // 20 rəng: ilk 8-i köhnə palitradır (mövcud kateqoriyaların rəngi seçili qalsın deyə eyni saxlanılıb).
   const renkPaleti = [
-    '#1f2a44','#c99a3a','#3d7068','#8b5f8f','#b5533f','#4a6fa5','#7a8450','#a35c7a',
+    '#7d2a3d','#c99a3a','#3d7068','#8b5f8f','#b5533f','#4a6fa5','#7a8450','#a35c7a',
     '#2b7a56','#d97b3a','#c0435a','#5aa5b5','#6b5bb5','#8a6d4b','#e0a3b8','#9fbf5a',
     '#e6c84f','#7d3c5e','#b8a9d9','#86c5a3'
   ];
@@ -2131,7 +2152,7 @@
   }
 
   const varsayilanKategoriler = [
-    { ad: 'Bus', sabitTutar: null, renk: '#1f2a44', ikon: '🚌' },
+    { ad: 'Bus', sabitTutar: null, renk: '#7d2a3d', ikon: '🚌' },
     { ad: 'Metro', sabitTutar: null, renk: '#c99a3a', ikon: '🚇' },
     { ad: 'Coffee', sabitTutar: null, renk: '#3d7068', ikon: '☕️' },
     { ad: 'Sigaret', sabitTutar: null, renk: '#8b5f8f', ikon: '🚬' },
@@ -2510,11 +2531,11 @@
       if (digerTutar > 0.004) {
         const yuzdeD = (digerTutar / toplam) * 100;
         const parcaD = document.createElement('div');
-        parcaD.style.background = '#8d96a8'; parcaD.style.height = '100%'; parcaD.style.width = yuzdeD + '%';
+        parcaD.style.background = '#9a8a8f'; parcaD.style.height = '100%'; parcaD.style.width = yuzdeD + '%';
         if (progressEl) progressEl.appendChild(parcaD);
         const rowD = document.createElement('div');
         rowD.className = 'breakdown-row';
-        rowD.innerHTML = `<span><span class="dot" style="background:#8d96a8"></span>📦 Digər</span><span>${digerTutar.toFixed(2)} AZN · %${yuzdeD.toFixed(0)}</span>`;
+        rowD.innerHTML = `<span><span class="dot" style="background:#9a8a8f"></span>📦 Digər</span><span>${digerTutar.toFixed(2)} AZN · %${yuzdeD.toFixed(0)}</span>`;
         if (breakdownEl) breakdownEl.appendChild(rowD);
       }
     } else {
@@ -2574,7 +2595,7 @@
       giderler.forEach((g, index) => {
         if (g.aylikRef) return; // aylıq xərclər / kredit borcu ödəmələri yalnız kredit kartına yansıyır
         listeHtml += `<li class="list-item"><div><span class="cat">${escapeHtml(g.kategori)}${g.sebeb ? ' — ' + escapeHtml(g.sebeb) : ''}</span><span class="time">${escapeHtml(g.tarix)}</span></div>
-          <div class="right"><span class="amt">${g.tutar.toFixed(2)} AZN</span><button onclick="islemFormModalAc(${index})" title="Düzəlt" style="color:var(--navy-soft);">✏️</button><button onclick="giderSilOnayla(${index})" title="Sil">✕</button></div></li>`;
+          <div class="right"><span class="amt">${g.tutar.toFixed(2)} AZN</span><button onclick="islemFormModalAc(${index})" title="Düzəlt" style="color:var(--brand-ink);">✏️</button><button onclick="giderSilOnayla(${index})" title="Sil">✕</button></div></li>`;
       });
     }
     const listeEl = document.getElementById('giderListesi');
@@ -3248,9 +3269,9 @@
     const umumiCemi = kkBorcu + depozitBorcu + krediBorcuQalan;
     document.getElementById('dashUmumiBorcMerkez').innerText = umumiCemi > 0 ? umumiCemi.toFixed(2) : '0.00';
     dashUmumiBorcChart = dairaviCiz('dashUmumiBorcCanvas', dashUmumiBorcChart, [
-      { ad: 'Kredit kartı borcu', tutar: kkBorcu, renk: '#c99a3a' },
-      { ad: 'Deposit borcu', tutar: depozitBorcu, renk: '#b5533f' },
-      { ad: 'Kredit borcu (xətt)', tutar: krediBorcuQalan, renk: '#4a6fa5' }
+      { ad: 'Kredit kartı borcu', tutar: kkBorcu, renk: '#c4566f' },
+      { ad: 'Deposit borcu', tutar: depozitBorcu, renk: '#d9895a' },
+      { ad: 'Kredit borcu (xətt)', tutar: krediBorcuQalan, renk: '#9b6b9e' }
     ], 'dashUmumiBorcLegend', ' AZN', 'Borc yoxdur.');
 
     // 2. Kredit kartı: istifadə olunan / istifadə edilə bilən qalıq
@@ -3260,15 +3281,15 @@
     const qalanLimit = Math.max(0, limitDeger + hesapDeger);
     document.getElementById('dashKrediKartMerkez').innerText = (typeof kreditLimit === 'number') ? limitDeger.toFixed(2) : '—';
     dashKrediKartChart = dairaviCiz('dashKrediKartCanvas', dashKrediKartChart, (typeof kreditLimit === 'number') ? [
-      { ad: 'İstifadə olunan', tutar: istifade, renk: '#c0435a' },
-      { ad: 'İstifadə edilə bilən', tutar: qalanLimit, renk: '#1f2a44' }
+      { ad: 'İstifadə olunan', tutar: istifade, renk: cssVar('--danger') || '#d63a3a' },
+      { ad: 'İstifadə edilə bilən', tutar: qalanLimit, renk: cssVar('--brand') || '#7d2a3d' }
     ] : [], 'dashKrediKartLegend', ' AZN', 'Kredit kartı hələ əlavə edilməyib.');
 
     // 3. Kredit borcu (taksitli kredit xətt): ödənilmiş / qalan taksit sayı
     document.getElementById('dashKrediBorcuMerkez').innerText = krediBorcu ? (krediBorcu.odenmisTaksitSayi + '/' + krediBorcu.taksitSayi) : '—';
     dashKrediBorcuChart = dairaviCiz('dashKrediBorcuCanvas', dashKrediBorcuChart, krediBorcu ? [
       { ad: 'Ödənilib', tutar: krediBorcu.odenmisTaksitSayi, renk: '#2b7a56' },
-      { ad: 'Qalıb', tutar: krediBorcu.taksitSayi - krediBorcu.odenmisTaksitSayi, renk: '#c7cfe0' }
+      { ad: 'Qalıb', tutar: krediBorcu.taksitSayi - krediBorcu.odenmisTaksitSayi, renk: cssVar('--input-border') || '#d9c9cd' }
     ] : [], 'dashKrediBorcuLegend', ' taksit', 'Kredit xətt hələ əlavə edilməyib.');
   }
 
@@ -3450,8 +3471,8 @@
       }
     });
 
-    const navyRengi = cssVar('--navy') || '#1f2a44';
-    const muted = cssVar('--muted') || '#6b7688';
+    const navyRengi = cssVar('--accent') || '#b0405c';
+    const muted = cssVar('--muted') || '#7a6a6e';
     const lineRengi = cssVar('--line') || '#e3e7ee';
 
     aylikTrendChart = new Chart(canvas.getContext('2d'), {
@@ -3503,7 +3524,7 @@
       if (kategoriAylikdirmi(ad)) sabitCemi += buAyToplam[ad]; else gunlukCemi += buAyToplam[ad];
     });
     const digerTutar = Math.round((gunlukCemi - gunlukKat.reduce((acc, k) => acc + k.tutar, 0)) * 100) / 100;
-    if (digerTutar > 0) gunlukKat.push({ ad: 'Digər', ikon: '📦', renk: '#8d96a8', tutar: digerTutar });
+    if (digerTutar > 0) gunlukKat.push({ ad: 'Digər', ikon: '📦', renk: '#9a8a8f', tutar: digerTutar });
 
     const altEl = document.getElementById('aylikHesabatAlt');
     if (altEl) altEl.innerText = 'Günlük: ' + gunlukCemi.toFixed(2) + ' AZN · Aylıq sabit: ' + sabitCemi.toFixed(2) + ' AZN';
@@ -3671,7 +3692,7 @@
           <div class="field-row"><span style="font-size:18px;">💵</span><b>Cash Hesab</b></div>
           <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('nagd')" style="padding:5px 10px;">Düzəlt</button>
         </div>
-        <div style="font-size:19px; font-weight:700; color:var(--navy);">${nagdBakiye.toFixed(2)} AZN</div>
+        <div style="font-size:19px; font-weight:700; color:var(--brand-ink);">${nagdBakiye.toFixed(2)} AZN</div>
       </div>`;
     }
     if (hesabEklenib.debit) {
@@ -3681,7 +3702,7 @@
           <div class="field-row"><span style="font-size:18px;">🏦</span><b>Debit bank Hesabım</b></div>
           <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('debit')" style="padding:5px 10px;">Düzəlt</button>
         </div>
-        <div style="font-size:19px; font-weight:700; color:var(--navy);">${debitBakiye.toFixed(2)} AZN</div>
+        <div style="font-size:19px; font-weight:700; color:var(--brand-ink);">${debitBakiye.toFixed(2)} AZN</div>
       </div>`;
     }
     if (hesabEklenib.depozit) {
@@ -3691,7 +3712,7 @@
           <div class="field-row"><span style="font-size:18px;">🏛️</span><b>Bank Deposit Hesabım</b></div>
           <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('depozit')" style="padding:5px 10px;">Düzəlt</button>
         </div>
-        <div style="font-size:19px; font-weight:700; color:${depozitBakiye < 0 ? 'var(--danger)' : 'var(--navy)'};">${depozitBakiye.toFixed(2)} AZN</div>
+        <div style="font-size:19px; font-weight:700; color:${depozitBakiye < 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${depozitBakiye.toFixed(2)} AZN</div>
       </div>`;
     }
     if (typeof kreditLimit === 'number') {
@@ -3701,7 +3722,7 @@
           <div class="field-row"><span style="font-size:18px;">💳</span><b>Kredi kartı Hesabım</b></div>
           <button class="btn btn-ghost" onclick="hesablarPaneliniKapat(); balanceModalAc();" style="padding:5px 10px;">Düzəlt</button>
         </div>
-        <div style="font-size:19px; font-weight:700; color:${borc < 0 ? 'var(--danger)' : 'var(--navy)'};">${borc.toFixed(2)} AZN</div>
+        <div style="font-size:19px; font-weight:700; color:${borc < 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${borc.toFixed(2)} AZN</div>
         <div style="font-size:12px; color:var(--muted);">Limit: ${limit.toFixed(2)} AZN · İstifadə edilə bilən: ${muvcud.toFixed(2)} AZN</div>
       </div>`;
     }
@@ -3718,7 +3739,7 @@
           <div class="field-row"><span style="font-size:18px;">🧾</span><b>Kredit xətt</b></div>
           <button class="btn btn-ghost" onclick="krediBorcuDuzeltModalAc()" style="padding:5px 10px;">Düzəlt</button>
         </div>
-        <div style="font-size:19px; font-weight:700; color:${qalan > 0 ? 'var(--danger)' : 'var(--navy)'};">${qalan > 0 ? '-' : ''}${qalan.toFixed(2)} AZN</div>
+        <div style="font-size:19px; font-weight:700; color:${qalan > 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${qalan > 0 ? '-' : ''}${qalan.toFixed(2)} AZN</div>
         <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">${krediBorcu.odenmisTaksitSayi}/${krediBorcu.taksitSayi} taksit ödənilib · Aylıq: ${krediBorcu.aylikMebleg.toFixed(2)} AZN · ${escapeHtml(tarixFormat(krediBorcu.baslangic))}–${escapeHtml(tarixFormat(krediBorcu.bitis))}${elaveText}</div>
         <button class="btn btn-primary" ${btnDisabled ? 'disabled' : ''} onclick="krediBorcuOdeModalAc()" style="width:100%;">${escapeHtml(btnText)}</button>
       </div>`;
