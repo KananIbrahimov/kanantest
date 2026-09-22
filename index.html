@@ -569,6 +569,7 @@
     <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən az 6 simvol)" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
     <button class="btn btn-primary" onclick="emailIleGirisEt()" style="width:100%; margin-bottom:8px;">Daxil ol</button>
     <button class="btn btn-ghost" onclick="emailIleQeydiyyat()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Hesab yarat (ilk dəfədirsə)</button>
+    <button class="btn btn-ghost" id="tesdiqYenidenBtn" onclick="tesdiqEmailiYenidenGonder()" style="width:100%; margin-bottom:10px; border:1px solid var(--line); display:none;">Təsdiq e-poçtunu yenidən göndər</button>
     <div class="error-text" id="googleGirisXeta"></div>
   </div>
 </div>
@@ -1533,10 +1534,12 @@
   // qorunma Authentication + Security Rules-dadır, ona görə kod daxilinə
   // yazmaq təhlükəsizdir.
   function firebaseConfigOxu() {
+    // TEST layihəsi (kanantest) üçün konfiq — Firebase Console > Project settings
+    // (dişli işarə) > General > "Your apps" bölməsindən öz dəyərlərinlə əvəz et.
     return {
-      apiKey: 'AIzaSyBGpwU5D_dYxAUk-RTymjK_rq1K9VL3V0E',
-      authDomain: 'kananapp-8d1c3.firebaseapp.com',
-      projectId: 'kananapp-8d1c3'
+      apiKey: 'AIzaSyAF39Xt36SUvjpYp55eIGR9XDmUaHHT7oo',
+      authDomain: 'kanantest.firebaseapp.com',
+      projectId: 'kanantest'
     };
   }
   let firebaseConfig = firebaseConfigOxu();
@@ -1593,14 +1596,27 @@
     return { email, sifre };
   }
 
+  // Təsdiqlənməmiş (emailVerified === false) istifadəçini tətbiqə buraxmır:
+  // dərhal signOut edir və "Yenidən göndər" düyməsini göstərir.
+  let tesdiqGozleyenIstifadeci = null;
+
   function emailIleGirisEt() {
     const xetaEl = document.getElementById('googleGirisXeta');
     const { email, sifre } = emailSifreOxu();
     xetaEl.innerText = '';
+    document.getElementById('tesdiqYenidenBtn').style.display = 'none';
     if (!email || !sifre) { xetaEl.innerText = 'E-poçt və şifrəni yaz.'; return; }
     firebaseBaslat().then((hazir) => {
       if (!hazir) { xetaEl.innerText = 'Bağlantı alınmadı, internetini yoxla və yenidən cəhd et.'; return; }
-      firebase.auth().signInWithEmailAndPassword(email, sifre).catch((e) => {
+      firebase.auth().signInWithEmailAndPassword(email, sifre).then((deyisim) => {
+        const istifadeci = deyisim.user;
+        if (istifadeci && !istifadeci.emailVerified) {
+          tesdiqGozleyenIstifadeci = istifadeci;
+          xetaEl.innerText = 'E-poçtun hələ təsdiqlənməyib. Poçt qutunu (spam qovluğu da daxil) yoxla və linkə klikləyəndən sonra yenidən daxil ol.';
+          document.getElementById('tesdiqYenidenBtn').style.display = 'block';
+          firebase.auth().signOut();
+        }
+      }).catch((e) => {
         console.warn('Email giriş xətası:', e);
         if (e && e.code === 'auth/user-not-found') xetaEl.innerText = 'Bu e-poçtla hesab tapılmadı — əvvəlcə "Hesab yarat" ilə qeydiyyatdan keç.';
         else if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) xetaEl.innerText = 'Şifrə səhvdir.';
@@ -1613,15 +1629,34 @@
     const xetaEl = document.getElementById('googleGirisXeta');
     const { email, sifre } = emailSifreOxu();
     xetaEl.innerText = '';
+    document.getElementById('tesdiqYenidenBtn').style.display = 'none';
     if (!email || !sifre) { xetaEl.innerText = 'E-poçt və şifrəni yaz.'; return; }
     if (sifre.length < 6) { xetaEl.innerText = 'Şifrə ən az 6 simvol olmalıdır.'; return; }
     firebaseBaslat().then((hazir) => {
       if (!hazir) { xetaEl.innerText = 'Bağlantı alınmadı, internetini yoxla və yenidən cəhd et.'; return; }
-      firebase.auth().createUserWithEmailAndPassword(email, sifre).catch((e) => {
+      firebase.auth().createUserWithEmailAndPassword(email, sifre).then((deyisim) => {
+        const istifadeci = deyisim.user;
+        return istifadeci.sendEmailVerification().then(() => {
+          tesdiqGozleyenIstifadeci = istifadeci;
+          xetaEl.innerText = 'Hesab yaradıldı! Sənə təsdiq linki göndərdik — poçtunu (spam qovluğu da daxil) yoxla, linkə klikləyəndən sonra "Daxil ol" ilə giriş et.';
+          document.getElementById('tesdiqYenidenBtn').style.display = 'block';
+          return firebase.auth().signOut();
+        });
+      }).catch((e) => {
         console.warn('Email qeydiyyat xətası:', e);
         if (e && e.code === 'auth/email-already-in-use') xetaEl.innerText = 'Bu e-poçtla artıq hesab var — "Daxil ol" düyməsini istifadə et.';
         else xetaEl.innerText = 'Qeydiyyat alınmadı: ' + (e && e.code ? e.code : (e && e.message ? e.message : 'naməlum xəta'));
       });
+    });
+  }
+
+  function tesdiqEmailiYenidenGonder() {
+    const xetaEl = document.getElementById('googleGirisXeta');
+    if (!tesdiqGozleyenIstifadeci) { xetaEl.innerText = 'Əvvəlcə "Daxil ol" və ya "Hesab yarat" ilə cəhd et.'; return; }
+    tesdiqGozleyenIstifadeci.sendEmailVerification().then(() => {
+      xetaEl.innerText = 'Təsdiq e-poçtu yenidən göndərildi.';
+    }).catch((e) => {
+      xetaEl.innerText = 'Göndərilmədi: ' + (e && e.code ? e.code : 'naməlum xəta') + ' — bir az sonra yenidən cəhd et.';
     });
   }
 
@@ -1642,6 +1677,15 @@
       return;
     }
     firebase.auth().onAuthStateChanged((istifadeci) => {
+      if (istifadeci && !istifadeci.emailVerified) {
+        // Köhnə sessiyadan qalan, hələ təsdiqlənməmiş istifadəçi — buraxma.
+        tesdiqGozleyenIstifadeci = istifadeci;
+        document.getElementById('googleGirisXeta').innerText = 'E-poçtun hələ təsdiqlənməyib. Poçtunu yoxla və linkə klikləyəndən sonra yenidən daxil ol.';
+        document.getElementById('tesdiqYenidenBtn').style.display = 'block';
+        document.getElementById('googleGirisEkrani').classList.add('active');
+        firebase.auth().signOut();
+        return;
+      }
       if (istifadeci) {
         cariGoogleIstifadeci = istifadeci;
         senkronKey = istifadeci.uid;
