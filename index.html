@@ -296,7 +296,6 @@
   #transferModal { z-index: 70; }
   #hesabDuzeltModal { z-index: 70; }
   #krediBorcuDuzeltModal { z-index: 70; }
-  #senkronKeyGirModal { z-index: 70; }
   #pinAyarlaModal { z-index: 70; }
   #islemFormModal { z-index: 70; }
   #hesabSecModal { z-index: 70; }
@@ -352,7 +351,7 @@
   .modal-item.siralanan { opacity: 0.92; box-shadow: 0 8px 20px var(--shadow); z-index: 5; }
   .field-row { display: flex; align-items: center; gap: 8px; }
   .field-row.between { justify-content: space-between; }
-  input[type="text"], input[type="number"] {
+  input[type="text"], input[type="number"], input[type="email"], input[type="password"] {
     padding: 8px 10px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; outline: none; width: 100%;
     font-family: inherit; background: var(--panel); color: var(--ink);
   }
@@ -553,9 +552,26 @@
   .toggle-switch.on { background: var(--brand); }
   .toggle-switch.on::after { transform: translateX(18px); }
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+
+<!-- Email/Şifrə ilə giriş: tətbiqin əsas qapısı. Google/Apple OAuth (popup/redirect)
+     iOS-da "Ana ekrana əlavə et" ilə açılan standalone tətbiqlərdə sessiya itkisinə görə
+     işləmədiyi üçün email/şifrə istifadə olunur — bu, heç bir xarici səhifəyə keçmir,
+     hər şey səhifənin öz içində baş verir. Datası öz uid-inə bağlı ayrı sənəddə saxlanılır.
+     DOM-da cihaz kilidindən ƏVVƏL yerləşir ki, ikisi də aktiv olsa cihaz kilidi üstdə qalsın. -->
+<div class="lock-screen" id="googleGirisEkrani">
+  <div class="lock-box">
+    <div class="lock-icon">💰</div>
+    <h2>Günlük Xərclər</h2>
+    <p class="hint" id="emailGirisHint">Davam etmək üçün email və şifrənlə daxil ol. Məlumatların yalnız sənin hesabına bağlı olacaq.</p>
+    <input type="email" id="emailGirisEmail" placeholder="E-poçt" autocomplete="username" style="width:100%; margin-bottom:8px; box-sizing:border-box;">
+    <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən az 6 simvol)" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
+    <button class="btn btn-primary" onclick="emailIleGirisEt()" style="width:100%; margin-bottom:8px;">Daxil ol</button>
+    <button class="btn btn-ghost" onclick="emailIleQeydiyyat()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Hesab yarat (ilk dəfədirsə)</button>
+    <div class="error-text" id="googleGirisXeta"></div>
+  </div>
+</div>
 
 <!-- Tətbiq kilidi: Face ID / Touch ID (WebAuthn) və ya ehtiyat PIN -->
 <div class="lock-screen" id="kilidEkrani">
@@ -716,52 +732,6 @@
   </div>
 </div>
 
-<!-- Firebase Sync Key gir (başqa cihazdakı key ilə bağlan) -->
-<div id="senkronKeyGirModal" class="modal">
-  <div class="modal-content">
-    <h2>Sync Key gir</h2>
-    <p class="hint">Digər cihazında yaratdığın Sync Key-i bura yapışdır. İkisi eyni olanda o iki cihaz avtomatik sinxronlaşır.</p>
-    <input type="text" id="senkronKeyGirInput" placeholder="Sync Key" style="font-family:monospace; font-size:12px;">
-    <div class="error-text" id="senkronKeyGirError"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('senkronKeyGirModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="senkronKeyGirOnayla()">Bağlan</button>
-    </div>
-  </div>
-</div>
-
-<!-- Firebase layihə konfiqi gir (YALNIZ bu cihazda, localStorage-da saxlanılır — fayl daxilində DEYİL, GitHub-a getmir) -->
-<div id="firebaseKonfiqModal" class="modal">
-  <div class="modal-content">
-    <h2>Öz Firebase layihən</h2>
-    <p class="hint">Anlıq sinxronizasiya üçün öz Firebase/Firestore layihənin konfiqini bura yaz. Bu məlumat YALNIZ bu cihazın brauzer yaddaşında (localStorage) saxlanılır — fayl daxilinə yazılmır, GitHub-a getmir.</p>
-    <input type="text" id="firebaseKonfiqApiKey" placeholder="apiKey" style="font-family:monospace; font-size:12px;">
-    <input type="text" id="firebaseKonfiqAuthDomain" placeholder="authDomain (məs: layihe.firebaseapp.com)" style="font-family:monospace; font-size:12px; margin-top:8px;">
-    <input type="text" id="firebaseKonfiqProjectId" placeholder="projectId" style="font-family:monospace; font-size:12px; margin-top:8px;">
-    <div class="error-text" id="firebaseKonfiqError"></div>
-    <button type="button" class="btn btn-ghost" style="width:100%; margin-top:10px;" onclick="modalKapat('firebaseKonfiqModal'); firebaseHamisiModalAc();">📦 Hamısını birdən yapışdır</button>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('firebaseKonfiqModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="firebaseKonfiqKaydet()">Yadda saxla</button>
-    </div>
-  </div>
-</div>
-
-<!-- Firebase: 4 məlumatı (apiKey, authDomain, projectId, Sync Key) BİR DƏFƏYƏ yapışdır -->
-<div id="firebaseHamisiModal" class="modal">
-  <div class="modal-content">
-    <h2>Hamısını birdən yapışdır</h2>
-    <p class="hint">Digər cihazda <b>"📦 Hamısını kopyala"</b> düyməsinə bas, sonra bura bir dəfə yapışdır. apiKey, authDomain, projectId və Sync Key avtomatik ayrılıb yazılır. (Firebase konsolundan kopyaladığın konfiq blokunu da qəbul edir.)</p>
-    <textarea id="firebaseHamisiInput" rows="6" placeholder="apiKey: ...&#10;authDomain: ...&#10;projectId: ...&#10;syncKey: ..." autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" style="width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--input-border); border-radius:8px; font-family:monospace; font-size:12px; background:var(--panel); color:var(--ink); resize:vertical; outline:none;"></textarea>
-    <button type="button" class="btn btn-ghost" style="width:100%; margin-top:8px;" onclick="firebaseHamisiBuferdenOxu()">📋 Buferdən yapışdır</button>
-    <div class="error-text" id="firebaseHamisiError"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('firebaseHamisiModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="firebaseHamisiOnayla()">Yadda saxla və bağlan</button>
-    </div>
-  </div>
-</div>
-
 <!-- Xərci düzəlt / köhnə tarixli xərc əlavə et -->
 <div id="islemFormModal" class="modal">
   <div class="modal-content">
@@ -869,18 +839,11 @@
       </div>
     </div>
 
-    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">⚡ Anlıq sinxronizasiya (Firebase)</h3>
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">⚡ Hesab (Google)</h3>
     <div class="drive-box" id="firebaseBox">
-      <div class="drive-status" id="firebaseStatus">⚡ Anlıq sinxronizasiya bağlı deyil</div>
-      <div class="drive-sub" id="firebaseSub">Telefon və kompüter arasında 1-2 saniyədə avtomatik sinxron üçün bir Sync Key lazımdır.</div>
-      <div id="firebaseKeyGosterim" style="display:none; margin:8px 0; padding:8px; background:var(--bg); border:1px solid var(--line); border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:var(--ink);"></div>
-      <div class="drive-btns" id="firebaseBtns">
-        <button onclick="senkronKeyOlustur()">🔑 Yeni Sync Key yarat</button>
-        <button onclick="senkronKeyGirModalAc()">📋 Var olan Key-i gir</button>
-      </div>
-      <div class="drive-btns" id="firebaseBtns2">
-        <button onclick="firebaseHamisiModalAc()">📦 4 məlumatı birdən yapışdır</button>
-      </div>
+      <div class="drive-status" id="firebaseStatus">⚡ Bağlanmayıb</div>
+      <div class="drive-sub" id="firebaseSub">Daxil olmamısan.</div>
+      <div class="drive-btns" id="firebaseBtns"></div>
     </div>
 
     <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">💾 Yedək faylı</h3>
@@ -1561,21 +1524,19 @@
   }
   // ==================== /Google Drive ====================
 
-  // ==================== Firebase: anlıq (real-time) sinxronizasiya ====================
-  // Drive-dan fərqli olaraq bura POLLING (nə vaxtsa yoxlamaq) YOX — Firestore
-  // dəyişikliyi ANINDA (adətən 1 saniyədən az) digər açıq cihazlara "itələyir".
-  // Təhlükəsizlik: giriş şifrə ilə deyil, uzun/rastgele "Sync Key" ilədir — key-i
-  // yalnız öz cihazlarına yaz, kimsə ilə paylaşma (onu bilən, məlumatına baxa bilər).
-  // Bu bölmədə artıq HEÇ BİR açar/layihə adı kodun daxilində saxlanılmır.
-  // Hər istifadəçi "Anlıq sinxronizasiya" düyməsinə basanda öz Firebase
-  // layihəsinin konfiqini (apiKey, authDomain, projectId) daxil edir — bu
-  // dəyərlər YALNIZ həmin cihazın brauzer yaddaşında (localStorage) qalır,
-  // fayla yazılmır, deməli GitHub-a və ya başqa heç bir yerə getmir.
+  // ==================== Firebase: hər istifadəçi öz Google hesabı ilə ====================
+  // Sinxronizasiya artıq təsadüfi "Sync Key" ilə deyil, Google girişi ilədir.
+  // Hər istifadəçinin Firestore sənədi onun öz Google uid-i ilə adlanır
+  // (syncs/{uid}) və Firestore Security Rules yalnız sahibinin ora yazmasına
+  // icazə verir (request.auth.uid == syncId). apiKey/authDomain/projectId
+  // "sirr" deyil — Firebase veb konfiqləri həmişə client-side görünür, əsl
+  // qorunma Authentication + Security Rules-dadır, ona görə kod daxilinə
+  // yazmaq təhlükəsizdir.
   function firebaseConfigOxu() {
     return {
-      apiKey: localStorage.getItem('fb_apiKey') || '',
-      authDomain: localStorage.getItem('fb_authDomain') || '',
-      projectId: localStorage.getItem('fb_projectId') || ''
+      apiKey: 'AIzaSyBGpwU5D_dYxAUk-RTymjK_rq1K9VL3V0E',
+      authDomain: 'kananapp-8d1c3.firebaseapp.com',
+      projectId: 'kananapp-8d1c3'
     };
   }
   let firebaseConfig = firebaseConfigOxu();
@@ -1584,7 +1545,7 @@
   let firebaseHazir = false;
   let firebaseUnsubscribe = null;
   let firebaseYazTimer = null;
-  let senkronKey = localStorage.getItem('firebase_sync_key') || null;
+  let senkronKey = null; // artıq Google uid-i olacaq, giriş edəndə təyin olunur
   let cihazId = localStorage.getItem('device_id') || null;
   if (!cihazId) {
     cihazId = 'cihaz_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
@@ -1596,318 +1557,130 @@
     return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').slice(0, uzunluq);
   }
 
-  // TƏHLÜKƏSİZLİK: Firebase SDK eyni adla ikinci dəfə initializeApp çağırılmağa icazə
-  // vermir. Ona görə hər başlatmadan əvvəl köhnə [DEFAULT] app-i (varsa) silirik.
+  // Konfiq artıq sabitdir (kod daxilində), ona görə tətbiq faylını app-i cəmi
+  // BİR DƏFƏ başladır — hər sync əməliyyatında yenidən yaratmağa ehtiyac yoxdur.
+  // Bu həm sürəti artırır, həm də Google giriş sessiyasının qorunmasına kömək edir.
   function firebaseBaslat() {
     return new Promise((resolve) => {
-      if (!firebaseConfig.apiKey) { resolve(false); return; } // key silinib — heç bir hesaba avtomatik qoşulma yoxdur
+      if (firestoreDb) { resolve(true); return; }
       if (typeof firebase === 'undefined') { resolve(false); return; } // internet yoxdursa SDK yüklənməyib
       try {
-        if (firebase.apps && firebase.apps.length) {
-          firebase.app().delete()
-            .then(() => _firebaseYenidenBaslat(resolve))
-            .catch((e) => { console.warn('Köhnə Firebase app silinmədi:', e); _firebaseYenidenBaslat(resolve); });
-        } else {
-          _firebaseYenidenBaslat(resolve);
-        }
+        if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        firestoreDb = firebase.firestore();
+        firebaseHazir = true;
+        resolve(true);
       } catch (e) {
-        console.warn('Firebase başlatma xətası:', e);
+        console.warn('Firebase init xətası:', e);
         resolve(false);
       }
     });
   }
 
-  function _firebaseYenidenBaslat(resolve) {
-    try {
-      firebase.initializeApp(firebaseConfig);
-      firestoreDb = firebase.firestore();
-      firebase.auth().signInAnonymously().then(() => {
-        firebaseHazir = true;
-        if (senkronKey) firebaseDinlemeyeBasla(); // yavaş şəbəkədə vaxt aşımından sonra da gec-tez qoşulsun
-        firebasePanelGuncelle();
-        resolve(true);
-      }).catch((e) => {
-        console.warn('Firebase giriş xətası:', e);
-        firebasePanelGuncelle('Bağlantı alınmadı.', true);
-        resolve(false);
+  // ==================== Google ilə giriş / çıxış ====================
+  // iOS-da "Ana ekrana əlavə et" ilə açılan standalone PWA-larda signInWithPopup
+  // işləmir: iOS window.open-i məcburən Safari-yə açır və popup pəncərəsi ilə
+  // əsas tətbiq arasında əlaqə (postMessage) qırılır, nəticədə "The requested
+  // action is invalid" xətası görünür. Ona görə standalone rejimdə popup əvəzinə
+  // ==================== Email / Şifrə ilə giriş və qeydiyyat ====================
+  // Google/Apple OAuth (popup və ya redirect) iOS-da "Ana ekrana əlavə et" ilə
+  // açılan standalone tətbiqlərdə xarici domenə (accounts.google.com və s.)
+  // keçib-qayıdanda sessiyanı itirir — bu, sınaqla təsdiqləndi. Email/şifrə isə
+  // heç bir xarici səhifəyə getmir, hər şey birbaşa səhifənin öz içində baş verir,
+  // ona görə standalone rejimdə də 100% etibarlı işləyir.
+  function emailSifreOxu() {
+    const email = document.getElementById('emailGirisEmail').value.trim();
+    const sifre = document.getElementById('emailGirisSifre').value;
+    return { email, sifre };
+  }
+
+  function emailIleGirisEt() {
+    const xetaEl = document.getElementById('googleGirisXeta');
+    const { email, sifre } = emailSifreOxu();
+    xetaEl.innerText = '';
+    if (!email || !sifre) { xetaEl.innerText = 'E-poçt və şifrəni yaz.'; return; }
+    firebaseBaslat().then((hazir) => {
+      if (!hazir) { xetaEl.innerText = 'Bağlantı alınmadı, internetini yoxla və yenidən cəhd et.'; return; }
+      firebase.auth().signInWithEmailAndPassword(email, sifre).catch((e) => {
+        console.warn('Email giriş xətası:', e);
+        if (e && e.code === 'auth/user-not-found') xetaEl.innerText = 'Bu e-poçtla hesab tapılmadı — əvvəlcə "Hesab yarat" ilə qeydiyyatdan keç.';
+        else if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) xetaEl.innerText = 'Şifrə səhvdir.';
+        else xetaEl.innerText = 'Giriş alınmadı: ' + (e && e.code ? e.code : (e && e.message ? e.message : 'naməlum xəta'));
       });
-    } catch (e) {
-      console.warn('Firebase init xətası:', e);
-      resolve(false);
+    });
+  }
+
+  function emailIleQeydiyyat() {
+    const xetaEl = document.getElementById('googleGirisXeta');
+    const { email, sifre } = emailSifreOxu();
+    xetaEl.innerText = '';
+    if (!email || !sifre) { xetaEl.innerText = 'E-poçt və şifrəni yaz.'; return; }
+    if (sifre.length < 6) { xetaEl.innerText = 'Şifrə ən az 6 simvol olmalıdır.'; return; }
+    firebaseBaslat().then((hazir) => {
+      if (!hazir) { xetaEl.innerText = 'Bağlantı alınmadı, internetini yoxla və yenidən cəhd et.'; return; }
+      firebase.auth().createUserWithEmailAndPassword(email, sifre).catch((e) => {
+        console.warn('Email qeydiyyat xətası:', e);
+        if (e && e.code === 'auth/email-already-in-use') xetaEl.innerText = 'Bu e-poçtla artıq hesab var — "Daxil ol" düyməsini istifadə et.';
+        else xetaEl.innerText = 'Qeydiyyat alınmadı: ' + (e && e.code ? e.code : (e && e.message ? e.message : 'naməlum xəta'));
+      });
+    });
+  }
+
+  function cixisEt() {
+    confirmAc('Çıxış et', 'Hesabdan çıxmaq istəyirsən? Bu cihazda tətbiq yenidən giriş ekranını göstərəcək.', () => {
+      if (firebaseUnsubscribe) { firebaseUnsubscribe(); firebaseUnsubscribe = null; }
+      firebase.auth().signOut().then(() => location.reload());
+    });
+  }
+
+  // Tətbiqin əsas "qapısı": giriş olmadan heç bir data yüklənmir/göstərilmir.
+  let cariGoogleIstifadeci = null;
+  async function uygulamaGirisBaslat() {
+    const hazir = await firebaseBaslat();
+    if (!hazir) {
+      document.getElementById('googleGirisEkrani').classList.add('active');
+      document.getElementById('googleGirisXeta').innerText = 'Bağlantı alınmadı, internetini yoxla və səhifəni yenilə.';
+      return;
     }
+    firebase.auth().onAuthStateChanged((istifadeci) => {
+      if (istifadeci) {
+        cariGoogleIstifadeci = istifadeci;
+        senkronKey = istifadeci.uid;
+        document.getElementById('googleGirisEkrani').classList.remove('active');
+        firebasePanelGuncelle();
+        veriYuklendi = false;
+        veriYukle();
+      } else {
+        cariGoogleIstifadeci = null;
+        senkronKey = null;
+        veriYuklendi = false;
+        document.getElementById('googleGirisEkrani').classList.add('active');
+      }
+    });
   }
 
   function firebasePanelGuncelle(mesaj, xetaMi) {
     const statusEl = document.getElementById('firebaseStatus');
     const subEl = document.getElementById('firebaseSub');
-    const keyGosterimEl = document.getElementById('firebaseKeyGosterim');
     const btnsEl = document.getElementById('firebaseBtns');
     if (!statusEl) return;
 
     if (xetaMi) {
       statusEl.innerText = '⚠️ ' + (mesaj || 'Xəta baş verdi.');
-    } else if (senkronKey) {
+    } else if (cariGoogleIstifadeci) {
       statusEl.innerText = '⚡ Anlıq sinxronizasiya aktiv';
     } else {
-      statusEl.innerText = '⚡ Anlıq sinxronizasiya bağlı deyil';
+      statusEl.innerText = '⚡ Bağlanmayıb';
     }
 
-    if (senkronKey) {
-      subEl.innerText = 'Bu Sync Key-i digər cihazına da (bir dəfə) daxil et ki, ikisi avtomatik sinxronlaşsın.';
-      keyGosterimEl.style.display = 'block';
-      keyGosterimEl.innerText = senkronKey;
-      btnsEl.innerHTML = '<button onclick="senkronKeyKopyala()">📋 Kopyala</button><button onclick="senkronKeySil()">Bağlantını kəs</button>';
+    if (cariGoogleIstifadeci) {
+      subEl.innerText = cariGoogleIstifadeci.email || 'Hesabla bağlısan.';
+      btnsEl.innerHTML = '<button onclick="cixisEt()">Çıxış et</button>';
     } else {
-      subEl.innerText = 'Sync Key olmadan məlumat yadda saxlanmır — səhifə yenilənəndə silinir. Telefon və kompüter arasında sinxron üçün Sync Key yarat və ya daxil et.';
-      keyGosterimEl.style.display = 'none';
-      btnsEl.innerHTML = '<button onclick="senkronKeyOlustur()">🔑 Yeni Sync Key yarat</button><button onclick="senkronKeyGirModalAc()">📋 Var olan Key-i gir</button>';
-    }
-
-    // İkinci sıra: bağlıdırsa "hamısını kopyala", deyilsə "hamısını yapışdır"
-    const btns2El = document.getElementById('firebaseBtns2');
-    if (btns2El) {
-      if (senkronKey && firebaseConfig.apiKey) {
-        btns2El.innerHTML = '<button id="firebaseHamisiBtn" onclick="firebaseHamisiniKopyala()">📦 Hamısını kopyala (4 məlumat)</button>';
-      } else {
-        btns2El.innerHTML = '<button onclick="firebaseHamisiModalAc()">📦 4 məlumatı birdən yapışdır</button>';
-      }
+      subEl.innerText = 'Daxil olmamısan.';
+      btnsEl.innerHTML = '';
     }
   }
 
-  let firebaseKonfiqGozleyenEmeliyyat = null; // konfiq yadda saxlanandan sonra hansı əməliyyata davam ediləcək
-
-  function firebaseKonfiqModalAc(sonraEmeliyyat) {
-    firebaseKonfiqGozleyenEmeliyyat = sonraEmeliyyat || null;
-    document.getElementById('firebaseKonfiqApiKey').value = firebaseConfig.apiKey || '';
-    document.getElementById('firebaseKonfiqAuthDomain').value = firebaseConfig.authDomain || '';
-    document.getElementById('firebaseKonfiqProjectId').value = firebaseConfig.projectId || '';
-    document.getElementById('firebaseKonfiqError').innerText = '';
-    modalAc('firebaseKonfiqModal');
-  }
-
-  function firebaseKonfiqKaydet() {
-    const errEl = document.getElementById('firebaseKonfiqError');
-    const apiKey = document.getElementById('firebaseKonfiqApiKey').value.trim();
-    const authDomain = document.getElementById('firebaseKonfiqAuthDomain').value.trim();
-    const projectId = document.getElementById('firebaseKonfiqProjectId').value.trim();
-    if (!apiKey || !authDomain || !projectId) {
-      errEl.innerText = 'Hər üç sahəni doldur: apiKey, authDomain, projectId.';
-      return;
-    }
-    localStorage.setItem('fb_apiKey', apiKey);
-    localStorage.setItem('fb_authDomain', authDomain);
-    localStorage.setItem('fb_projectId', projectId);
-    firebaseConfig = firebaseConfigOxu();
-    // Əvvəlki konfiqlə artıq başlanmış Firebase App varsa, yenisi ilə yenidən başlamaq üçün sıfırla.
-    // Köhnə app faktiki olaraq firebaseBaslat() içində silinəcək (tək mərkəzli yer).
-    firebaseHazir = false;
-    firestoreDb = null;
-    modalKapat('firebaseKonfiqModal');
-
-    const davamEt = firebaseKonfiqGozleyenEmeliyyat;
-    firebaseKonfiqGozleyenEmeliyyat = null;
-    if (davamEt === 'olustur') senkronKeyOlustur();
-    else if (davamEt === 'gir') senkronKeyGirModalAc();
-  }
-
-  function senkronKeyOlustur() {
-    if (!firebaseConfig.apiKey) { firebaseKonfiqModalAc('olustur'); return; }
-    senkronKey = uzunRastgeleKod(32);
-    localStorage.setItem('firebase_sync_key', senkronKey);
-    veriMenbeGuvenli = true; // tamamilə yeni key — cari yerli vəziyyəti bilə-bilə buluda göndəririk
-    bazaRev = 0; yerliSurum = 0; yazilmisSurum = 0; // yeni key = hələ heç bir bulud sənədi yoxdur
-    firebasePanelGuncelle();
-    // Firebase hələ hazır deyilsə, əvvəlcə başlat, sonra dinlə və yaz.
-    firebaseBaslat().then(() => {
-      firebaseDinlemeyeBasla();
-      firebaseYazEt(); // yerli məlumatı dərhal göndər ki, ilk andan Sync Key işlək olsun
-    });
-  }
-
-  function senkronKeyKopyala() {
-    if (!senkronKey) return;
-    navigator.clipboard.writeText(senkronKey).then(() => {
-      firebasePanelGuncelle('Kopyalandı!');
-      setTimeout(() => firebasePanelGuncelle(), 1500);
-    }).catch(() => alert('Kopyalanmadı, əl ilə seçib kopyala: ' + senkronKey));
-  }
-
-  function senkronKeySil() {
-    confirmAc('Sinxronizasiyanı kəs', 'Bu cihazı Sync Key-dən ayırmaq istəyirsən? Digər cihazlar öz Key-lərini saxlayacaq.', () => {
-      if (firebaseUnsubscribe) { firebaseUnsubscribe(); firebaseUnsubscribe = null; }
-      senkronKey = null;
-      bazaRev = 0; yerliSurum = 0; yazilmisSurum = 0;
-      localStorage.removeItem('firebase_sync_key');
-      firebasePanelGuncelle();
-    });
-  }
-
-  function senkronKeyGirModalAc() {
-    if (!firebaseConfig.apiKey) { firebaseHamisiModalAc(); return; }
-    document.getElementById('senkronKeyGirInput').value = '';
-    document.getElementById('senkronKeyGirError').innerText = '';
-    modalAc('senkronKeyGirModal');
-  }
-
-  async function senkronKeyGirOnayla() {
-    const errEl = document.getElementById('senkronKeyGirError');
-    if (!firebaseConfig.apiKey) { errEl.innerText = 'Əvvəlcə öz Firebase layihə konfiqini daxil et.'; return; }
-    const val = document.getElementById('senkronKeyGirInput').value.trim();
-    if (!val) {
-      errEl.innerText = 'Sync Key yaz.';
-      return;
-    }
-    await senkronKeyIleBaglan(val, errEl, 'senkronKeyGirModal');
-  }
-
-  // Sync Key ilə bağlanmanın ortaq məntiqi (həm "Sync Key gir", həm "Hamısını yapışdır" istifadə edir).
-  // Write-guard (veriMenbeGuvenli) məntiqi olduğu kimi saxlanılıb.
-  async function senkronKeyIleBaglan(val, errEl, modalId) {
-    // TƏHLÜKƏSİZLİK: yeni key təsdiqlənənə (bulud verisi HƏQİQƏTƏN oxunana) qədər
-    // yazma qadağandır. Əvvəllər burada sadəcə passiv onSnapshot dinləməsi
-    // başladılırdı — əgər ilk snapshot gecikirdisə/səssizcə xəta verirdisə, ekran
-    // boş qalır və növbəti hər hansı bir toxunuş bu boşluğu buluda yazıb əsl
-    // datanı silirdi. İndi əvvəlcə AKTİV, gözlənilən bir oxuma edirik.
-    veriMenbeGuvenli = false;
-    errEl.innerText = 'Buluddan yüklənir...';
-
-    try {
-      if (!firebaseHazir) {
-        const hazir = await vaxtAsimiIle(firebaseBaslat(), 15000);
-        if (!hazir || !firestoreDb) {
-          errEl.innerText = 'Buluda qoşulmadı, internetini yoxla və yenidən cəhd et.';
-          return;
-        }
-      }
-
-      const snap = await firestoreDb.collection('syncs').doc(val).get();
-
-      // Yalnız oxuma HƏQİQƏTƏN uğurlu olduqdan sonra key-i təsdiqləyib saxlayırıq.
-      senkronKey = val;
-      localStorage.setItem('firebase_sync_key', senkronKey);
-
-      if (snap.exists && snap.data() && snap.data().data) {
-        driveVerisiniTetbiqEt(snap.data().data);
-        bazaRev = Number(snap.data().rev) || 0;
-      } else {
-        // Sənəd həqiqətən boşdursa (yeni/səhv key) — indi bunu bilə-bilə boşa keçirik.
-        yerliVeriniYukle();
-        bazaRev = 0;
-      }
-      yazilmisSurum = yerliSurum;
-      veriMenbeGuvenli = true;
-
-      modalKapat(modalId);
-      ekraniGuncelle();
-      firebasePanelGuncelle();
-      firebaseDinlemeyeBasla();
-    } catch (e) {
-      console.warn('Sync Key ilə oxuma xətası:', e);
-      errEl.innerText = 'Buluddan oxuma alınmadı, yenidən cəhd et.';
-    }
-  }
-
-  // ==================== 4 məlumatı BİR DƏFƏYƏ kopyala / yapışdır ====================
-  // Format (oxunaqlı, hər sətir ayrı):
-  //   apiKey: ...
-  //   authDomain: ...
-  //   projectId: ...
-  //   syncKey: ...
-  // JSON əvəzinə bu format seçilib: iPhone-un "ağıllı dırnaqları" JSON-u pozur, bu format isə pozulmur.
-  // Ayırıcı həm etiketlərlə (apiKey: ...), həm də Firebase konsolunun verdiyi blokla (apiKey: "..."),
-  // həm də etiketsiz (məlumatın formasına görə) işləyir.
-  function firebaseHamisiAyir(metn) {
-    const s = String(metn || '')
-      .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g, '"')
-      .replace(/[\u2018\u2019\u201A\u201B]/g, "'");
-    const netice = { apiKey: '', authDomain: '', projectId: '', syncKey: '' };
-    const etiket = {
-      apiKey: 'api[\\s_-]*key',
-      authDomain: 'auth[\\s_-]*domain',
-      projectId: 'project[\\s_-]*id',
-      syncKey: 'sync[\\s_-]*key'
-    };
-    Object.keys(etiket).forEach((ad) => {
-      const m = s.match(new RegExp('["\']?' + etiket[ad] + '["\']?\\s*[:=]\\s*["\']?([^"\'\\s,;{}]+)', 'i'));
-      if (m) netice[ad] = m[1].trim();
-    });
-    // Etiketsiz yapışdırılıbsa: məlumatı formasına görə tanı
-    s.split(/[\s,;"'{}]+/).filter(Boolean).forEach((t) => {
-      if (!netice.apiKey && /^AIza[0-9A-Za-z_-]{20,}$/.test(t)) netice.apiKey = t;
-      else if (!netice.authDomain && /^[a-z0-9-]+\.(firebaseapp\.com|web\.app)$/i.test(t)) netice.authDomain = t;
-      else if (!netice.syncKey && /^[0-9a-f]{32}$/i.test(t)) netice.syncKey = t;
-    });
-    // projectId tapılmayıbsa, standart authDomain-dən (layihe.firebaseapp.com) çıxar
-    if (!netice.projectId && netice.authDomain) {
-      const m = netice.authDomain.match(/^([a-z0-9-]+)\.(firebaseapp\.com|web\.app)$/i);
-      if (m) netice.projectId = m[1];
-    }
-    return netice;
-  }
-
-  function firebaseHamisiModalAc() {
-    document.getElementById('firebaseHamisiInput').value = '';
-    document.getElementById('firebaseHamisiError').innerText = '';
-    modalAc('firebaseHamisiModal');
-  }
-
-  async function firebaseHamisiBuferdenOxu() {
-    const errEl = document.getElementById('firebaseHamisiError');
-    try {
-      const metn = await navigator.clipboard.readText();
-      document.getElementById('firebaseHamisiInput').value = metn;
-      errEl.innerText = '';
-    } catch (e) {
-      errEl.innerText = 'Buferə giriş icazəsi verilmədi — yuxarıdakı sahəyə uzun basıb "Yapışdır" seç.';
-    }
-  }
-
-  function firebaseHamisiniKopyala() {
-    if (!firebaseConfig.apiKey || !senkronKey) return;
-    const metn =
-      'apiKey: ' + firebaseConfig.apiKey + '\n' +
-      'authDomain: ' + firebaseConfig.authDomain + '\n' +
-      'projectId: ' + firebaseConfig.projectId + '\n' +
-      'syncKey: ' + senkronKey;
-    const btn = document.getElementById('firebaseHamisiBtn');
-    navigator.clipboard.writeText(metn).then(() => {
-      if (btn) btn.innerText = '✅ Kopyalandı — indi digər cihazda yapışdır';
-      setTimeout(() => firebasePanelGuncelle(), 2500);
-    }).catch(() => prompt('Avtomatik kopyalanmadı. Mətni seçib kopyala:', metn));
-  }
-
-  async function firebaseHamisiOnayla() {
-    const errEl = document.getElementById('firebaseHamisiError');
-    const n = firebaseHamisiAyir(document.getElementById('firebaseHamisiInput').value);
-    const eksik = ['apiKey', 'authDomain', 'projectId'].filter((k) => !n[k]);
-    if (eksik.length) {
-      errEl.innerText = 'Tapılmadı: ' + eksik.join(', ') + '. Məlumatı tam kopyaladığından əmin ol.';
-      return;
-    }
-
-    // Konfiqi bu cihazın localStorage-ına yaz (fayla/GitHub-a getmir)
-    const evvelki = firebaseConfig;
-    localStorage.setItem('fb_apiKey', n.apiKey);
-    localStorage.setItem('fb_authDomain', n.authDomain);
-    localStorage.setItem('fb_projectId', n.projectId);
-    firebaseConfig = firebaseConfigOxu();
-    const deyisdi = evvelki.apiKey !== firebaseConfig.apiKey ||
-                    evvelki.authDomain !== firebaseConfig.authDomain ||
-                    evvelki.projectId !== firebaseConfig.projectId;
-    if (deyisdi) { // yalnız konfiq həqiqətən dəyişibsə Firebase-i sıfırla
-      firebaseHazir = false;
-      firestoreDb = null;
-    }
-
-    if (!n.syncKey) {
-      // Yalnız konfiq yapışdırılıb — Sync Key ayrıca yaradılar/daxil edilər
-      modalKapat('firebaseHamisiModal');
-      firebasePanelGuncelle();
-      return;
-    }
-    await senkronKeyIleBaglan(n.syncKey, errEl, 'firebaseHamisiModal');
-  }
-  // ==================== /4 məlumat ====================
 
   // ==== Sənəd nömrəsi (rev) ilə çakışmasız sinxronizasiya ====
   // ƏVVƏLKİ MƏNTİQ (cihaz saatı ilə "kim daha təzədir" müqayisəsi + hər ekran yenilənməsində yazma)
@@ -2107,7 +1880,7 @@
   // ==================== /Saatlıq avtomatik snapshot backup ====================
   // ==================== /Firebase ====================
 
-  const APP_VERSION = '2.1'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
+  const APP_VERSION = '3.0'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
   let aktifDonem = 'gunluk';
   let goruntulenenTarix = new Date(); goruntulenenTarix.setHours(0, 0, 0, 0);
   let kategoriler = [];
@@ -3934,9 +3707,9 @@
     });
   }
 
-  // veriYukle() özü firebaseBaslat()-ı çağırıb məlumatı Firebase-dən gətirir —
-  // burada ikinci dəfə çağırmırıq (Firebase App-i iki dəfə başlatmaq xəta verər).
-  veriYukle();
+  // Tətbiq Google girişi ilə açılır: uygulamaGirisBaslat() auth vəziyyətini
+  // izləyir və yalnız giriş edildikdə veriYukle()-i özü çağırır.
+  uygulamaGirisBaslat();
   kilidYoxla();
 
   // ==== PWA: Service Worker qeydiyyatı ====
