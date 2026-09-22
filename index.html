@@ -568,9 +568,48 @@
     <input type="email" id="emailGirisEmail" placeholder="E-poçt" autocomplete="username" style="width:100%; margin-bottom:8px; box-sizing:border-box;">
     <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən az 6 simvol)" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
     <button class="btn btn-primary" onclick="emailIleGirisEt()" style="width:100%; margin-bottom:8px;">Daxil ol</button>
-    <button class="btn btn-ghost" onclick="emailIleQeydiyyat()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Hesab yarat (ilk dəfədirsə)</button>
+    <button class="btn btn-ghost" onclick="qeydiyyatModalAc()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Hesab yarat (ilk dəfədirsə)</button>
     <button class="btn btn-ghost" id="tesdiqYenidenBtn" onclick="tesdiqEmailiYenidenGonder()" style="width:100%; margin-bottom:10px; border:1px solid var(--line); display:none;">Təsdiq e-poçtunu yenidən göndər</button>
     <div class="error-text" id="googleGirisXeta"></div>
+  </div>
+</div>
+
+<!-- Hesab yaratma: ayrıca pəncərə (modal) — giriş ekranından fərqli olaraq
+     ad/soyad/telefon da götürür və şifrəni 2 dəfə yazdırıb yoxlayır. -->
+<div id="qeydiyyatModal" class="modal">
+  <div class="modal-content">
+    <h2>Hesab yarat</h2>
+    <p class="hint">Məlumatlarını doldur — hesabın yalnız sənə aid olacaq.</p>
+    <div style="margin-bottom:8px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Ad</label>
+      <input type="text" id="qeydiyyatAd" placeholder="Adın" autocomplete="given-name" style="width:100%; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:8px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Soyad</label>
+      <input type="text" id="qeydiyyatSoyad" placeholder="Soyadın" autocomplete="family-name" style="width:100%; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:8px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Telefon</label>
+      <input type="tel" id="qeydiyyatTelefon" placeholder="Məs: 050 123 45 67" autocomplete="tel" style="width:100%; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:8px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">E-poçt</label>
+      <input type="email" id="qeydiyyatEmail" placeholder="E-poçt" autocomplete="username" style="width:100%; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:8px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə</label>
+      <input type="password" id="qeydiyyatSifre1" placeholder="Məs: Aa12345@" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:6px;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə (təkrar)</label>
+      <input type="password" id="qeydiyyatSifre2" placeholder="Şifrəni təkrar yaz" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
+    </div>
+    <p class="hint" style="margin-top:0;">Şifrə ən az 6 simvol olmalı və ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol (@, #, ! və s.) daxil etməlidir. Məs: Aa12345@</p>
+    <div class="error-text" id="qeydiyyatXeta"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('qeydiyyatModal')">Ləğv et</button>
+      <button class="btn btn-primary" onclick="qeydiyyatGonder()">Hesab yarat</button>
+    </div>
   </div>
 </div>
 
@@ -1070,10 +1109,6 @@
 </div>
 
 <script>
-  // v12: bütün rəqəmlər sıfırlanıb — köhnə yerli data görməzdən gəlinir.
-  // Öz məlumatlarını "Backup bərpa et" düyməsi ilə (və ya Drive bağlısansa avtomatik) geri qaytara bilərsən.
-  const STORAGE_KEY = 'gider-takibi-data-v12';
-
   // ==================== Google Drive avtomatik backup ====================
   // 1) Google Cloud Console-da OAuth Client ID yarat (Web application tipi) və aşağıya yapışdır.
   // 2) Bu faylı http(s):// üzərindən aç (file:// işləmir) — o ünvanı Client ID-nin
@@ -1362,7 +1397,7 @@
   }
 
   function driveBackupVerisi() {
-    return { kategoriler, giderler, anaHesap, kreditLimit, krediBorcu, nagdBakiye, debitBakiye, depozitBakiye, hesabTransferleri, gunlukLimit, hesabEklenib, backupTarixi: sonDeyisiklikVaxti || new Date().toISOString() };
+    return { kategoriler, giderler, anaHesap, kreditLimit, krediBorcu, nagdBakiye, debitBakiye, depozitBakiye, hesabTransferleri, gunlukLimit, hesabEklenib, profil: istifadeciProfili, backupTarixi: sonDeyisiklikVaxti || new Date().toISOString() };
   }
 
   function driveYeniBackupAdi() {
@@ -1397,6 +1432,7 @@
     hesabTransferleri = parsed.hesabTransferleri || [];
     gunlukLimit = (typeof parsed.gunlukLimit === 'number') ? parsed.gunlukLimit : null;
     hesabEklenib = parsed.hesabEklenib || { nagd: false, debit: false, depozit: false };
+    istifadeciProfili = parsed.profil || { ad: '', soyad: '', telefon: '' };
     sonDeyisiklikVaxti = parsed.backupTarixi || new Date().toISOString();
     // QƏSDƏN localStorage-a YAZILMIR — yeganə mənbə Firestore-dur.
   }
@@ -1525,9 +1561,9 @@
   }
   // ==================== /Google Drive ====================
 
-  // ==================== Firebase: hər istifadəçi öz Google hesabı ilə ====================
-  // Sinxronizasiya artıq təsadüfi "Sync Key" ilə deyil, Google girişi ilədir.
-  // Hər istifadəçinin Firestore sənədi onun öz Google uid-i ilə adlanır
+  // ==================== Firebase: hər istifadəçi öz hesabı ilə ====================
+  // Sinxronizasiya artıq təsadüfi "Sync Key" ilə deyil, email/şifrə girişi ilədir.
+  // Hər istifadəçinin Firestore sənədi onun öz uid-i ilə adlanır
   // (syncs/{uid}) və Firestore Security Rules yalnız sahibinin ora yazmasına
   // icazə verir (request.auth.uid == syncId). apiKey/authDomain/projectId
   // "sirr" deyil — Firebase veb konfiqləri həmişə client-side görünür, əsl
@@ -1555,11 +1591,6 @@
     localStorage.setItem('device_id', cihazId);
   }
 
-  function uzunRastgeleKod(uzunluq) {
-    const bytes = crypto.getRandomValues(new Uint8Array(uzunluq));
-    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').slice(0, uzunluq);
-  }
-
   // Konfiq artıq sabitdir (kod daxilində), ona görə tətbiq faylını app-i cəmi
   // BİR DƏFƏ başladır — hər sync əməliyyatında yenidən yaratmağa ehtiyac yoxdur.
   // Bu həm sürəti artırır, həm də Google giriş sessiyasının qorunmasına kömək edir.
@@ -1579,11 +1610,6 @@
     });
   }
 
-  // ==================== Google ilə giriş / çıxış ====================
-  // iOS-da "Ana ekrana əlavə et" ilə açılan standalone PWA-larda signInWithPopup
-  // işləmir: iOS window.open-i məcburən Safari-yə açır və popup pəncərəsi ilə
-  // əsas tətbiq arasında əlaqə (postMessage) qırılır, nəticədə "The requested
-  // action is invalid" xətası görünür. Ona görə standalone rejimdə popup əvəzinə
   // ==================== Email / Şifrə ilə giriş və qeydiyyat ====================
   // Google/Apple OAuth (popup və ya redirect) iOS-da "Ana ekrana əlavə et" ilə
   // açılan standalone tətbiqlərdə xarici domenə (accounts.google.com və s.)
@@ -1625,26 +1651,77 @@
     });
   }
 
-  function emailIleQeydiyyat() {
-    const xetaEl = document.getElementById('googleGirisXeta');
-    const { email, sifre } = emailSifreOxu();
+  // Şifrə tələbi: ən az 6 simvol, ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol (məs: Aa12345@).
+  function sifreGuclumu(sifre) {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{6,}$/.test(sifre || '');
+  }
+
+  // Qeydiyyat zamanı yazılan ad/soyad/telefon Firestore Rules email_verified tələb
+  // etdiyi üçün hesab təsdiqlənənə qədər buluda yazıla bilmir. Ona görə təsdiqə
+  // qədər bu məlumatı müvəqqəti localStorage-da (email-ə bağlı) saxlayırıq, ilk
+  // uğurlu (təsdiqlənmiş) girişdə isə istifadeciProfili-ə köçürüb Firestore-a göndəririk.
+  function gozleyenProfilAcari(email) { return 'gozleyen_profil_' + encodeURIComponent((email || '').trim().toLowerCase()); }
+  function gozleyenProfilYaz(email, profil) {
+    try { localStorage.setItem(gozleyenProfilAcari(email), JSON.stringify(profil)); } catch (e) { /* sakit keç */ }
+  }
+  function gozleyenProfilOxu(email) {
+    try {
+      const xam = localStorage.getItem(gozleyenProfilAcari(email));
+      return xam ? JSON.parse(xam) : null;
+    } catch (e) { return null; }
+  }
+  function gozleyenProfilSil(email) {
+    try { localStorage.removeItem(gozleyenProfilAcari(email)); } catch (e) { /* sakit keç */ }
+  }
+
+  function qeydiyyatModalAc() {
+    document.getElementById('qeydiyyatAd').value = '';
+    document.getElementById('qeydiyyatSoyad').value = '';
+    document.getElementById('qeydiyyatTelefon').value = '';
+    document.getElementById('qeydiyyatEmail').value = document.getElementById('emailGirisEmail').value.trim();
+    document.getElementById('qeydiyyatSifre1').value = '';
+    document.getElementById('qeydiyyatSifre2').value = '';
+    document.getElementById('qeydiyyatXeta').innerText = '';
+    modalAc('qeydiyyatModal');
+  }
+
+  function qeydiyyatGonder() {
+    const xetaEl = document.getElementById('qeydiyyatXeta');
+    const ad = document.getElementById('qeydiyyatAd').value.trim();
+    const soyad = document.getElementById('qeydiyyatSoyad').value.trim();
+    const telefonXam = document.getElementById('qeydiyyatTelefon').value.trim();
+    const email = document.getElementById('qeydiyyatEmail').value.trim();
+    const sifre1 = document.getElementById('qeydiyyatSifre1').value;
+    const sifre2 = document.getElementById('qeydiyyatSifre2').value;
     xetaEl.innerText = '';
-    document.getElementById('tesdiqYenidenBtn').style.display = 'none';
-    if (!email || !sifre) { xetaEl.innerText = 'E-poçt və şifrəni yaz.'; return; }
-    if (sifre.length < 6) { xetaEl.innerText = 'Şifrə ən az 6 simvol olmalıdır.'; return; }
+
+    if (!ad || !soyad) { xetaEl.innerText = 'Ad və soyadını yaz.'; return; }
+    const telefonReqemleri = telefonXam.replace(/[^0-9]/g, '');
+    if (telefonReqemleri.length < 9) { xetaEl.innerText = 'Telefon nömrəsini düzgün yaz (məs: 050 123 45 67).'; return; }
+    if (!email) { xetaEl.innerText = 'E-poçtunu yaz.'; return; }
+    if (!sifre1 || !sifre2) { xetaEl.innerText = 'Şifrəni 2 dəfə yaz.'; return; }
+    if (sifre1 !== sifre2) { xetaEl.innerText = 'Yazdığın 2 şifrə üst-üstə düşmür.'; return; }
+    if (!sifreGuclumu(sifre1)) { xetaEl.innerText = 'Şifrə ən az 6 simvol olmalı və ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol daxil etməlidir (məs: Aa12345@).'; return; }
+
     firebaseBaslat().then((hazir) => {
       if (!hazir) { xetaEl.innerText = 'Bağlantı alınmadı, internetini yoxla və yenidən cəhd et.'; return; }
-      firebase.auth().createUserWithEmailAndPassword(email, sifre).then((deyisim) => {
+      firebase.auth().createUserWithEmailAndPassword(email, sifre1).then((deyisim) => {
         const istifadeci = deyisim.user;
-        return istifadeci.sendEmailVerification().then(() => {
+        gozleyenProfilYaz(email, { ad, soyad, telefon: telefonXam });
+        return istifadeci.updateProfile({ displayName: ad + ' ' + soyad }).catch(() => {}).then(() => istifadeci.sendEmailVerification()).then(() => {
           tesdiqGozleyenIstifadeci = istifadeci;
-          xetaEl.innerText = 'Hesab yaradıldı! Sənə təsdiq linki göndərdik — poçtunu (spam qovluğu da daxil) yoxla, linkə klikləyəndən sonra "Daxil ol" ilə giriş et.';
+          modalKapat('qeydiyyatModal');
+          const girisXetaEl = document.getElementById('googleGirisXeta');
+          document.getElementById('emailGirisEmail').value = email;
+          girisXetaEl.innerText = 'Hesab yaradıldı! Sənə təsdiq linki göndərdik — poçtunu (spam qovluğu da daxil) yoxla, linkə klikləyəndən sonra "Daxil ol" ilə giriş et.';
           document.getElementById('tesdiqYenidenBtn').style.display = 'block';
           return firebase.auth().signOut();
         });
       }).catch((e) => {
         console.warn('Email qeydiyyat xətası:', e);
-        if (e && e.code === 'auth/email-already-in-use') xetaEl.innerText = 'Bu e-poçtla artıq hesab var — "Daxil ol" düyməsini istifadə et.';
+        if (e && e.code === 'auth/email-already-in-use') xetaEl.innerText = 'Bu e-poçtla artıq hesab var — "Ləğv et" edib "Daxil ol" düyməsini istifadə et.';
+        else if (e && e.code === 'auth/invalid-email') xetaEl.innerText = 'E-poçt düzgün deyil.';
+        else if (e && e.code === 'auth/weak-password') xetaEl.innerText = 'Şifrə çox zəifdir.';
         else xetaEl.innerText = 'Qeydiyyat alınmadı: ' + (e && e.code ? e.code : (e && e.message ? e.message : 'naməlum xəta'));
       });
     });
@@ -1697,6 +1774,7 @@
         cariGoogleIstifadeci = null;
         senkronKey = null;
         veriYuklendi = false;
+        istifadeciProfili = { ad: '', soyad: '', telefon: '' };
         document.getElementById('googleGirisEkrani').classList.add('active');
       }
     });
@@ -1717,7 +1795,7 @@
     }
 
     if (cariGoogleIstifadeci) {
-      subEl.innerText = cariGoogleIstifadeci.email || 'Hesabla bağlısan.';
+      subEl.innerText = (istifadeciProfili && istifadeciProfili.ad) ? (istifadeciProfili.ad + ' ' + istifadeciProfili.soyad) : (cariGoogleIstifadeci.email || 'Hesabla bağlısan.');
       btnsEl.innerHTML = '<button onclick="cixisEt()">Çıxış et</button>';
     } else {
       subEl.innerText = 'Daxil olmamısan.';
@@ -1793,7 +1871,6 @@
       yazilmisSurum = yerliSurum;
       veriMenbeGuvenli = true;
       buludVerisiTetbiqSonrasi();
-      if (ilkBaglanti) avtomatikBackupZamanlayiciBasla();
     }, (err) => {
       console.warn('Firestore dinləmə xətası:', err);
       firebasePanelGuncelle('Dinləmə kəsildi.', true);
@@ -1856,72 +1933,6 @@
     if (!konflikt && (yerliDeyisiklikVar() || yazmaTekrarGerek)) firebaseYazPlanla(); // yazma zamanı yeni dəyişiklik olub
   }
 
-  // ==== Saatlıq avtomatik snapshot backup ====
-  // 'syncs/{key}' sənədi HƏMİŞƏ ən son vəziyyəti göstərir (üzərinə yazılır) —
-  // əvvəlki halların tarixçəsini saxlamır. Bu bölmə isə hər ~1 saatda bir
-  // ayrıca, tarixli bir sənəd yaradıb 'backups/{key}/versions/' altında saxlayır,
-  // beləki lazım olsa köhnə bir ana qayıtmaq mümkün olsun. Manuel JSON endirməyə
-  // ehtiyac qalmır.
-  const AVTOMATIK_BACKUP_ARALIGI_MS = 60 * 60 * 1000; // 1 saat
-  const AVTOMATIK_BACKUP_SAXLAMA_SAYI = 48; // ~2 gün, sonra ən köhnələr silinir
-
-  function sonAvtomatikBackupVaxtiOxu() {
-    if (!senkronKey) return 0;
-    const v = localStorage.getItem('son_avtomatik_backup_' + senkronKey);
-    return v ? parseInt(v, 10) : 0;
-  }
-  function sonAvtomatikBackupVaxtiYaz(ms) {
-    if (!senkronKey) return;
-    localStorage.setItem('son_avtomatik_backup_' + senkronKey, String(ms));
-  }
-
-  async function avtomatikBackupYarat() {
-    if (!firebaseHazir || !senkronKey || !firestoreDb) return;
-    try {
-      const indi = new Date();
-      const docId = indi.toISOString();
-      await firestoreDb.collection('backups').doc(senkronKey).collection('versions').doc(docId).set({
-        data: driveBackupVerisi(),
-        backupTarixi: docId,
-        cihazId
-      });
-      sonAvtomatikBackupVaxtiYaz(indi.getTime());
-      avtomatikBackupKohnelerTemizle();
-    } catch (e) {
-      console.warn('Avtomatik backup xətası:', e);
-    }
-  }
-
-  // Yalnız son N snapshotu saxlayır, qalanları silir ki, Firestore-da yer boş qalmasın.
-  // QEYD: bu sorğu üçün Firestore Console-da composite index lazımdır:
-  //   Collection ID: versions (Collection group: aktiv)
-  //   Field: backupTarixi — Descending
-  // Əks halda sorğu səssizcə xəta verəcək (console.warn ilə) və köhnə backup-lar
-  // yığılıb qalacaq.
-  async function avtomatikBackupKohnelerTemizle() {
-    if (!firebaseHazir || !senkronKey || !firestoreDb) return;
-    try {
-      const snap = await firestoreDb.collection('backups').doc(senkronKey).collection('versions')
-        .orderBy('backupTarixi', 'desc').get();
-      if (snap.size <= AVTOMATIK_BACKUP_SAXLAMA_SAYI) return;
-      const silinecekler = snap.docs.slice(AVTOMATIK_BACKUP_SAXLAMA_SAYI);
-      for (const d of silinecekler) { await d.ref.delete(); }
-    } catch (e) {
-      console.warn('Köhnə backup təmizləmə xətası (index yaradılmayıbsa normaldır):', e);
-    }
-  }
-
-  function avtomatikBackupKontrolEt() {
-    if (!firebaseHazir || !senkronKey || !firestoreDb || !veriMenbeGuvenli) return; // təsdiqlənməmiş (boş) vəziyyəti backup etmə
-    const kecenVaxt = Date.now() - sonAvtomatikBackupVaxtiOxu();
-    if (kecenVaxt >= AVTOMATIK_BACKUP_ARALIGI_MS) avtomatikBackupYarat();
-  }
-  let avtomatikBackupInterval = null;
-  function avtomatikBackupZamanlayiciBasla() {
-    avtomatikBackupKontrolEt(); // açılışda / bağlantıdan sonra 1 saatdan çox keçibsə dərhal backup al
-    if (!avtomatikBackupInterval) avtomatikBackupInterval = setInterval(avtomatikBackupKontrolEt, 15 * 60 * 1000);
-  }
-  // ==================== /Saatlıq avtomatik snapshot backup ====================
   // ==================== /Firebase ====================
 
   const APP_VERSION = '3.0'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
@@ -1929,6 +1940,8 @@
   let goruntulenenTarix = new Date(); goruntulenenTarix.setHours(0, 0, 0, 0);
   let kategoriler = [];
   let giderler = [];
+  // Qeydiyyatda yazılan ad/soyad/telefon — 'syncs/{uid}' sənədinin bir hissəsi kimi saxlanır.
+  let istifadeciProfili = { ad: '', soyad: '', telefon: '' };
   let anaHesap = null; // borc (kredit kartı balansı, mənfi ədəd kimi saxlanılır)
   let kreditLimit = null; // kredit kartının limiti
   let krediBorcu = null; // taksitli kredit (ayrıca bölmə) — istifadəçi "Düzəlt" ilə özü təyin edir
@@ -2067,6 +2080,17 @@
       veriMenbeGuvenli = true;
     }
 
+    // Qeydiyyat zamanı email təsdiqindən əvvəl yerli saxlanmış ad/soyad/telefon
+    // varsa, indi (təsdiqlənmiş, buluda yazmaq təhlükəsiz olan anda) tətbiq et.
+    if (veriMenbeGuvenli && cariGoogleIstifadeci && cariGoogleIstifadeci.email && !istifadeciProfili.ad) {
+      const gozleyen = gozleyenProfilOxu(cariGoogleIstifadeci.email);
+      if (gozleyen) {
+        istifadeciProfili = gozleyen;
+        gozleyenProfilSil(cariGoogleIstifadeci.email);
+        firebaseYazEt();
+      }
+    }
+
     yazilmisSurum = yerliSurum;
     veriYuklendi = true;
     appIskeletiOlustur();
@@ -2075,7 +2099,6 @@
     firebasePanelGuncelle();
     if (firebaseHazir && senkronKey) {
       firebaseDinlemeyeBasla();
-      avtomatikBackupZamanlayiciBasla();
     }
   }
 
@@ -3751,7 +3774,7 @@
     });
   }
 
-  // Tətbiq Google girişi ilə açılır: uygulamaGirisBaslat() auth vəziyyətini
+  // Tətbiq email/şifrə girişi ilə açılır: uygulamaGirisBaslat() auth vəziyyətini
   // izləyir və yalnız giriş edildikdə veriYukle()-i özü çağırır.
   uygulamaGirisBaslat();
   kilidYoxla();
