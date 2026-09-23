@@ -537,6 +537,11 @@
     display: none; align-items: center; justify-content: center; padding: 20px;
   }
   .lock-screen.active { display: flex; }
+  /* "Hesab yarat" ekranı: giriş ekranının üstündə açılır, ona görə z-index daha yüksək
+     və içərik uzun ola bilər deyə yuxarıdan başlayıb sürüşə bilir (overflow-y:auto). */
+  #qeydiyyatModal { z-index: 205; align-items: flex-start; overflow-y: auto; }
+  #qeydiyyatModal .lock-box { margin: 32px auto; text-align: left; }
+  #qeydiyyatModal .lock-box > .lock-icon, #qeydiyyatModal .lock-box > h2, #qeydiyyatModal .lock-box > .hint { text-align: center; }
   .lock-box { width: 100%; max-width: 320px; text-align: center; }
   .lock-icon { font-size: 42px; margin-bottom: 10px; }
   .lock-box h2 { margin: 0 0 6px; font-size: 18px; color: var(--ink); }
@@ -574,10 +579,11 @@
   </div>
 </div>
 
-<!-- Hesab yaratma: ayrıca pəncərə (modal) — giriş ekranından fərqli olaraq
+<!-- Hesab yaratma: giriş ekranının davamı kimi tam-ekran görünür (popup deyil) —
      ad/soyad/telefon da götürür və şifrəni 2 dəfə yazdırıb yoxlayır. -->
-<div id="qeydiyyatModal" class="modal">
-  <div class="modal-content">
+<div id="qeydiyyatModal" class="lock-screen">
+  <div class="lock-box">
+    <div class="lock-icon">📝</div>
     <h2>Hesab yarat</h2>
     <p class="hint">Məlumatlarını doldur — hesabın yalnız sənə aid olacaq.</p>
     <div style="margin-bottom:8px;">
@@ -604,12 +610,10 @@
       <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə (təkrar)</label>
       <input type="password" id="qeydiyyatSifre2" placeholder="Şifrəni təkrar yaz" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
     </div>
-    <p class="hint" style="margin-top:0;">Şifrə ən az 6 simvol olmalı və ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol (@, #, ! və s.) daxil etməlidir. Məs: Aa12345@</p>
+    <p class="hint" style="margin-top:0; text-align:left;">Şifrə ən az 6 simvol olmalı və ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol (@, #, ! və s.) daxil etməlidir. Məs: Aa12345@</p>
     <div class="error-text" id="qeydiyyatXeta"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('qeydiyyatModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="qeydiyyatGonder()">Hesab yarat</button>
-    </div>
+    <button class="btn btn-primary" onclick="qeydiyyatGonder()" style="width:100%; margin-top:8px; margin-bottom:8px;">Hesab yarat</button>
+    <button class="btn btn-ghost" onclick="modalKapat('qeydiyyatModal')" style="width:100%; border:1px solid var(--line);">Geri qayıt</button>
   </div>
 </div>
 
