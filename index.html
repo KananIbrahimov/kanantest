@@ -599,8 +599,8 @@
       <input type="tel" id="qeydiyyatTelefon" placeholder="Məs: 050 123 45 67" autocomplete="tel" style="width:100%; box-sizing:border-box;">
     </div>
     <div style="margin-bottom:8px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">E-poçt</label>
-      <input type="email" id="qeydiyyatEmail" placeholder="E-poçt" autocomplete="username" style="width:100%; box-sizing:border-box;">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">E-poçt (yalnız Gmail)</label>
+      <input type="email" id="qeydiyyatEmail" placeholder="adin@gmail.com" autocomplete="username" style="width:100%; box-sizing:border-box;">
     </div>
     <div style="margin-bottom:8px;">
       <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə</label>
@@ -1703,6 +1703,7 @@
     const telefonReqemleri = telefonXam.replace(/[^0-9]/g, '');
     if (telefonReqemleri.length < 9) { xetaEl.innerText = 'Telefon nömrəsini düzgün yaz (məs: 050 123 45 67).'; return; }
     if (!email) { xetaEl.innerText = 'E-poçtunu yaz.'; return; }
+    if (!/^[^\s@]+@gmail\.com$/i.test(email)) { xetaEl.innerText = 'Yalnız Gmail (@gmail.com) ünvanı ilə qeydiyyatdan keçmək olar.'; return; }
     if (!sifre1 || !sifre2) { xetaEl.innerText = 'Şifrəni 2 dəfə yaz.'; return; }
     if (sifre1 !== sifre2) { xetaEl.innerText = 'Yazdığın 2 şifrə üst-üstə düşmür.'; return; }
     if (!sifreGuclumu(sifre1)) { xetaEl.innerText = 'Şifrə ən az 6 simvol olmalı və ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol daxil etməlidir (məs: Aa12345@).'; return; }
@@ -2370,7 +2371,7 @@
         btn.style.background = kat.renk;
         const altYazi = kat.sabitTutar !== null ? kat.sabitTutar.toFixed(2) + ' AZN' : 'Tutar soruşulur';
         btn.innerHTML = `<span class="name">${escapeHtml(kat.ikon)} ${escapeHtml(kat.ad)}</span><span class="sub">${escapeHtml(altYazi)}</span>`;
-        btn.onclick = () => kategoriyeTikla(index); // index = kateqoriyanın ƏSL sıra nömrəsi (qruplaşdırma bunu dəyişmir)
+        uzunBasmaBağla(btn, () => kategoriyeTikla(index), () => amountModalAc(index)); // qısa toxunma: sabit tutar; basılı saxla: bu DƏFƏLİK fərqli tutar
         return btn;
       };
       // Yuxarıda günlük xərclər (tiksizlər), sonra xətt, sonra aylıq sabit xərclər (tiklilər)
@@ -2416,6 +2417,36 @@
 
   function kategoriSebebSorulsun(kat) {
     return !!(kat && kat.sebebSoruş);
+  }
+
+  // ---- Qısa toxunma / basılı saxlama (long-press) ayırdı ----
+  // Kateqoriya düymələrində: qısa toxunma → sabit tutar avtomatik yazılır.
+  // Basılı saxla (məs. 450ms) → həmin dəfəlik fərqli tutar yazmaq üçün ekran açılır,
+  // kateqoriyanın öz sabit tutarı DƏYİŞMİR. Həm toxunma ekranları, həm siçan üçün işləyir.
+  function uzunBasmaBağla(el, qisaFn, uzunFn, esikMs) {
+    const ESIK = esikMs || 450;
+    let timer = null;
+    let uzunTetiklendi = false;
+    const basla = () => {
+      uzunTetiklendi = false;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        uzunTetiklendi = true;
+        timer = null;
+        if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) { /* sakit keç */ } }
+        uzunFn();
+      }, ESIK);
+    };
+    const bitir = () => { if (timer) { clearTimeout(timer); timer = null; } };
+    el.addEventListener('pointerdown', basla);
+    el.addEventListener('pointerup', bitir);
+    el.addEventListener('pointerleave', bitir);
+    el.addEventListener('pointercancel', bitir);
+    el.addEventListener('contextmenu', (e) => e.preventDefault()); // uzun basmada mobil kontekst menyusu çıxmasın
+    el.addEventListener('click', (e) => {
+      if (uzunTetiklendi) { e.preventDefault(); e.stopPropagation(); uzunTetiklendi = false; return; }
+      qisaFn();
+    });
   }
 
   function kategoriyeTikla(index) {
