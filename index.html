@@ -836,6 +836,11 @@
       <h2 style="margin:0; flex:1;">Ayarlar</h2>
     </div>
 
+    <div id="ayarlarXosGeldinKutu" style="margin:2px 2px 16px; display:none;">
+      <div style="font-size:12px; color:var(--muted); font-weight:600;">Xoş gəldin</div>
+      <div id="ayarlarXosGeldinAd" style="font-size:19px; font-weight:700; color:var(--ink); margin-top:1px;"></div>
+    </div>
+
     <div class="ayarlar-kutu" style="margin-bottom:14px;">
       <div class="ayarlar-setir-ic" style="gap:8px;">
         <span class="ayarlar-metin" style="white-space:nowrap;">Günlük xərc limiti</span>
@@ -879,17 +884,12 @@
       </div>
     </div>
 
-    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">⚡ Hesab (Google)</h3>
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">⚡ Hesab</h3>
     <div class="drive-box" id="firebaseBox">
       <div class="drive-status" id="firebaseStatus">⚡ Bağlanmayıb</div>
       <div class="drive-sub" id="firebaseSub">Daxil olmamısan.</div>
       <div class="drive-btns" id="firebaseBtns"></div>
     </div>
-
-    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">💾 Yedək faylı</h3>
-    <button class="ayarlar-kutu ayarlar-setir-ic" id="menuBackupIndir" style="justify-content:flex-start; margin-bottom:8px;" onclick="backupIndir()"><span class="ayarlar-ikon">📥</span><span class="ayarlar-metin">Backup yüklə (JSON)</span></button>
-    <button class="ayarlar-kutu ayarlar-setir-ic" id="menuBackupBerpa" style="justify-content:flex-start; margin-bottom:14px;" onclick="document.getElementById('backupFileInput').click()"><span class="ayarlar-ikon">📤</span><span class="ayarlar-metin">Backup bərpa et</span></button>
-    <input type="file" id="backupFileInput" accept="application/json" style="display:none;" onchange="backupBerpaEt(event)">
 
     </div>
 
@@ -1801,6 +1801,17 @@
       subEl.innerText = 'Daxil olmamısan.';
       btnsEl.innerHTML = '';
     }
+
+    const xosKutu = document.getElementById('ayarlarXosGeldinKutu');
+    const xosAd = document.getElementById('ayarlarXosGeldinAd');
+    if (xosKutu && xosAd) {
+      if (cariGoogleIstifadeci && istifadeciProfili && istifadeciProfili.ad) {
+        xosAd.innerText = istifadeciProfili.ad + ' ' + istifadeciProfili.soyad;
+        xosKutu.style.display = 'block';
+      } else {
+        xosKutu.style.display = 'none';
+      }
+    }
   }
 
 
@@ -2123,53 +2134,6 @@
     }
   }
 
-  // ---- Backup: JSON endir / bərpa et ----
-  function backupIndir() {
-    const data = { kategoriler, giderler, anaHesap, kreditLimit, krediBorcu, nagdBakiye, debitBakiye, depozitBakiye, hesabTransferleri, gunlukLimit, hesabEklenib, backupTarixi: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const tarixEtiket = new Date().toISOString().slice(0, 10);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `gider-backup-${tarixEtiket}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    menuKapat();
-  }
-
-  function backupBerpaEt(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsed = JSON.parse(e.target.result);
-        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('etibarsız backup');
-        confirmAc('Backup bərpa et', 'Mövcud bütün data bu fayldakı ilə əvəz olunacaq. Davam edilsin?', () => {
-          kategoriler = parsed.kategoriler || varsayilanKategoriler;
-          giderler = parsed.giderler || [];
-          anaHesap = (typeof parsed.anaHesap === 'number') ? parsed.anaHesap : null;
-          kreditLimit = (typeof parsed.kreditLimit === 'number') ? parsed.kreditLimit : null;
-          krediBorcu = parsed.krediBorcu || krediBorcuKohnaBackupdanCixar(parsed.aylikXerclar);
-          nagdBakiye = (typeof parsed.nagdBakiye === 'number') ? parsed.nagdBakiye : 0;
-          debitBakiye = (typeof parsed.debitBakiye === 'number') ? parsed.debitBakiye : 0;
-          depozitBakiye = (typeof parsed.depozitBakiye === 'number') ? parsed.depozitBakiye : 0;
-          hesabTransferleri = parsed.hesabTransferleri || [];
-          gunlukLimit = (typeof parsed.gunlukLimit === 'number') ? parsed.gunlukLimit : null;
-          hesabEklenib = parsed.hesabEklenib || { nagd: false, debit: false, depozit: false };
-          veriKaydet();
-          ekraniGuncelle();
-          menuKapat();
-        });
-      } catch (err) {
-        alert('Fayl oxuna bilmədi. Düzgün JSON backup faylı seçdiyinə əmin ol.');
-      }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-  }
 
   function appIskeletiOlustur() {
     const appEl = document.getElementById('app');
