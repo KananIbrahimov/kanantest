@@ -31,8 +31,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
-  /* ==== Tema: Black & Merlot ====
-     Əsas (defolt) rejim = qara + merlot ("dark").  İşıqlı rejim = ivory fon üzərində merlot.
+  /* ==== Tema: Black & Neon Cyan ====
+     Əsas (defolt) rejim = qara + neon firuzəyi ("dark").  İşıqlı rejim = ivory fon üzərində firuzəyi.
      --brand      : dolğu rəngi (kartlar, düymələr, aktiv tab)
      --brand-ink  : mətn / ikon kimi istifadə olunan merlot (fonla kontrastlı)
      --accent-*   : vurğu (proqres zolaqları, balans kartları) */
@@ -44,20 +44,20 @@
     --muted: #7a6a6e;
     --faint: #b9a8ac;
     --line: #eadfe1;
-    --brand: #6d1f33;
-    --brand-deep: #4a1424;
-    --brand-soft: #8a2b44;
-    --brand-ink: #6d1f33;
-    --accent: #b0405c;
-    --accent-soft: #f7e9ed;
-    --accent-line: #e8c7d0;
-    --accent-ink: #8a2b44;
-    --accent-ink-dark: #4a1424;
-    --accent-track: rgba(138,43,68,0.16);
-    --glow: rgba(214,92,124,0.30);
-    --on-brand-1: #ecd0d7;
-    --on-brand-2: #d9aab7;
-    --on-brand-3: #f7e6ea;
+    --brand: #1f686d;
+    --brand-deep: #14464a;
+    --brand-soft: #2b848a;
+    --brand-ink: #1f686d;
+    --accent: #40a9b0;
+    --accent-soft: #e9f6f7;
+    --accent-line: #c7e6e8;
+    --accent-ink: #2b848a;
+    --accent-ink-dark: #14464a;
+    --accent-track: rgba(43,132,138,0.16);
+    --glow: rgba(92,206,214,0.30);
+    --on-brand-1: #d0eaec;
+    --on-brand-2: #aad6d9;
+    --on-brand-3: #e6f6f7;
     --danger: #d63a3a;
     --danger-bg: #fdecec;
     --danger-bg-soft: #fef3f3;
@@ -80,17 +80,17 @@
     --muted: #a8969b;
     --faint: #7a666b;
     --line: #2b2023;
-    --brand: #7d2a3d;
-    --brand-deep: #4d1422;
-    --brand-soft: #9c3a52;
-    --brand-ink: #e39aac;
-    --accent: #c4566f;
-    --accent-soft: #261016;
-    --accent-line: #4b2230;
-    --accent-ink: #e39aac;
-    --accent-ink-dark: #f8d7de;
-    --accent-track: rgba(227,154,172,0.20);
-    --glow: rgba(196,86,111,0.35);
+    --brand: #2a777d;
+    --brand-deep: #14494d;
+    --brand-soft: #3a959c;
+    --brand-ink: #9adee3;
+    --accent: #56bdc4;
+    --accent-soft: #102526;
+    --accent-line: #22484b;
+    --accent-ink: #9adee3;
+    --accent-ink-dark: #d7f6f8;
+    --accent-track: rgba(154,222,227,0.20);
+    --glow: rgba(86,189,196,0.35);
     --danger: #ff6b5e;
     --danger-bg: #3a1614;
     --danger-bg-soft: #2a1210;
@@ -3338,7 +3338,7 @@
     const umumiCemi = kkBorcu + depozitBorcu + krediBorcuQalan;
     document.getElementById('dashUmumiBorcMerkez').innerText = umumiCemi > 0 ? umumiCemi.toFixed(2) : '0.00';
     dashUmumiBorcChart = dairaviCiz('dashUmumiBorcCanvas', dashUmumiBorcChart, [
-      { ad: 'Kredit kartı borcu', tutar: kkBorcu, renk: '#c4566f' },
+      { ad: 'Kredit kartı borcu', tutar: kkBorcu, renk: '#56bdc4' },
       { ad: 'Deposit borcu', tutar: depozitBorcu, renk: '#d9895a' },
       { ad: 'Kredit borcu (xətt)', tutar: krediBorcuQalan, renk: '#9b6b9e' }
     ], 'dashUmumiBorcLegend', ' AZN', 'Borc yoxdur.');
@@ -3351,7 +3351,7 @@
     document.getElementById('dashKrediKartMerkez').innerText = (typeof kreditLimit === 'number') ? limitDeger.toFixed(2) : '—';
     dashKrediKartChart = dairaviCiz('dashKrediKartCanvas', dashKrediKartChart, (typeof kreditLimit === 'number') ? [
       { ad: 'İstifadə olunan', tutar: istifade, renk: cssVar('--danger') || '#d63a3a' },
-      { ad: 'İstifadə edilə bilən', tutar: qalanLimit, renk: cssVar('--brand') || '#7d2a3d' }
+      { ad: 'İstifadə edilə bilən', tutar: qalanLimit, renk: cssVar('--brand') || '#2a777d' }
     ] : [], 'dashKrediKartLegend', ' AZN', 'Kredit kartı hələ əlavə edilməyib.');
 
     // 3. Kredit borcu (taksitli kredit xətt): ödənilmiş / qalan taksit sayı
@@ -3540,7 +3540,7 @@
       }
     });
 
-    const navyRengi = cssVar('--accent') || '#b0405c';
+    const navyRengi = cssVar('--accent') || '#40a9b0';
     const muted = cssVar('--muted') || '#7a6a6e';
     const lineRengi = cssVar('--line') || '#e3e7ee';
 
