@@ -273,6 +273,11 @@
     background: #ff3b30; color: #fff; display: flex; align-items: center; justify-content: center;
     font-size: 17px; font-weight: 800; line-height: 1; box-shadow: 0 2px 6px rgba(0,0,0,.5); z-index: 3; cursor: pointer;
   }
+  .cat-edit-badge {
+    position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%;
+    background: #3a3a3c; color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; line-height: 1; box-shadow: 0 2px 6px rgba(0,0,0,.5); z-index: 3; cursor: pointer;
+  }
 
   /* Xərclər ekranı: günlük (tiksiz) və aylıq sabit (tikli) kateqoriyalar arasında xətt */
   .grid-ayirici {
@@ -780,6 +785,39 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="modalKapat('newCatModal')">Ləğv et</button>
       <button class="btn btn-primary" onclick="yeniKategoriOnayla()">Əlavə et</button>
+    </div>
+  </div>
+</div>
+
+<!-- Kateqoriya paneli: "Ekranı düzənlə" rejimində qələm (✏️) ilə mövcud kateqoriyanı düzənləmək,
+     yaxud "➕ Yeni kateqoriya" ilə yenisini əlavə etmək üçün eyni panel istifadə olunur. -->
+<div id="catPanelModal" class="modal">
+  <div class="modal-content">
+    <h2 id="catPanelBaslik">Kateqoriyanı düzənlə</h2>
+    <div class="modal-item" style="border:none; background:transparent; padding:0;">
+      <div class="field-row">
+        <input type="text" id="catPanelIkon" style="width:52px; text-align:center;">
+        <input type="text" id="catPanelAd" placeholder="Kateqoriya adı" style="flex:1;">
+        <button id="catPanelSilBtn" onclick="catPanelSil()" style="background:none; border:none; cursor:pointer; font-size:14px;">🗑</button>
+      </div>
+      <label class="field-row" style="gap:8px; font-size:13px; font-weight:600; color:var(--ink); border-top:1px solid var(--line); padding-top:8px; cursor:pointer;">
+        <input type="checkbox" id="catPanelAylik" style="width:auto;">
+        <span>📌 Aylıq sabit xərc <span style="font-weight:400; color:var(--muted);">(tiksiz = günlük)</span></span>
+      </label>
+      <div class="field-row" style="font-size:12px; color:var(--muted); gap:6px;">
+        <span>Sabit tutar:</span>
+        <input type="number" step="0.01" min="0" id="catPanelSabit" placeholder="Soruş" style="width:78px;">
+      </div>
+      <div class="renk-grid" id="catPanelRenkGrid"></div>
+      <label class="field-row" style="gap:6px; font-size:12px; color:var(--muted); padding-top:2px; cursor:pointer;">
+        <input type="checkbox" id="catPanelSebeb" style="width:auto;">
+        <span>Əlavə edərkən səbəb də soruşulsun</span>
+      </label>
+    </div>
+    <div class="error-text" id="catPanelError"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="modalKapat('catPanelModal')">Ləğv et</button>
+      <button class="btn btn-primary" id="catPanelSaveBtn" onclick="catPanelSaxla()">Yadda saxla</button>
     </div>
   </div>
 </div>
@@ -2185,6 +2223,7 @@
         </div>
       </div>
       <div id="butonlarKonteyneri" class="grid-buttons"></div>
+      <button class="dashed-btn" id="kateqoriyaEkleBtn" onclick="catPanelYeniAc()" style="display:none;">➕ Yeni kateqoriya əlavə et</button>
       <button class="dashed-btn" id="duzenlemeBtn" onclick="duzenlemeRejimiDeyis()">✏️ Ekranı düzənlə</button>
       <button class="dashed-btn" onclick="islemFormModalAc(null)">🕓 Köhnə tarixli xərc əlavə et</button>
     `;
@@ -2377,6 +2416,8 @@
     const butonlarEl = document.getElementById('butonlarKonteyneri');
     const duzenlemeBtnEl = document.getElementById('duzenlemeBtn');
     if (duzenlemeBtnEl) duzenlemeBtnEl.innerText = duzenlemeRejimi ? '✅ Hazırdır' : '✏️ Ekranı düzənlə';
+    const kateqoriyaEkleBtnEl = document.getElementById('kateqoriyaEkleBtn');
+    if (kateqoriyaEkleBtnEl) kateqoriyaEkleBtnEl.style.display = duzenlemeRejimi ? 'flex' : 'none';
     if (butonlarEl) {
       butonlarEl.innerHTML = '';
       const kategoriDugmesiYarat = (kat, index) => {
@@ -2394,6 +2435,12 @@
           badge.addEventListener('pointerdown', (e) => e.stopPropagation());
           badge.addEventListener('click', (e) => { e.stopPropagation(); kategoriSilOnayla(index); });
           btn.appendChild(badge);
+          const editBadge = document.createElement('span');
+          editBadge.className = 'cat-edit-badge';
+          editBadge.innerText = '✏️';
+          editBadge.addEventListener('pointerdown', (e) => e.stopPropagation());
+          editBadge.addEventListener('click', (e) => { e.stopPropagation(); catPanelDuzenleAc(index); });
+          btn.appendChild(editBadge);
           kateqoriyaSuruklemeBağla(btn); // sərbəst sürükləmə: heç bir gözləmə yoxdur, artıq düzənləmə rejimindəyik
         } else {
           uzunBasmaBağla(btn, () => kategoriyeTikla(index), () => amountModalAc(index)); // qısa toxunma: sabit tutar; basılı saxla: bu DƏFƏLİK fərqli tutar
@@ -2822,6 +2869,103 @@
     veriKaydet();
     ekraniGuncelle();
     if (document.getElementById('yonetimModal').classList.contains('active')) modalListesiniDoldur();
+  }
+
+  // ---- Kateqoriya paneli (✏️ ilə düzənləmə və ➕ ilə əlavə etmə eyni paneldən keçir) ----
+  let catPanelIndex = null; // null = yeni kateqoriya əlavə edilir, əks halda düzənlənən kateqoriyanın indeksidir
+  let catPanelSecilenRenk = null;
+
+  function catPanelRenkleriCiz() {
+    const grid = document.getElementById('catPanelRenkGrid');
+    if (!grid) return;
+    grid.innerHTML = renkPaleti.map(r =>
+      `<span class="swatch ${catPanelSecilenRenk === r ? 'selected' : ''}" style="background:${escapeHtml(r)}" onclick="catPanelRenkSec('${escapeHtml(r)}')"></span>`
+    ).join('');
+  }
+  window.catPanelRenkSec = (renk) => { catPanelSecilenRenk = renk; catPanelRenkleriCiz(); };
+
+  // Kateqoriya kartındakı ✏️ nişanına basanda: mövcud kateqoriyanı bu paneldə düzənlə
+  function catPanelDuzenleAc(index) {
+    const kat = kategoriler[index];
+    if (!kat) return;
+    catPanelIndex = index;
+    document.getElementById('catPanelBaslik').innerText = 'Kateqoriyanı düzənlə';
+    document.getElementById('catPanelIkon').value = kat.ikon;
+    document.getElementById('catPanelAd').value = kat.ad;
+    document.getElementById('catPanelAylik').checked = !!kat.aylik;
+    document.getElementById('catPanelSabit').value = kat.sabitTutar !== null ? kat.sabitTutar : '';
+    document.getElementById('catPanelSebeb').checked = !!kat.sebebSoruş;
+    catPanelSecilenRenk = kat.renk;
+    catPanelRenkleriCiz();
+    const silBtn = document.getElementById('catPanelSilBtn'); if (silBtn) silBtn.style.display = '';
+    document.getElementById('catPanelSaveBtn').innerText = 'Yadda saxla';
+    document.getElementById('catPanelError').innerText = '';
+    modalAc('catPanelModal');
+  }
+
+  // "➕ Yeni kateqoriya əlavə et" düyməsinə basanda: eyni panel boş vəziyyətdə açılır
+  function catPanelYeniAc() {
+    catPanelIndex = null;
+    document.getElementById('catPanelBaslik').innerText = 'Yeni kateqoriya';
+    document.getElementById('catPanelIkon').value = '💰';
+    document.getElementById('catPanelAd').value = '';
+    document.getElementById('catPanelAylik').checked = false;
+    document.getElementById('catPanelSabit').value = '';
+    document.getElementById('catPanelSebeb').checked = false;
+    const istifadeOlunanRenkler = new Set(kategoriler.map(k => k.renk));
+    catPanelSecilenRenk = renkPaleti.find(r => !istifadeOlunanRenkler.has(r)) || renkPaleti[kategoriler.length % renkPaleti.length];
+    catPanelRenkleriCiz();
+    const silBtn = document.getElementById('catPanelSilBtn'); if (silBtn) silBtn.style.display = 'none';
+    document.getElementById('catPanelSaveBtn').innerText = 'Əlavə et';
+    document.getElementById('catPanelError').innerText = '';
+    modalAc('catPanelModal');
+  }
+
+  function catPanelSil() {
+    if (catPanelIndex === null) return;
+    if (kategoriler.length <= 1) { confirmAc('Mümkün deyil', 'Ən azı bir kateqoriya qalmalıdır.', () => {}); return; }
+    const index = catPanelIndex;
+    confirmAc('Kateqoriyanı sil', kategoriler[index].ad + ' kateqoriyasını silmək istədiyinə əminsən?', () => {
+      kategoriler.splice(index, 1);
+      veriKaydet();
+      modalKapat('catPanelModal');
+      ekraniGuncelle();
+      if (document.getElementById('yonetimModal') && document.getElementById('yonetimModal').classList.contains('active')) modalListesiniDoldur();
+    });
+  }
+
+  function catPanelSaxla() {
+    const ad = document.getElementById('catPanelAd').value.trim();
+    const ikon = document.getElementById('catPanelIkon').value.trim() || '💰';
+    if (!ad) { document.getElementById('catPanelError').innerText = 'Kateqoriya adı boş ola bilməz.'; return; }
+    const kicik = (x) => x.toLocaleLowerCase('az-AZ');
+    const tekrarVarmi = kategoriler.some((k, j) => j !== catPanelIndex && kicik(k.ad) === kicik(ad));
+    if (tekrarVarmi) { document.getElementById('catPanelError').innerText = 'Bu adda kateqoriya artıq var.'; return; }
+    const sabitVal = document.getElementById('catPanelSabit').value;
+    let sabitTutar = null;
+    if (sabitVal.trim() !== '') {
+      const p = parseFloat(sabitVal.replace(',', '.'));
+      if (!isNaN(p) && p >= 0) sabitTutar = p;
+    }
+    const aylik = document.getElementById('catPanelAylik').checked;
+    const sebeb = document.getElementById('catPanelSebeb').checked;
+    const renk = catPanelSecilenRenk || renkPaleti[0];
+
+    if (catPanelIndex === null) {
+      kategoriler.push({ ad, sabitTutar, renk, ikon, aylik, sebebSoruş: sebeb });
+    } else {
+      const kat = kategoriler[catPanelIndex];
+      const kohneAd = kat.ad;
+      if (kohneAd !== ad) {
+        giderler.forEach(g => { if (g.kategori === kohneAd) g.kategori = ad; });
+        if (amountModalKategoriAdi === kohneAd) amountModalKategoriAdi = ad;
+      }
+      kat.ad = ad; kat.ikon = ikon; kat.sabitTutar = sabitTutar; kat.renk = renk; kat.aylik = aylik; kat.sebebSoruş = sebeb;
+    }
+    veriKaydet();
+    modalKapat('catPanelModal');
+    ekraniGuncelle();
+    if (document.getElementById('yonetimModal') && document.getElementById('yonetimModal').classList.contains('active')) modalListesiniDoldur();
   }
 
   // ---- Confirm modal ----
