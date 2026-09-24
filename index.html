@@ -586,12 +586,12 @@
   <div class="lock-box">
     <img src="icon-192.png" alt="Safe Money" style="width:64px; height:64px; border-radius:16px; margin-bottom:10px;">
     <h2>Safe Money</h2>
-    <p class="hint" id="emailGirisHint">Davam etmək üçün email və şifrənlə daxil ol. Məlumatların yalnız sənin hesabına bağlı olacaq.</p>
-    <input type="email" id="emailGirisEmail" placeholder="E-poçt" autocomplete="username" style="width:100%; margin-bottom:8px; box-sizing:border-box;">
-    <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən az 6 simvol)" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
-    <button class="btn btn-primary" onclick="emailIleGirisEt()" style="width:100%; margin-bottom:8px;">Daxil ol</button>
-    <button class="btn btn-ghost" onclick="qeydiyyatModalAc()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Hesab yarat (ilk dəfədirsə)</button>
-    <button class="btn btn-ghost" id="tesdiqYenidenBtn" onclick="tesdiqEmailiYenidenGonder()" style="width:100%; margin-bottom:10px; border:1px solid var(--line); display:none;">Təsdiq e-poçtunu yenidən göndər</button>
+    <p data-i18n="giris.davamEtmekUcunEmail" class="hint" id="emailGirisHint">Davam etmək üçün email və şifrənlə daxil ol. Məlumatların yalnız sənin hesabına bağlı olacaq.</p>
+    <input type="email" id="emailGirisEmail" placeholder="E-poçt" data-i18n-placeholder="giris.ePoctPlaceholder" autocomplete="username" style="width:100%; margin-bottom:8px; box-sizing:border-box;">
+    <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən az 6 simvol)" data-i18n-placeholder="giris.sifreEnAz6Placeholder" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
+    <button data-i18n="giris.daxilOl" class="btn btn-primary" onclick="emailIleGirisEt()" style="width:100%; margin-bottom:8px;">Daxil ol</button>
+    <button data-i18n="giris.hesabYaratIlkDefedirse" class="btn btn-ghost" onclick="qeydiyyatModalAc()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Hesab yarat (ilk dəfədirsə)</button>
+    <button data-i18n="giris.tesdiqEPoctunuYeniden" class="btn btn-ghost" id="tesdiqYenidenBtn" onclick="tesdiqEmailiYenidenGonder()" style="width:100%; margin-bottom:10px; border:1px solid var(--line); display:none;">Təsdiq e-poçtunu yenidən göndər</button>
     <div class="error-text" id="googleGirisXeta"></div>
   </div>
 </div>
@@ -601,32 +601,32 @@
 <div id="qeydiyyatModal" class="lock-screen">
   <div class="lock-box">
     <div class="lock-icon">📝</div>
-    <h2>Hesab yarat</h2>
-    <p class="hint">Məlumatlarını doldur — hesabın yalnız sənə aid olacaq.</p>
+    <h2 data-i18n="qeyd.hesabYarat">Hesab yarat</h2>
+    <p data-i18n="qeyd.melumatlariniDoldurHesabinYalniz" class="hint">Məlumatlarını doldur — hesabın yalnız sənə aid olacaq.</p>
     <div style="margin-bottom:8px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Ad</label>
-      <input type="text" id="qeydiyyatAd" placeholder="Adın" autocomplete="given-name" style="width:100%; box-sizing:border-box;">
+      <label data-i18n="qeyd.ad" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Ad</label>
+      <input type="text" id="qeydiyyatAd" placeholder="Adın" data-i18n-placeholder="qeyd.adinPlaceholder" autocomplete="given-name" style="width:100%; box-sizing:border-box;">
     </div>
     <div style="margin-bottom:8px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Soyad</label>
-      <input type="text" id="qeydiyyatSoyad" placeholder="Soyadın" autocomplete="family-name" style="width:100%; box-sizing:border-box;">
+      <label data-i18n="qeyd.soyad" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Soyad</label>
+      <input type="text" id="qeydiyyatSoyad" placeholder="Soyadın" data-i18n-placeholder="qeyd.soyadinPlaceholder" autocomplete="family-name" style="width:100%; box-sizing:border-box;">
     </div>
     <div style="margin-bottom:8px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">E-poçt (yalnız Gmail)</label>
-      <input type="email" id="qeydiyyatEmail" placeholder="adin@gmail.com" autocomplete="username" style="width:100%; box-sizing:border-box;">
+      <label data-i18n="qeyd.ePoctYalnizGmail" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">E-poçt (yalnız Gmail)</label>
+      <input type="email" id="qeydiyyatEmail" placeholder="adin@gmail.com" data-i18n-placeholder="qeyd.adinGmailComPlaceholder" autocomplete="username" style="width:100%; box-sizing:border-box;">
     </div>
     <div style="margin-bottom:8px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə</label>
-      <input type="password" id="qeydiyyatSifre1" placeholder="Məs: Aa12345@" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
+      <label data-i18n="qeyd.sifre" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə</label>
+      <input type="password" id="qeydiyyatSifre1" placeholder="Məs: Aa12345@" data-i18n-placeholder="qeyd.mesAa12345Placeholder" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
     </div>
     <div style="margin-bottom:6px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə (təkrar)</label>
-      <input type="password" id="qeydiyyatSifre2" placeholder="Şifrəni təkrar yaz" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
+      <label data-i18n="qeyd.sifreTekrar" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə (təkrar)</label>
+      <input type="password" id="qeydiyyatSifre2" placeholder="Şifrəni təkrar yaz" data-i18n-placeholder="qeyd.sifreniTekrarYazPlaceholder" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
     </div>
-    <p class="hint" style="margin-top:0; text-align:left;">Şifrə ən az 6 simvol olmalı və ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol (@, #, ! və s.) daxil etməlidir. Məs: Aa12345@</p>
+    <p data-i18n="qeyd.sifreEnAz6" class="hint" style="margin-top:0; text-align:left;">Şifrə ən az 6 simvol olmalı və ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol (@, #, ! və s.) daxil etməlidir. Məs: Aa12345@</p>
     <div class="error-text" id="qeydiyyatXeta"></div>
-    <button class="btn btn-primary" onclick="qeydiyyatGonder()" style="width:100%; margin-top:8px; margin-bottom:8px;">Hesab yarat</button>
-    <button class="btn btn-ghost" onclick="modalKapat('qeydiyyatModal')" style="width:100%; border:1px solid var(--line);">Geri qayıt</button>
+    <button data-i18n="qeyd.hesabYarat" class="btn btn-primary" onclick="qeydiyyatGonder()" style="width:100%; margin-top:8px; margin-bottom:8px;">Hesab yarat</button>
+    <button data-i18n="qeyd.geriQayit" class="btn btn-ghost" onclick="modalKapat('qeydiyyatModal')" style="width:100%; border:1px solid var(--line);">Geri qayıt</button>
   </div>
 </div>
 
@@ -634,12 +634,12 @@
 <div class="lock-screen" id="kilidEkrani">
   <div class="lock-box">
     <div class="lock-icon">🔒</div>
-    <h2>Tətbiq kilidlidir</h2>
-    <p class="hint" id="kilidHint">Davam etmək üçün təsdiqlə.</p>
-    <button class="btn btn-primary" id="kilidFaceBtn" onclick="kilidWebAuthnDogrula()" style="width:100%; margin-bottom:10px; display:none;">🔓 Face ID / Touch ID ilə aç</button>
+    <h2 data-i18n="kilid.tetbiqKilidlidir">Tətbiq kilidlidir</h2>
+    <p data-i18n="kilid.davamEtmekUcunTesdiqle" class="hint" id="kilidHint">Davam etmək üçün təsdiqlə.</p>
+    <button data-i18n="kilid.faceIdTouchId" class="btn btn-primary" id="kilidFaceBtn" onclick="kilidWebAuthnDogrula()" style="width:100%; margin-bottom:10px; display:none;">🔓 Face ID / Touch ID ilə aç</button>
     <div id="kilidPinWrap" style="display:none;">
-      <input type="password" inputmode="numeric" maxlength="4" id="kilidPinInput" placeholder="PIN kodu">
-      <button class="btn btn-primary" onclick="kilidPinIleAc()" style="width:100%;">Aç</button>
+      <input type="password" inputmode="numeric" maxlength="4" id="kilidPinInput" placeholder="PIN kodu" data-i18n-placeholder="kilid.pinKoduPlaceholder">
+      <button data-i18n="kilid.ac" class="btn btn-primary" onclick="kilidPinIleAc()" style="width:100%;">Aç</button>
     </div>
     <div class="error-text" id="kilidError"></div>
   </div>
@@ -648,34 +648,34 @@
 <!-- PIN təyin etmə (Face ID mövcud olmayanda ehtiyat) -->
 <div id="pinAyarlaModal" class="modal">
   <div class="modal-content">
-    <h2>Ehtiyat PIN təyin et</h2>
-    <p class="hint">Bu cihaz Face ID/Touch ID dəstəkləmir (və ya rədd edildi). 4 rəqəmli bir PIN qoy.</p>
-    <input type="password" inputmode="numeric" maxlength="4" id="pinAyarlaInput" placeholder="Məs: 1234" style="text-align:center; letter-spacing:8px; font-size:18px;">
+    <h2 data-i18n="pin.ehtiyatPinTeyinEt">Ehtiyat PIN təyin et</h2>
+    <p data-i18n="pin.buCihazFaceId" class="hint">Bu cihaz Face ID/Touch ID dəstəkləmir (və ya rədd edildi). 4 rəqəmli bir PIN qoy.</p>
+    <input type="password" inputmode="numeric" maxlength="4" id="pinAyarlaInput" placeholder="Məs: 1234" data-i18n-placeholder="pin.mes1234Placeholder" style="text-align:center; letter-spacing:8px; font-size:18px;">
     <div class="error-text" id="pinAyarlaError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('pinAyarlaModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="pinAyarlaOnayla()">Təyin et</button>
+      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('pinAyarlaModal')">Ləğv et</button>
+      <button data-i18n="pin.teyinEt" class="btn btn-primary" onclick="pinAyarlaOnayla()">Təyin et</button>
     </div>
   </div>
 </div>
 
 <div class="container" id="app">
-  <div class="loading-screen" id="loadingScreen">Yüklənir...</div>
+  <div class="loading-screen" id="loadingScreen" data-i18n="umumi.yuklenir">Yüklənir...</div>
 </div>
 
 <!-- Dashboard tab: kredit kartının güncəl borcu -->
 <div id="dashboardModal" class="page-screen">
   <div class="page-inner">
     <div style="padding-bottom:12px; margin-bottom:4px;">
-      <h2 style="margin:0;">Dashboard</h2>
+      <h2 data-i18n="nav.dashboard" style="margin:0;">Dashboard</h2>
     </div>
 
     <!-- 1. Ümumi Borc — dairəvi diaqram -->
     <div class="pie-card">
-      <div class="pie-title">📊 Ümumi borc</div>
+      <div data-i18n="dash.umumiBorc" class="pie-title">📊 Ümumi borc</div>
       <div class="pie-card-row">
         <div class="pie-canvas-wrap"><canvas id="dashUmumiBorcCanvas"></canvas>
-          <div class="pie-center-label"><span class="n" id="dashUmumiBorcMerkez">—</span><span class="l">cəm</span></div>
+          <div class="pie-center-label"><span class="n" id="dashUmumiBorcMerkez">—</span><span data-i18n="dash.cem" class="l">cəm</span></div>
         </div>
         <div class="pie-legend" id="dashUmumiBorcLegend"></div>
       </div>
@@ -683,10 +683,10 @@
 
     <!-- 2. Kredit kartı — istifadə olunan / istifadə edilə bilən — dairəvi diaqram -->
     <div class="pie-card">
-      <div class="pie-title">💳 Kredit kartı limiti</div>
+      <div data-i18n="dash.kreditKartiLimiti" class="pie-title">💳 Kredit kartı limiti</div>
       <div class="pie-card-row">
         <div class="pie-canvas-wrap"><canvas id="dashKrediKartCanvas"></canvas>
-          <div class="pie-center-label"><span class="n" id="dashKrediKartMerkez">—</span><span class="l">limit</span></div>
+          <div class="pie-center-label"><span class="n" id="dashKrediKartMerkez">—</span><span data-i18n="dash.limit" class="l">limit</span></div>
         </div>
         <div class="pie-legend" id="dashKrediKartLegend"></div>
       </div>
@@ -694,10 +694,10 @@
 
     <!-- 3. Kredit borcu (taksit) — ödənilib / qalıb — dairəvi diaqram -->
     <div class="pie-card">
-      <div class="pie-title">🧾 Kredit borcu — taksit ödənilib</div>
+      <div data-i18n="dash.kreditBorcuTaksitOdenilib" class="pie-title">🧾 Kredit borcu — taksit ödənilib</div>
       <div class="pie-card-row">
         <div class="pie-canvas-wrap"><canvas id="dashKrediBorcuCanvas"></canvas>
-          <div class="pie-center-label"><span class="n" id="dashKrediBorcuMerkez">—</span><span class="l">taksit</span></div>
+          <div class="pie-center-label"><span class="n" id="dashKrediBorcuMerkez">—</span><span data-i18n="dash.taksit" class="l">taksit</span></div>
         </div>
         <div class="pie-legend" id="dashKrediBorcuLegend"></div>
       </div>
@@ -710,19 +710,19 @@
 <nav class="bottom-nav" id="bottomNav">
   <div class="bottom-nav-inner">
     <button class="nav-item" id="navDashboard" onclick="sekmeSec('dashboard')">
-      <span class="nav-icon">📊</span><span>Dashboard</span>
+      <span class="nav-icon">📊</span><span data-i18n="nav.dashboard">Dashboard</span>
     </button>
     <button class="nav-item" id="navAylikHesabat" onclick="sekmeSec('aylikHesabat')">
-      <span class="nav-icon">📈</span><span>Aylıq</span>
+      <span class="nav-icon">📈</span><span data-i18n="nav.aylik">Aylıq</span>
     </button>
     <button class="nav-item active" id="navAna" onclick="sekmeSec('ana')">
-      <span class="nav-icon">🧾</span><span>Xərclər</span>
+      <span class="nav-icon">🧾</span><span data-i18n="nav.xercler">Xərclər</span>
     </button>
     <button class="nav-item" id="navHesablar" onclick="sekmeSec('hesablar')">
-      <span class="nav-icon">💰</span><span>Hesablar</span>
+      <span class="nav-icon">💰</span><span data-i18n="nav.hesablar">Hesablar</span>
     </button>
     <button class="nav-item" id="navAyarlar" onclick="sekmeSec('ayarlar')">
-      <span class="nav-icon">⚙️</span><span>Ayarlar</span>
+      <span class="nav-icon">⚙️</span><span data-i18n="nav.ayarlar">Ayarlar</span>
     </button>
   </div>
 </nav>
@@ -730,17 +730,17 @@
 <!-- Amount entry modal -->
 <div id="amountModal" class="modal">
   <div class="modal-content">
-    <h2 id="amountModalTitle">Tutarı daxil et</h2>
-    <p class="hint">Bu xərc üçün məbləği AZN olaraq yaz.</p>
+    <h2 data-i18n="mebleg.tutariDaxilEt" id="amountModalTitle">Tutarı daxil et</h2>
+    <p data-i18n="mebleg.buXercUcunMeblegi" class="hint">Bu xərc üçün məbləği AZN olaraq yaz.</p>
     <input type="number" step="0.01" min="0" id="amountInput" placeholder="0.00" style="margin-bottom:10px;">
     <div id="amountReasonWrap" style="display:none;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Səbəb</label>
-      <input type="text" id="amountReasonInput" placeholder="Məs: Taksi, hədiyyə, təmir...">
+      <label data-i18n="mebleg.sebeb" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Səbəb</label>
+      <input type="text" id="amountReasonInput" placeholder="Məs: Taksi, hədiyyə, təmir..." data-i18n-placeholder="mebleg.mesTaksiHediyyeTemirPlaceholder">
     </div>
     <div class="error-text" id="amountError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('amountModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="amountModalOnayla()">Əlavə et</button>
+      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('amountModal')">Ləğv et</button>
+      <button data-i18n="mebleg.elaveEt" class="btn btn-primary" onclick="amountModalOnayla()">Əlavə et</button>
     </div>
   </div>
 </div>
@@ -748,20 +748,20 @@
 <!-- Credit card modal: limit + actual balance -->
 <div id="balanceModal" class="modal">
   <div class="modal-content">
-    <h2>Kredit kartı</h2>
-    <p class="hint">Kartının limitini və hazırkı borcunu yaz. Hər xərc avtomatik olaraq borcu artıracaq (mənfi tərəfə).</p>
+    <h2 data-i18n="kreditKart.kreditKarti">Kredit kartı</h2>
+    <p data-i18n="kreditKart.kartininLimitiniVeHazirki" class="hint">Kartının limitini və hazırkı borcunu yaz. Hər xərc avtomatik olaraq borcu artıracaq (mənfi tərəfə).</p>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Kredit limiti (AZN)</label>
-      <input type="number" step="0.01" min="0" id="cardLimitInput" placeholder="Məs: 2000">
+      <label data-i18n="kreditKart.kreditLimitiAzn" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Kredit limiti (AZN)</label>
+      <input type="number" step="0.01" min="0" id="cardLimitInput" placeholder="Məs: 2000" data-i18n-placeholder="kreditKart.mes2000Placeholder">
     </div>
     <div style="margin-bottom:6px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Borc (AZN)</label>
-      <input type="number" step="0.01" max="0" id="cardBalanceInput" placeholder="Məs: -800">
+      <label data-i18n="kreditKart.borcAzn" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Borc (AZN)</label>
+      <input type="number" step="0.01" max="0" id="cardBalanceInput" placeholder="Məs: -800" data-i18n-placeholder="kreditKart.mes800Placeholder">
     </div>
     <div class="error-text" id="balanceError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('balanceModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="balanceModalOnayla()">Yadda saxla</button>
+      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('balanceModal')">Ləğv et</button>
+      <button data-i18n="umumi.yaddaSaxla" class="btn btn-primary" onclick="balanceModalOnayla()">Yadda saxla</button>
     </div>
   </div>
 </div>
@@ -769,22 +769,22 @@
 <!-- New category modal -->
 <div id="newCatModal" class="modal">
   <div class="modal-content">
-    <h2>Yeni kateqoriya</h2>
-    <p class="hint">Ad ver və istəsən sabit bir məbləğ təyin et.</p>
+    <h2 data-i18n="yeniKat.yeniKateqoriya">Yeni kateqoriya</h2>
+    <p data-i18n="yeniKat.adVerVeIstesen" class="hint">Ad ver və istəsən sabit bir məbləğ təyin et.</p>
     <div class="field-row" style="margin-bottom:10px;">
-      <input type="text" id="newCatName" placeholder="Məs: Metro, Kofe, Fatura">
+      <input type="text" id="newCatName" placeholder="Məs: Metro, Kofe, Fatura" data-i18n-placeholder="yeniKat.mesMetroKofeFaturaPlaceholder">
     </div>
     <div class="field-row" style="margin-bottom:6px;">
-      <input type="number" step="0.01" min="0" id="newCatFixed" placeholder="Sabit tutar (boş = hər dəfə soruş)">
+      <input type="number" step="0.01" min="0" id="newCatFixed" placeholder="Sabit tutar (boş = hər dəfə soruş)" data-i18n-placeholder="yeniKat.sabitTutarBosHerPlaceholder">
     </div>
     <label class="field-row" style="gap:8px; font-size:13px; color:var(--ink); margin:4px 0 10px; cursor:pointer;">
       <input type="checkbox" id="newCatAylik" style="width:auto;">
-      <span>📌 Aylıq sabit xərcdir <span style="color:var(--muted);">(tik yoxdursa – günlük xərc)</span></span>
+      <span><span data-i18n="yeniKat.aylikSabitXercdir">📌 Aylıq sabit xərcdir</span> <span data-i18n="yeniKat.tikYoxdursaGunlukXerc" style="color:var(--muted);">(tik yoxdursa – günlük xərc)</span></span>
     </label>
     <div class="error-text" id="newCatError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('newCatModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="yeniKategoriOnayla()">Əlavə et</button>
+      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('newCatModal')">Ləğv et</button>
+      <button data-i18n="yeniKat.elaveEt" class="btn btn-primary" onclick="yeniKategoriOnayla()">Əlavə et</button>
     </div>
   </div>
 </div>
@@ -793,31 +793,31 @@
      yaxud "➕ Yeni kateqoriya" ilə yenisini əlavə etmək üçün eyni panel istifadə olunur. -->
 <div id="catPanelModal" class="modal">
   <div class="modal-content">
-    <h2 id="catPanelBaslik">Kateqoriyanı düzənlə</h2>
+    <h2 data-i18n="katDuzenle.kateqoriyaniDuzenle" id="catPanelBaslik">Kateqoriyanı düzənlə</h2>
     <div class="modal-item" style="border:none; background:transparent; padding:0;">
       <div class="field-row">
         <input type="text" id="catPanelIkon" style="width:52px; text-align:center;">
-        <input type="text" id="catPanelAd" placeholder="Kateqoriya adı" style="flex:1;">
+        <input type="text" id="catPanelAd" placeholder="Kateqoriya adı" data-i18n-placeholder="katDuzenle.kateqoriyaAdiPlaceholder" style="flex:1;">
         <button id="catPanelSilBtn" onclick="catPanelSil()" style="background:none; border:none; cursor:pointer; font-size:14px;">🗑</button>
       </div>
       <label class="field-row" style="gap:8px; font-size:13px; font-weight:600; color:var(--ink); border-top:1px solid var(--line); padding-top:8px; cursor:pointer;">
         <input type="checkbox" id="catPanelAylik" style="width:auto;">
-        <span>📌 Aylıq sabit xərc <span style="font-weight:400; color:var(--muted);">(tiksiz = günlük)</span></span>
+        <span><span data-i18n="katDuzenle.aylikSabitXerc">📌 Aylıq sabit xərc</span> <span data-i18n="katDuzenle.tiksizGunluk" style="font-weight:400; color:var(--muted);">(tiksiz = günlük)</span></span>
       </label>
       <div class="field-row" style="font-size:12px; color:var(--muted); gap:6px;">
-        <span>Sabit tutar:</span>
-        <input type="number" step="0.01" min="0" id="catPanelSabit" placeholder="Soruş" style="width:78px;">
+        <span data-i18n="katDuzenle.sabitTutar">Sabit tutar:</span>
+        <input type="number" step="0.01" min="0" id="catPanelSabit" placeholder="Soruş" data-i18n-placeholder="katDuzenle.sorusPlaceholder" style="width:78px;">
       </div>
       <div class="renk-grid" id="catPanelRenkGrid"></div>
       <label class="field-row" style="gap:6px; font-size:12px; color:var(--muted); padding-top:2px; cursor:pointer;">
         <input type="checkbox" id="catPanelSebeb" style="width:auto;">
-        <span>Əlavə edərkən səbəb də soruşulsun</span>
+        <span data-i18n="katDuzenle.elaveEderkenSebebDe">Əlavə edərkən səbəb də soruşulsun</span>
       </label>
     </div>
     <div class="error-text" id="catPanelError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('catPanelModal')">Ləğv et</button>
-      <button class="btn btn-primary" id="catPanelSaveBtn" onclick="catPanelSaxla()">Yadda saxla</button>
+      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('catPanelModal')">Ləğv et</button>
+      <button data-i18n="umumi.yaddaSaxla" class="btn btn-primary" id="catPanelSaveBtn" onclick="catPanelSaxla()">Yadda saxla</button>
     </div>
   </div>
 </div>
@@ -825,30 +825,30 @@
 <!-- Xərci düzəlt / köhnə tarixli xərc əlavə et -->
 <div id="islemFormModal" class="modal">
   <div class="modal-content">
-    <h2 id="islemFormBaslik">Xərci düzəlt</h2>
-    <p class="hint">Kateqoriya, məbləğ, səbəb və tarixi dəyiş.</p>
+    <h2 data-i18n="islemForm.xerciDuzelt" id="islemFormBaslik">Xərci düzəlt</h2>
+    <p data-i18n="islemForm.kateqoriyaMeblegSebebVe" class="hint">Kateqoriya, məbləğ, səbəb və tarixi dəyiş.</p>
     <div style="margin-bottom:10px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Kateqoriya</label>
+      <label data-i18n="islemForm.kateqoriya" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Kateqoriya</label>
       <select id="islemFormKategori" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);"></select>
     </div>
     <div style="margin-bottom:10px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Məbləğ (AZN)</label>
+      <label data-i18n="transfer.meblegLbl" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Məbləğ (AZN)</label>
       <input type="number" step="0.01" min="0" id="islemFormTutar" placeholder="0.00">
     </div>
     <div style="margin-bottom:10px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Səbəb (istəyə bağlı)</label>
-      <input type="text" id="islemFormSebeb" placeholder="Məs: Taksi, hədiyyə...">
+      <label data-i18n="islemForm.sebebIsteyeBagli" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Səbəb (istəyə bağlı)</label>
+      <input type="text" id="islemFormSebeb" placeholder="Məs: Taksi, hədiyyə..." data-i18n-placeholder="islemForm.mesTaksiHediyyePlaceholder">
     </div>
     <div style="margin-bottom:6px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Tarix</label>
+      <label data-i18n="islemForm.tarix" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Tarix</label>
       <input type="date" id="islemFormTarix">
     </div>
     <div class="error-text" id="islemFormError"></div>
     <div class="modal-footer" style="justify-content:space-between;">
-      <button class="btn btn-danger" id="islemFormSilBtn" onclick="islemFormSilOnayla()" style="display:none;">Sil</button>
+      <button data-i18n="islemForm.sil" class="btn btn-danger" id="islemFormSilBtn" onclick="islemFormSilOnayla()" style="display:none;">Sil</button>
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-ghost" onclick="modalKapat('islemFormModal')">Ləğv et</button>
-        <button class="btn btn-primary" onclick="islemFormOnayla()">Yadda saxla</button>
+        <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('islemFormModal')">Ləğv et</button>
+        <button data-i18n="umumi.yaddaSaxla" class="btn btn-primary" onclick="islemFormOnayla()">Yadda saxla</button>
       </div>
     </div>
   </div>
@@ -857,11 +857,11 @@
 <!-- Generic confirm modal -->
 <div id="confirmModal" class="modal">
   <div class="modal-content">
-    <h2 id="confirmTitle">Əminsən?</h2>
+    <h2 data-i18n="tesdiq.eminsen" id="confirmTitle">Əminsən?</h2>
     <p class="hint" id="confirmText"></p>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('confirmModal')">Ləğv et</button>
-      <button class="btn btn-danger" id="confirmActionBtn">Bəli, sil</button>
+      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('confirmModal')">Ləğv et</button>
+      <button data-i18n="tesdiq.beliSil" class="btn btn-danger" id="confirmActionBtn">Bəli, sil</button>
     </div>
   </div>
 </div>
@@ -869,11 +869,11 @@
 <!-- Drive: available backups list to pick from -->
 <div id="driveBackupSecModal" class="modal">
   <div class="modal-content">
-    <h2>Hansı backup?</h2>
-    <p class="hint">Drive-a göndərilmiş backuplardan birini seç.</p>
+    <h2 data-i18n="backupSec.hansiBackup">Hansı backup?</h2>
+    <p data-i18n="backupSec.driveAGonderilmisBackuplardan" class="hint">Drive-a göndərilmiş backuplardan birini seç.</p>
     <div id="driveBackupSecListesi" class="modal-list" style="max-height:320px;"></div>
     <div class="modal-footer" style="justify-content:flex-end;">
-      <button class="btn btn-ghost" onclick="modalKapat('driveBackupSecModal')">Bağla</button>
+      <button data-i18n="umumi.bagla" class="btn btn-ghost" onclick="modalKapat('driveBackupSecModal')">Bağla</button>
     </div>
   </div>
 </div>
@@ -883,73 +883,92 @@
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="ayarlarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
-      <h2 style="margin:0; flex:1;">Ayarlar</h2>
+      <h2 style="margin:0; flex:1;" data-i18n="ayarlar.basliq">Ayarlar</h2>
     </div>
 
     <div id="ayarlarXosGeldinKutu" style="margin:2px 2px 16px; display:none;">
-      <div style="font-size:12px; color:var(--muted); font-weight:600;">Xoş gəldin</div>
+      <div style="font-size:12px; color:var(--muted); font-weight:600;" data-i18n="ayarlar.xosGeldin">Xoş gəldin</div>
       <div id="ayarlarXosGeldinAd" style="font-size:19px; font-weight:700; color:var(--ink); margin-top:1px;"></div>
     </div>
 
     <div class="ayarlar-kutu" style="margin-bottom:14px;">
       <div class="ayarlar-setir-ic" style="gap:8px;">
-        <span class="ayarlar-metin" style="white-space:nowrap;">Günlük xərc limiti</span>
+        <span class="ayarlar-metin" style="white-space:nowrap;" data-i18n="ayarlar.gunlukLimit">Günlük xərc limiti</span>
         <div style="display:flex; gap:6px; align-items:center;">
           <input type="number" step="0.01" min="0" id="gunlukLimitInput" placeholder="20" style="width:64px; padding:8px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
-          <button class="btn btn-primary" onclick="gunlukLimitYadSaxla()" style="white-space:nowrap; padding:8px 12px; font-size:13px;">Yadda saxla</button>
+          <button class="btn btn-primary" onclick="gunlukLimitYadSaxla()" style="white-space:nowrap; padding:8px 12px; font-size:13px;" data-i18n="umumi.yaddaSaxla">Yadda saxla</button>
         </div>
       </div>
       <div class="error-text" id="gunlukLimitError"></div>
     </div>
 
-    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:8px;" onclick="ayarlarKateqoriyalarAc()"><span class="ayarlar-ikon">⚙️</span><span class="ayarlar-metin">Kateqoriyalar</span></button>
-    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:14px;" onclick="ayarlarSonEmeliyyatlarAc()"><span class="ayarlar-ikon">🧾</span><span class="ayarlar-metin">Son əməliyyatlar</span></button>
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; flex:1; min-width:0;" onclick="ayarlarKateqoriyalarAc()"><span class="ayarlar-ikon">⚙️</span><span class="ayarlar-metin" data-i18n="ayarlar.kateqoriyalar">Kateqoriyalar</span></button>
+      <button class="ayarlar-kutu ayarlar-setir-ic" id="dilAyarBtn" style="justify-content:flex-start; flex:1; min-width:0;" onclick="dilPaneliniAc()"><span class="ayarlar-ikon">🌐</span><span class="ayarlar-metin" data-i18n="ayarlar.dil">Dil</span></button>
+    </div>
+    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:14px;" onclick="ayarlarSonEmeliyyatlarAc()"><span class="ayarlar-ikon">🧾</span><span class="ayarlar-metin" data-i18n="ayarlar.sonEmeliyyatlar">Son əməliyyatlar</span></button>
 
     <div class="ayarlar-kutu ayarlar-setir-ic" style="margin-bottom:8px;">
       <span id="temaLabel" style="display:flex; align-items:center;"></span>
-      <button class="theme-switch" id="temaSwitch" onclick="temaDeyis()" aria-label="Tema dəyiş"></button>
+      <button class="theme-switch" id="temaSwitch" onclick="temaDeyis()" aria-label="Tema dəyiş" data-i18n-aria="ayarlar.temaDeyisAria"></button>
     </div>
 
     <div class="ayarlar-kutu" style="margin-bottom:14px;">
       <div class="ayarlar-setir-ic">
         <span id="kilidAyarLabel" style="display:flex; align-items:center;"></span>
-        <button class="toggle-switch" id="kilidAyarSwitch" onclick="kilidToggle()" aria-label="Tətbiq kilidini aç/bağla"></button>
+        <button class="toggle-switch" id="kilidAyarSwitch" onclick="kilidToggle()" aria-label="Tətbiq kilidini aç/bağla" data-i18n-aria="ayarlar.kilidToggleAria"></button>
       </div>
       <div class="error-text" id="kilidAyarError"></div>
     </div>
 
     <button class="ayarlar-kutu ayarlar-setir-ic" id="sistemBaslikBtn" style="margin-bottom:8px;" onclick="sistemBolmesiToggle()">
-      <span style="display:flex; align-items:center;"><span class="ayarlar-ikon">⚙️</span><span class="ayarlar-metin">System</span></span>
+      <span style="display:flex; align-items:center;"><span class="ayarlar-ikon">⚙️</span><span class="ayarlar-metin" data-i18n="ayarlar.sistem">System</span></span>
       <span id="sistemBaslikOx" style="transition:transform .15s;">▾</span>
     </button>
     <div id="sistemBolmesi" style="display:none;">
 
-    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">☁️ Google Drive (əl ilə yedəkləmə)</h3>
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);" data-i18n="ayarlar.googleDriveBaslik">☁️ Google Drive (əl ilə yedəkləmə)</h3>
     <div class="drive-box" id="driveBox">
-      <div class="drive-status" id="driveStatus">☁️ Google Drive-a bağlı deyil</div>
-      <div class="drive-sub" id="driveSub">Bağlansan, "Göndər" və "Çək" düymələri ilə özün idarə edəcəksən.</div>
+      <div data-i18n="ayarlar.googleDriveABagli" class="drive-status" id="driveStatus">☁️ Google Drive-a bağlı deyil</div>
+      <div data-i18n="ayarlar.baglansanGonderVeCek" class="drive-sub" id="driveSub">Bağlansan, "Göndər" və "Çək" düymələri ilə özün idarə edəcəksən.</div>
       <div class="drive-sub" id="driveDebug" style="opacity:0.65;"></div>
       <div class="drive-btns" id="driveBtns">
-        <button onclick="driveBaglan()">Bağlan</button>
+        <button data-i18n="ayarlar.baglan" onclick="driveBaglan()">Bağlan</button>
       </div>
     </div>
 
-    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">⚡ Hesab</h3>
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);" data-i18n="ayarlar.hesabBaslik">⚡ Hesab</h3>
     <div class="drive-box" id="firebaseBox">
-      <div class="drive-status" id="firebaseStatus">⚡ Bağlanmayıb</div>
-      <div class="drive-sub" id="firebaseSub">Daxil olmamısan.</div>
+      <div data-i18n="ayarlar.baglanmayib" class="drive-status" id="firebaseStatus">⚡ Bağlanmayıb</div>
+      <div data-i18n="ayarlar.daxilOlmamisan" class="drive-sub" id="firebaseSub">Daxil olmamısan.</div>
       <div class="drive-btns" id="firebaseBtns"></div>
     </div>
 
     </div>
 
-    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:14px;" onclick="tetbiqiYenile()"><span class="ayarlar-ikon">🔄</span><span class="ayarlar-metin">Yenilə (son versiyanı yüklə)</span></button>
+    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:14px;" onclick="tetbiqiYenile()"><span class="ayarlar-ikon">🔄</span><span class="ayarlar-metin" data-i18n="ayarlar.yenile">Yenilə (son versiyanı yüklə)</span></button>
 
     <div class="modal-footer" style="justify-content:flex-end; margin-top:16px;">
-      <button class="btn btn-ghost" onclick="ayarlarPaneliniKapat()">Bağla</button>
+      <button class="btn btn-ghost" onclick="ayarlarPaneliniKapat()" data-i18n="umumi.bagla">Bağla</button>
     </div>
     <p style="text-align:center; font-size:11px; color:var(--muted); margin:18px 0 0;">Powered by Kanan Ibrahimov</p>
-    <p style="text-align:center; font-size:10px; color:var(--muted); margin:2px 0 0;">Version <span id="tetbiqVersiyaGoster"></span></p>
+    <p style="text-align:center; font-size:10px; color:var(--muted); margin:2px 0 0;"><span data-i18n="ayarlar.versiya">Version</span> <span id="tetbiqVersiyaGoster"></span></p>
+  </div>
+</div>
+
+<!-- Dil seçimi səhifəsi (FAZ 2): lang/ qovluğundakı JSON fayllardan avtomatik doldurulur -->
+<div id="dilModal" class="page-screen">
+  <div class="page-inner">
+    <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
+      <button onclick="dilPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
+      <h2 style="margin:0; flex:1;" data-i18n="dil.basliq">🌐 Dil</h2>
+    </div>
+    <p class="hint" data-i18n="dil.hint">Dil seçəndə tətbiq yenidən yüklənəcək.</p>
+    <div id="dilSiyahisi" class="modal-list" style="flex:none; overflow:visible; gap:8px;"></div>
+    <div class="error-text" id="dilXeta"></div>
+    <div class="modal-footer" style="justify-content:flex-end; margin-top:16px;">
+      <button class="btn btn-ghost" onclick="dilPaneliniKapat()" data-i18n="umumi.bagla">Bağla</button>
+    </div>
   </div>
 </div>
 
@@ -958,13 +977,13 @@
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="yonetimPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
-      <h2 style="margin:0; flex:1;">Kateqoriyalar</h2>
+      <h2 data-i18n="ayarlar.kateqoriyalar" style="margin:0; flex:1;">Kateqoriyalar</h2>
     </div>
-    <p class="hint">Adını, ikonunu, rəngini, sabit qiymətini və günlük/aylıq növünü dəyiş.</p>
+    <p data-i18n="kateqoriyalar.adiniIkonunuRenginiSabit" class="hint">Adını, ikonunu, rəngini, sabit qiymətini və günlük/aylıq növünü dəyiş.</p>
     <div id="kategoriDuzenlemeListesi" class="modal-list"></div>
     <div class="modal-footer" style="justify-content:space-between;">
-      <button class="btn btn-ghost" onclick="yeniKategoriModalAc()">➕ Yeni kateqoriya</button>
-      <button class="btn btn-primary" onclick="yonetimPaneliniKapat()">Bağla</button>
+      <button data-i18n="kateqoriyalar.yeniKateqoriya" class="btn btn-ghost" onclick="yeniKategoriModalAc()">➕ Yeni kateqoriya</button>
+      <button data-i18n="umumi.bagla" class="btn btn-primary" onclick="yonetimPaneliniKapat()">Bağla</button>
     </div>
   </div>
 </div>
@@ -974,15 +993,15 @@
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="aylikHesabatPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
-      <h2 style="margin:0; flex:1;">Bu ay hara pul gedir?</h2>
+      <h2 data-i18n="aylik.buAyHaraPul" style="margin:0; flex:1;">Bu ay hara pul gedir?</h2>
     </div>
     <div class="hesabat-cemi-card">
-      <div class="k">Bu ay xərclədiyin</div>
+      <div data-i18n="aylik.buAyXerclediyin" class="k">Bu ay xərclədiyin</div>
       <div class="v" id="aylikHesabatCemi">—</div>
       <div class="k" id="aylikHesabatAlt" style="margin-top:4px; font-weight:500;"></div>
     </div>
 
-    <h3 class="hesabat-bolme-basliq">🛒 Günlük xərclər</h3>
+    <h3 data-i18n="aylik.gunlukXercler" class="hesabat-bolme-basliq">🛒 Günlük xərclər</h3>
     <div class="hesabat-kart">
       <div class="donut-sarici" id="aylikGunlukSarici">
         <canvas id="aylikGunlukCanvas"></canvas>
@@ -993,7 +1012,7 @@
       <div id="aylikGunlukListesi"></div>
     </div>
 
-    <h3 class="hesabat-bolme-basliq">📌 Aylıq sabit xərclər</h3>
+    <h3 data-i18n="aylik.ayliqSabitXercler" class="hesabat-bolme-basliq">📌 Aylıq sabit xərclər</h3>
     <div class="hesabat-kart">
       <div class="donut-sarici" id="aylikSabitSarici">
         <canvas id="aylikSabitCanvas"></canvas>
@@ -1003,14 +1022,14 @@
       <div id="aylikSabitListesi"></div>
     </div>
 
-    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Günlük xərc trendi (bu ay)</h3>
+    <h3 data-i18n="aylik.gunlukXercTrendiBu" style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Günlük xərc trendi (bu ay)</h3>
     <div style="background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); padding:14px; margin-bottom:16px;">
       <canvas id="aylikTrendCanvas" height="160"></canvas>
     </div>
-    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Keçən aya görə</h3>
+    <h3 data-i18n="aylik.kecenAyaGore" style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Keçən aya görə</h3>
     <div id="aylikHesabatTrend"></div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="aylikHesabatPaneliniKapat()">Bağla</button>
+      <button data-i18n="umumi.bagla" class="btn btn-primary" onclick="aylikHesabatPaneliniKapat()">Bağla</button>
     </div>
   </div>
 </div>
@@ -1020,10 +1039,10 @@
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="sonEmeliyyatlarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
-      <h2 style="margin:0; flex:1;">Son əməliyyatlar</h2>
+      <h2 data-i18n="ayarlar.sonEmeliyyatlar" style="margin:0; flex:1;">Son əməliyyatlar</h2>
     </div>
     <div class="modal-footer" style="justify-content:flex-end; border-top:none; padding-top:0; margin-bottom:6px;">
-      <button class="btn btn-ghost" onclick="listeyiTemizleOnayla()">Hamısını sil</button>
+      <button data-i18n="sonEmeliyyat.hamisiniSil" class="btn btn-ghost" onclick="listeyiTemizleOnayla()">Hamısını sil</button>
     </div>
     <ul id="sonEmeliyyatlarListesi" style="list-style:none; padding:0; margin:0; max-height:65vh; overflow-y:auto;"></ul>
   </div>
@@ -1032,24 +1051,24 @@
 <!-- Kredit borcu (taksitli kredit) düzəliş modalı -->
 <div id="krediBorcuDuzeltModal" class="modal">
   <div class="modal-content">
-    <h2>Kredit borcunu düzəlt</h2>
-    <p class="hint">Aylıq taksit məbləğini, taksit sayını və başlanğıc tarixini özün təyin et.</p>
+    <h2 data-i18n="krediBorc.kreditBorcunuDuzelt">Kredit borcunu düzəlt</h2>
+    <p data-i18n="krediBorc.ayliqTaksitMebleginiTaksit" class="hint">Aylıq taksit məbləğini, taksit sayını və başlanğıc tarixini özün təyin et.</p>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Aylıq taksit (AZN)</label>
-      <input type="number" step="0.01" min="0" id="krediBorcuDuzeltMebleg" placeholder="Məs: 550">
+      <label data-i18n="krediBorc.ayliqTaksitAzn" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Aylıq taksit (AZN)</label>
+      <input type="number" step="0.01" min="0" id="krediBorcuDuzeltMebleg" placeholder="Məs: 550" data-i18n-placeholder="krediBorc.mes550Placeholder">
     </div>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Taksit sayısı</label>
-      <input type="number" step="1" min="1" id="krediBorcuDuzeltSayi" placeholder="Məs: 8">
+      <label data-i18n="krediBorc.taksitSayisi" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Taksit sayısı</label>
+      <input type="number" step="1" min="1" id="krediBorcuDuzeltSayi" placeholder="Məs: 8" data-i18n-placeholder="krediBorc.mes8Placeholder">
     </div>
     <div style="margin-bottom:6px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Başlanğıc tarixi</label>
+      <label data-i18n="krediBorc.baslangicTarixi" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Başlanğıc tarixi</label>
       <input type="date" id="krediBorcuDuzeltBaslangic">
     </div>
     <div class="error-text" id="krediBorcuDuzeltError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('krediBorcuDuzeltModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="krediBorcuDuzeltOnayla()">Yadda saxla</button>
+      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('krediBorcuDuzeltModal')">Ləğv et</button>
+      <button data-i18n="umumi.yaddaSaxla" class="btn btn-primary" onclick="krediBorcuDuzeltOnayla()">Yadda saxla</button>
     </div>
   </div>
 </div>
@@ -1057,16 +1076,16 @@
 <!-- Kredit taksiti: hansı hesabdan ödənəcək -->
 <div id="taksitOdeModal" class="modal">
   <div class="modal-content">
-    <h2>Taksiti ödə</h2>
+    <h2 data-i18n="taksitOde.taksitiOde">Taksiti ödə</h2>
     <p class="hint" id="taksitOdeInfo"></p>
     <div style="margin-bottom:6px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Hansı hesabdan ödənilsin?</label>
+      <label data-i18n="taksitOde.hansiHesabdanOdenilsin" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Hansı hesabdan ödənilsin?</label>
       <select id="taksitOdeMenbe" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);"></select>
     </div>
     <div class="error-text" id="taksitOdeError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('taksitOdeModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="krediBorcuOdeOnayla()">Ödə</button>
+      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('taksitOdeModal')">Ləğv et</button>
+      <button data-i18n="taksitOde.ode" class="btn btn-primary" onclick="krediBorcuOdeOnayla()">Ödə</button>
     </div>
   </div>
 </div>
@@ -1076,22 +1095,22 @@
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="hesablarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
-      <h2 style="margin:0; flex:1;">Hesablar və Borclar</h2>
+      <h2 style="margin:0; flex:1;" data-i18n="hesablar.basliq">Hesablar və Borclar</h2>
     </div>
 
     <div class="hesab-add-head" style="margin-top:6px;">
-      <h3>Hesablarım</h3>
-      <button class="hesab-add-btn" onclick="hesabSecModalAc()" title="Hesab əlavə et">+</button>
+      <h3 data-i18n="hesablar.hesablarim">Hesablarım</h3>
+      <button class="hesab-add-btn" onclick="hesabSecModalAc()" title="Hesab əlavə et" data-i18n-title="hesablar.hesabElaveEtTitle">+</button>
     </div>
-    <p class="hint">Hesablarının balansına bax, düzəlt və aralarında transfer et.</p>
+    <p class="hint" data-i18n="hesablar.hint">Hesablarının balansına bax, düzəlt və aralarında transfer et.</p>
     <div id="hesablarKartlari" class="modal-list" style="gap:10px; flex:none; overflow:visible; max-height:none;"></div>
-    <button class="btn btn-primary" onclick="transferModalAc()" style="width:100%; margin-bottom:14px;">🔁 Hesablar arası transfer</button>
+    <button class="btn btn-primary" onclick="transferModalAc()" style="width:100%; margin-bottom:14px;" data-i18n="hesablar.hesablarArasiTransfer">🔁 Hesablar arası transfer</button>
 
-    <div class="history-head" style="margin-top:4px;"><span>Son transferlər</span></div>
+    <div class="history-head" style="margin-top:4px;"><span data-i18n="hesablar.sonTransferler">Son transferlər</span></div>
     <div id="hesabTransferTarixce" class="modal-list" style="max-height:160px; flex:none; margin-bottom:14px;"></div>
 
     <div class="modal-footer" style="justify-content:flex-end;">
-      <button class="btn btn-ghost" onclick="hesablarPaneliniKapat()">Bağla</button>
+      <button class="btn btn-ghost" onclick="hesablarPaneliniKapat()" data-i18n="umumi.bagla">Bağla</button>
     </div>
   </div>
 </div>
@@ -1099,11 +1118,11 @@
 <!-- Hesab əlavə et: 5 seçim -->
 <div id="hesabSecModal" class="modal">
   <div class="modal-content">
-    <h2>Hansı hesabı əlavə edirsən?</h2>
-    <p class="hint">Bir hesab növü seç, sonra ondan istəniləni doldur.</p>
+    <h2 data-i18n="hesabSec.basliq">Hansı hesabı əlavə edirsən?</h2>
+    <p class="hint" data-i18n="hesabSec.hint">Bir hesab növü seç, sonra ondan istəniləni doldur.</p>
     <div id="hesabSecListesi"></div>
     <div class="modal-footer" style="justify-content:flex-end;">
-      <button class="btn btn-ghost" onclick="modalKapat('hesabSecModal')">Ləğv et</button>
+      <button class="btn btn-ghost" onclick="modalKapat('hesabSecModal')" data-i18n="umumi.legvEt">Ləğv et</button>
     </div>
   </div>
 </div>
@@ -1111,13 +1130,13 @@
 <!-- Cash / Debit balance quick-edit modal -->
 <div id="hesabDuzeltModal" class="modal">
   <div class="modal-content">
-    <h2 id="hesabDuzeltBaslik">Balansı düzəlt</h2>
-    <p class="hint">Bu hesabın hazırkı balansını yaz.</p>
+    <h2 id="hesabDuzeltBaslik" data-i18n="hesabDuzelt.basliq">Balansı düzəlt</h2>
+    <p class="hint" data-i18n="hesabDuzelt.hint">Bu hesabın hazırkı balansını yaz.</p>
     <input type="number" step="0.01" id="hesabDuzeltInput" placeholder="0.00">
     <div class="error-text" id="hesabDuzeltError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('hesabDuzeltModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="hesabDuzeltOnayla()">Yadda saxla</button>
+      <button class="btn btn-ghost" onclick="modalKapat('hesabDuzeltModal')" data-i18n="umumi.legvEt">Ləğv et</button>
+      <button class="btn btn-primary" onclick="hesabDuzeltOnayla()" data-i18n="umumi.yaddaSaxla">Yadda saxla</button>
     </div>
   </div>
 </div>
@@ -1125,35 +1144,35 @@
 <!-- Transfer modal -->
 <div id="transferModal" class="modal">
   <div class="modal-content">
-    <h2>Transfer et</h2>
-    <p class="hint">Bir hesabdan digərinə məbləğ köçür.</p>
+    <h2 data-i18n="transfer.basliq">Transfer et</h2>
+    <p class="hint" data-i18n="transfer.hint">Bir hesabdan digərinə məbləğ köçür.</p>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Mənbə hesab</label>
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.menbeHesab">Mənbə hesab</label>
       <select id="transferMenbe" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
-        <option value="nagd">💵 Cash Hesab</option>
-        <option value="debit">🏦 Debit bank Hesabım</option>
-        <option value="depozit">🏛️ Bank Deposit Hesabım</option>
-        <option value="kredit">💳 Kredi kartı Hesabım</option>
+        <option value="nagd" data-i18n="hesabNovu.nagd">💵 Cash Hesab</option>
+        <option value="debit" data-i18n="hesabNovu.debit">🏦 Debit bank Hesabım</option>
+        <option value="depozit" data-i18n="hesabNovu.depozit">🏛️ Bank Deposit Hesabım</option>
+        <option value="kredit" data-i18n="hesabNovu.kredit">💳 Kredi kartı Hesabım</option>
       </select>
     </div>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Hədəf hesab</label>
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.hedefHesab">Hədəf hesab</label>
       <select id="transferHedef" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
-        <option value="debit">🏦 Debit bank Hesabım</option>
-        <option value="depozit">🏛️ Bank Deposit Hesabım</option>
-        <option value="kredit">💳 Kredi kartı Hesabım</option>
-        <option value="nagd">💵 Cash Hesab</option>
-        <option value="krediXett">🧾 Kredit xətt (ödəniş)</option>
+        <option value="debit" data-i18n="hesabNovu.debit">🏦 Debit bank Hesabım</option>
+        <option value="depozit" data-i18n="hesabNovu.depozit">🏛️ Bank Deposit Hesabım</option>
+        <option value="kredit" data-i18n="hesabNovu.kredit">💳 Kredi kartı Hesabım</option>
+        <option value="nagd" data-i18n="hesabNovu.nagd">💵 Cash Hesab</option>
+        <option value="krediXett" data-i18n="hesabNovu.krediXett">🧾 Kredit xətt (ödəniş)</option>
       </select>
     </div>
     <div style="margin-bottom:6px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Məbləğ (AZN)</label>
-      <input type="number" step="0.01" min="0" id="transferMebleg" placeholder="Məs: 100">
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.meblegLbl">Məbləğ (AZN)</label>
+      <input type="number" step="0.01" min="0" id="transferMebleg" placeholder="Məs: 100" data-i18n-placeholder="transfer.meblegPlaceholder">
     </div>
     <div class="error-text" id="transferError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('transferModal')">Ləğv et</button>
-      <button class="btn btn-primary" onclick="transferOnayla()">Transfer et</button>
+      <button class="btn btn-ghost" onclick="modalKapat('transferModal')" data-i18n="umumi.legvEt">Ləğv et</button>
+      <button class="btn btn-primary" onclick="transferOnayla()" data-i18n="transfer.transferEt">Transfer et</button>
     </div>
   </div>
 </div>
@@ -1184,8 +1203,8 @@
     if (metaTema) metaTema.setAttribute('content', tema === 'dark' ? '#0b0809' : '#f6f0f1');
     const lbl = document.getElementById('temaLabel');
     if (lbl) lbl.innerHTML = tema === 'dark'
-      ? '<span class="ayarlar-ikon">☀️</span><span class="ayarlar-metin">İşıqlı rejim</span>'
-      : '<span class="ayarlar-ikon">🌙</span><span class="ayarlar-metin">Qaranlıq rejim</span>';
+      ? '<span class="ayarlar-ikon">☀️</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.isiqliRejim', 'İşıqlı rejim')) + '</span>'
+      : '<span class="ayarlar-ikon">🌙</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.qaranliqRejim', 'Qaranlıq rejim')) + '</span>';
   }
   function temaDeyis() {
     const cari = localStorage.getItem('tema') === 'dark' ? 'dark' : 'light';
@@ -1200,6 +1219,312 @@
     temaTetbiqEt(tema);
   })();
   // ==================== /Tema ====================
+
+  // ==================== Dil (i18n) — FAZ 1: yalnız altyapı ====================
+  // Bu blok hələ heç bir mövcud mətni əvəz ETMİR — ekranlar tamamilə əvvəlki kimi görünəcək.
+  // Məqsəd: t(key) funksiyasını və dil faylı yükləmə məntiqini qurub sınaqdan keçirmək.
+  // Sonrakı fazalarda: mövcud sabit mətnlər tədricən t('...') çağırışları ilə əvəzlənəcək.
+  //
+  // Yeni dil necə əlavə olunacaq (gələcək fazalarda): lang/ qovluğuna eyni formatda
+  // (_meta + strings) yeni bir JSON fayl atmaq kifayət edəcək, məs. lang/en.json.
+  // Dil kodu yalnız təhlükəsiz formatda ola bilər (fayl adı kimi istifadə olunur: lang/<kod>.json).
+  // Diqqət: bu sabit dilKodu-dan ƏVVƏL elan olunmalıdır (const → təyinatdan əvvəl istifadə edilə bilmir).
+  const DIL_KOD_REGEX = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})?$/;
+  let dilKodu = (function () {
+    let k = null;
+    try { k = localStorage.getItem('dil'); } catch (e) {}
+    return (k && DIL_KOD_REGEX.test(k)) ? k : 'az';
+  })();
+  let dilSozlugu = {};
+  let dilHazirdir = false;
+
+  // Tək bir dil faylını çəkib "strings" hissəsini qaytarır. Fayl tapılmasa/pozulmuşsa xəta atır —
+  // xətanı yuxarı ötürürük ki, dilYukle() defolt (az) dilinə düzgün keçə bilsin.
+  async function dilFayliYukle(kod) {
+    const cavab = await fetch(`lang/${kod}.json`, { cache: 'no-store' });
+    if (!cavab.ok) {
+      const x = new Error('Dil faylı tapılmadı: ' + kod);
+      x.status = cavab.status;
+      throw x;
+    }
+    const data = await cavab.json();
+    return (data && data.strings) ? data.strings : {};
+  }
+
+  // İstənilən dili yükləyir; alınmasa avtomatik olaraq az.json-a (defolt) düşür.
+  // az.json da yüklənə bilməsə (məs. file:// ilə açılıbsa), lüğət boş qalır və
+  // t() sadəcə açarın özünü qaytarır — tətbiq heç vaxt sınmır.
+  async function dilYukle(kod) {
+    dilHazirdir = false;
+    try {
+      dilSozlugu = await dilFayliYukle(kod);
+      dilKodu = kod;
+    } catch (e) {
+      console.warn('[i18n] "' + kod + '" dil faylı yüklənmədi, defolt (az) sınanılır:', e);
+      if (kod !== 'az' && e && e.status === 404) {
+        // Fayl həqiqətən yoxdur (silinib/səhv yazılıb) — hər açılışda 404 almamaq üçün seçimi sıfırla.
+        try { localStorage.removeItem('dil'); } catch (e3) {}
+      }
+      if (kod !== 'az') {
+        try {
+          dilSozlugu = await dilFayliYukle('az');
+          dilKodu = 'az';
+        } catch (e2) {
+          console.warn('[i18n] az.json da yüklənmədi — tərcümə deaktivdir, sabit mətnlər göstəriləcək.', e2);
+          dilSozlugu = {};
+        }
+      } else {
+        dilSozlugu = {};
+      }
+    }
+    dilHazirdir = true;
+    return dilSozlugu;
+  }
+
+  // Açar tapılmazsa açarın özü qaytarılır (hələ heç bir HTML/JS mətni bunu çağırmır —
+  // sonrakı fazalarda mövcud sabit mətnlər tədricən t('...') ilə əvəzlənəcək).
+  // Boş / yalnız boşluqdan ibarət dəyər "tərcümə edilməyib" sayılır (boş şablon faylı ekranı silməsin).
+  function dilVar(k) {
+    return Object.prototype.hasOwnProperty.call(dilSozlugu, k) &&
+      typeof dilSozlugu[k] === 'string' && dilSozlugu[k].trim() !== '';
+  }
+  function t(key) {
+    return dilVar(key) ? dilSozlugu[key] : key;
+  }
+
+  // Mühərrikin işlədiyini yoxlamaq üçün səssiz sınaq — yalnız konsolda görünür, ekranda YOX.
+  // tr(açar, defolt): JS-dən qurulan mətnlər üçün. Açar tapılmazsa (və ya lüğət hələ yüklənməyibsə)
+  // verilən Azərbaycanca defolt qaytarılır — ekranda heç vaxt xam açar görünmür.
+  // try/catch: bu funksiya lüğət dəyişəni elan olunmazdan əvvəl də (tema ilkin yüklənməsi) çağırıla bilər.
+  //   Parametrlər: tr('a.b', 'Salam {ad}', { ad: 'Kanan' }) → {ad} yerinə dəyər yazılır (HTML-ə yazılan dəyərləri çağıran escape etməlidir).
+  function tr(key, defolt, params) {
+    let s = defolt;
+    try {
+      if (dilVar(key)) s = dilSozlugu[key];
+    } catch (e) {}
+    if (params) s = String(s).replace(/\{(\w+)\}/g, (m, k) => (k in params ? params[k] : m));
+    return s;
+  }
+
+  // data-i18n etiketli statik elementlərə tərcümələri tətbiq edir. Açar lüğətdə YOXDURSA elementin
+  // mövcud (Azərbaycanca) mətninə toxunmur. Yalnız textContent/atribut yazılır — HTML deyil.
+  //   data-i18n="açar"              → elementin mətni
+  //   data-i18n-placeholder="açar"  → placeholder
+  //   data-i18n-title="açar"        → title
+  //   data-i18n-aria="açar"         → aria-label
+  function dilTetbiqEt(kok) {
+    kok = kok || document;
+    const var_ = dilVar;
+    kok.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.getAttribute('data-i18n'); if (var_(k)) el.textContent = dilSozlugu[k];
+    });
+    [['data-i18n-placeholder', 'placeholder'], ['data-i18n-title', 'title'], ['data-i18n-aria', 'aria-label']].forEach(([a, hedef]) => {
+      kok.querySelectorAll('[' + a + ']').forEach(el => {
+        const k = el.getAttribute(a); if (var_(k)) el.setAttribute(hedef, dilSozlugu[k]);
+      });
+    });
+  }
+
+  const dilHazirPromise = dilYukle(dilKodu).then(() => {
+    console.log('[i18n] Motor hazırdır. dilKodu=' + dilKodu + ' | test açarı →', t('_i18n_test'));
+    document.documentElement.lang = dilKodu;
+    dilTetbiqEt();
+    // JS ilə qurulan etiketləri yenidən çək (tema / kilid)
+    try { temaTetbiqEt(localStorage.getItem('tema') || 'dark'); kilidAyarGoster(); } catch (e) { console.warn('[i18n]', e); }
+    try {
+      const dzBtn = document.getElementById('duzenlemeBtn');
+      if (dzBtn) dzBtn.innerText = duzenlemeRejimi ? tr('ana.hazirdir', '✅ Hazırdır') : tr('ana.ekraniDuzenle', '✏️ Ekranı düzənlə');
+    } catch (e) {}
+    // Təhlükəsizlik şəbəkəsi: lüğət ekran çəkildikdən SONRA gəlibsə, dinamik ekranları yenidən çək.
+    // (ekraniGuncelle özü veriYuklendi=false olanda heç nə etmir — erkən çağırmaq təhlükəsizdir.)
+    try {
+      ekraniGuncelle();
+      const hm = document.getElementById('hesablarModal');
+      if (hm && hm.classList.contains('active') && typeof hesablarGoster === 'function') hesablarGoster();
+    } catch (e) { console.warn('[i18n] yenidən çəkmə:', e); }
+  });
+
+  // ---- FAZ 2: Dil seçimi ekranı ----
+  // Dil kodları 4 mənbədən BİRLƏŞDİRİLİR (hər biri uğursuz ola bilər, digərləri işləməyə davam edir):
+  //   1) lang/index.json   — hər hostinqdə işləyir, sorğu limiti yoxdur (əsas mənbə)
+  //   2) GitHub API        — yalnız *.github.io-da; index.json-a yazmağı unutsan da yeni fayl avtomatik tapılır
+  //   3) son uğurlu siyahı — localStorage (oflayn üçün)
+  //   4) 'az'              — həmişə var
+  // Hər kod üçün lang/<kod>.json oxunur (_meta → bayraq + ad). Fayl 404-dürsə siyahıya salınmır;
+  // yalnız şəbəkə xətasıdırsa keşdəki bayraq/ad istifadə olunur.
+  // Yeni dil əlavə etmək: lang/en.json yüklə + (istəyə görə) lang/index.json-da kodu yaz, məs. ["az","en"].
+  // GitHub yerini əl ilə göstərmək lazımdırsa: const DIL_GITHUB_ELLE = { owner: 'istifadeci', repo: 'repo-adi' };
+  const DIL_GITHUB_ELLE = null;
+  const DIL_ETIBARLI_ILK = { kod: 'az', ad: 'Azərbaycan dili', bayraq: '🇦🇿' };
+
+  // ---- FAZ 6: Avtomatik aşkarlamanı möhkəmləndir ----
+  // GitHub-un anonim API limiti saatdə 60 sorğudur. Panel hər açılanda GitHub-a getmək
+  // bu limiti tez doldura bilər, ona görə GitHub nəticəsi vaxt damğası ilə keşlənir və
+  // yalnız 24 saatdan bir HƏQİQƏTƏN yenidən sorğulanır (aşağıdakı dilKodlariGithubdanOxuKeshli).
+  const DIL_GITHUB_YENILEME_MS = 24 * 60 * 60 * 1000; // 24 saat
+  const DIL_GITHUB_KESH_ACARI = 'dil_github_kesh'; // { ts: <epoch ms>, kodlar: [...] }
+
+  function dilGithubYeri() {
+    if (DIL_GITHUB_ELLE) return DIL_GITHUB_ELLE;
+    const m = location.hostname.match(/^([^.]+)\.github\.io$/i);
+    if (!m) return null;
+    const ilk = location.pathname.split('/').filter(Boolean)[0];
+    const repo = (ilk && !/\.html?$/i.test(ilk)) ? ilk : (m[1] + '.github.io');
+    return { owner: m[1], repo: repo };
+  }
+
+  function dilKodSuz(arr) {
+    return (Array.isArray(arr) ? arr : []).filter(k => typeof k === 'string' && DIL_KOD_REGEX.test(k));
+  }
+
+  // 1) lang/index.json: ["az","en"]  və ya  { "languages": ["az","en"] }
+  async function dilKodlariIndexdenOxu() {
+    try {
+      const r = await fetch('lang/index.json', { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return dilKodSuz(Array.isArray(d) ? d : (d && d.languages));
+    } catch (e) {
+      console.warn('[i18n] lang/index.json oxunmadı:', e);
+      return [];
+    }
+  }
+
+  // 2) GitHub API (5 san. timeout — panel uzun gözləməsin)
+  async function dilKodlariGithubdanOxu() {
+    const yer = dilGithubYeri();
+    if (!yer) return [];
+    let taymer = null;
+    try {
+      const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      if (ctrl) taymer = setTimeout(() => ctrl.abort(), 5000);
+      const r = await fetch('https://api.github.com/repos/' + encodeURIComponent(yer.owner) + '/' +
+        encodeURIComponent(yer.repo) + '/contents/lang',
+        { headers: { Accept: 'application/vnd.github+json' }, signal: ctrl ? ctrl.signal : undefined });
+      if (!r.ok) throw new Error('GitHub API ' + r.status);
+      const arr = await r.json();
+      return dilKodSuz(arr.filter(f => f.type === 'file' && /\.json$/i.test(f.name))
+        .map(f => f.name.replace(/\.json$/i, '')));
+    } catch (e) {
+      console.warn('[i18n] lang/ siyahısı GitHub-dan alınmadı:', e);
+      return [];
+    } finally {
+      if (taymer) clearTimeout(taymer);
+    }
+  }
+
+  // GitHub API-ni YALNIZ keş 24 saatdan köhnədirsə çağırır. Uğurlu nəticə gələndə keşi
+  // vaxt damğası ilə yeniləyir; GitHub bu dəfə boş/xətalı cavab versə (limit, oflayn və s.)
+  // köhnə keş nə qədər köhnə olursa-olsun saxlanılır — sıfırdan boşa çıxmır.
+  async function dilKodlariGithubdanOxuKeshli() {
+    let kesh = null;
+    try { kesh = JSON.parse(localStorage.getItem(DIL_GITHUB_KESH_ACARI) || 'null'); } catch (e) { kesh = null; }
+    const kodlarKeshde = kesh && Array.isArray(kesh.kodlar) ? kesh.kodlar : null;
+    const tezedir = kodlarKeshde && typeof kesh.ts === 'number' && (Date.now() - kesh.ts) < DIL_GITHUB_YENILEME_MS;
+    if (tezedir) return kodlarKeshde;
+
+    const kodlar = await dilKodlariGithubdanOxu();
+    if (kodlar.length) {
+      try { localStorage.setItem(DIL_GITHUB_KESH_ACARI, JSON.stringify({ ts: Date.now(), kodlar })); } catch (e) {}
+      return kodlar;
+    }
+    // GitHub bu dəfə heç nə qaytarmadı (limit/xəta/oflayn): köhnə keş varsa onu istifadə et,
+    // 24 saat dolmasa da növbəti panel açılışında yenidən sınanacaq (ts yenilənmədi).
+    return kodlarKeshde || [];
+  }
+
+  // Son çarə: nə lang/index.json, nə GitHub, nə də əvvəlki keş heç bir kod versə,
+  // əl ilə saxlanılan kiçik lang/languages.json siyahısına düşülür (tam meta ilə —
+  // əlavə şəbəkə sorğusu tələb etmir, service worker tərəfindən oflayn keşlənib).
+  async function dilEhtiyatSiyahisiOxu() {
+    try {
+      const r = await fetch('lang/languages.json', { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const arr = await r.json();
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(x => x && typeof x.kod === 'string' && DIL_KOD_REGEX.test(x.kod))
+        .map(x => ({ kod: x.kod, ad: String(x.ad || x.kod), bayraq: String(x.bayraq || '🏳️') }));
+    } catch (e) {
+      console.warn('[i18n] lang/languages.json (ehtiyat siyahı) oxunmadı:', e);
+      return [DIL_ETIBARLI_ILK]; // fayl belə əlçatan deyilsə, ən azı 'az' həmişə işləsin
+    }
+  }
+
+  async function dilSiyahisiYukle() {
+    let kesh = [];
+    try { kesh = JSON.parse(localStorage.getItem('dil_siyahi_kesh') || '[]'); } catch (e) { kesh = []; }
+    if (!Array.isArray(kesh)) kesh = [];
+
+    const [idx, gh] = await Promise.all([dilKodlariIndexdenOxu(), dilKodlariGithubdanOxuKeshli()]);
+    const keshKodlari = dilKodSuz(kesh.map(x => x && x.kod));
+
+    // index.json, GitHub (keşli) və əvvəlki siyahı keşi — ÜÇÜ də boşdursa, əl ilə ehtiyat
+    // siyahısına düşürük (Faz 6: heç bir avtomatik mənbə işləməsə belə tətbiq boş qalmasın).
+    let ehtiyat = [];
+    if (!idx.length && !gh.length && !keshKodlari.length) {
+      ehtiyat = await dilEhtiyatSiyahisiOxu();
+    }
+    const ehtiyatKodlari = dilKodSuz(ehtiyat.map(x => x.kod));
+    let kodlar = Array.from(new Set(['az'].concat(idx, gh, keshKodlari, ehtiyatKodlari)));
+
+    const neticeler = await Promise.all(kodlar.map(async (kod) => {
+      try {
+        const r = await fetch('lang/' + kod + '.json', { cache: 'no-store' });
+        if (r.status === 404) return null; // fayl yoxdur → siyahıya salma (keşdə qalsa belə)
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if (!d || typeof d.strings !== 'object' || d.strings === null) return null; // pozulmuş dil faylı
+        const meta = d._meta || {};
+        return { kod: kod, ad: String(meta.name || kod), bayraq: String(meta.flag || '🏳️') };
+      } catch (e) {
+        // Şəbəkə xətası / oflayn: əvvəl uğurla oxunmuş bayraq+ad (keş) və ya ehtiyat siyahı,
+        // heç biri yoxdursa (yalnız 'az' üçün) sabit dəyər istifadə olunur.
+        const k = kesh.find(x => x && x.kod === kod) || ehtiyat.find(x => x && x.kod === kod);
+        if (k) return k;
+        return kod === 'az' ? DIL_ETIBARLI_ILK : null;
+      }
+    }));
+    const siyahi = neticeler.filter(Boolean).sort((a, b) =>
+      (a.kod === 'az' ? -1 : b.kod === 'az' ? 1 : a.ad.localeCompare(b.ad)));
+    if (siyahi.length) { try { localStorage.setItem('dil_siyahi_kesh', JSON.stringify(siyahi)); } catch (e) {} }
+    return siyahi;
+  }
+
+  async function dilPaneliniAc() {
+    modalKapat('ayarlarModal');
+    modalAc('dilModal');
+    const kutu = document.getElementById('dilSiyahisi');
+    const xeta = document.getElementById('dilXeta');
+    xeta.innerText = '';
+    kutu.innerHTML = '<div class="hint">' + escapeHtml(tr('umumi.yuklenir', 'Yüklənir...')) + '</div>';
+    let siyahi = [];
+    try { siyahi = await dilSiyahisiYukle(); } catch (e) { console.warn('[i18n]', e); }
+    if (!siyahi.length) siyahi = [DIL_ETIBARLI_ILK];
+    kutu.innerHTML = siyahi.map(d => {
+      const aktiv = d.kod === dilKodu;
+      return '<button class="ayarlar-kutu ayarlar-setir-ic" data-kod="' + escapeHtml(d.kod) + '"' +
+        (aktiv ? ' style="border-color:var(--brand-ink);"' : '') + '>' +
+        '<span style="display:flex; align-items:center;"><span class="ayarlar-ikon" style="font-size:20px;">' + escapeHtml(d.bayraq) +
+        '</span><span class="ayarlar-metin">' + escapeHtml(d.ad) + '</span></span>' +
+        '<span style="color:var(--brand-ink);">' + (aktiv ? '✓' : '') + '</span></button>';
+    }).join('');
+    kutu.querySelectorAll('button[data-kod]').forEach(b => b.addEventListener('click', () => dilSec(b.dataset.kod)));
+  }
+  function dilPaneliniKapat() {
+    modalKapat('dilModal');
+    ayarlarPaneliniAc();
+  }
+  // Seçimi yaz və səhifəni yenidən yüklə (4000 sətirlik dinamik ekranı canlı çəkməkdən daha təhlükəsizdir).
+  function dilSec(kod) {
+    if (!DIL_KOD_REGEX.test(kod)) return;
+    if (kod === dilKodu) { dilPaneliniKapat(); return; }
+    try { localStorage.setItem('dil', kod); } catch (e) {
+      document.getElementById('dilXeta').innerText = tr('dil.saxlanmadi', 'Seçim yadda saxlanmadı.');
+      return;
+    }
+    location.reload();
+  }
+  // ==================== /Dil (i18n) ====================
 
   // ==================== Tətbiq kilidi (Face ID / Touch ID / PIN) ====================
   let kilidVar = localStorage.getItem('kilit_aktiv') === '1';
@@ -1266,8 +1591,8 @@
     if (!sw || !lbl) return;
     sw.classList.toggle('on', kilidVar);
     lbl.innerHTML = kilidVar
-      ? '<span class="ayarlar-ikon">🔒</span><span class="ayarlar-metin">Tətbiq kilidi (aktiv)</span>'
-      : '<span class="ayarlar-ikon">🔒</span><span class="ayarlar-metin">Tətbiq kilidi (Face ID / PIN)</span>';
+      ? '<span class="ayarlar-ikon">🔒</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.kilidAktiv', 'Tətbiq kilidi (aktiv)')) + '</span>'
+      : '<span class="ayarlar-ikon">🔒</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.kilidFaceIdPin', 'Tətbiq kilidi (Face ID / PIN)')) + '</span>';
     const errEl = document.getElementById('kilidAyarError');
     if (errEl) errEl.innerText = '';
   }
@@ -1794,6 +2119,8 @@
   // Tətbiqin əsas "qapısı": giriş olmadan heç bir data yüklənmir/göstərilmir.
   let cariGoogleIstifadeci = null;
   async function uygulamaGirisBaslat() {
+    // İlk ekran çəkilməmişdən əvvəl dil lüğətini gözlə (maks. 4 san — dil faylı ilişsə tətbiq gecikməsin).
+    await Promise.race([dilHazirPromise, new Promise((res) => setTimeout(res, 4000))]);
     const hazir = await firebaseBaslat();
     if (!hazir) {
       document.getElementById('googleGirisEkrani').classList.add('active');
@@ -1993,7 +2320,7 @@
 
   // ==================== /Firebase ====================
 
-  const APP_VERSION = '3.0'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
+  const APP_VERSION = '3.3'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
   let aktifDonem = 'gunluk';
   let goruntulenenTarix = new Date(); goruntulenenTarix.setHours(0, 0, 0, 0);
   let kategoriler = [];
@@ -2204,30 +2531,31 @@
       </div>
       <div class="daily-limit-card" id="gunlukLimitKart">
         <div class="daily-limit-head">
-          <span class="lbl" id="gunlukLimitLbl">Günlük limit</span>
+          <span class="lbl" id="gunlukLimitLbl" data-i18n="ana.gunlukLimit">Günlük limit</span>
           <span class="pct" id="gunlukLimitYuzde">—</span>
         </div>
         <div class="daily-limit-bar-bg"><div class="daily-limit-bar-fill" id="gunlukLimitBar" style="width:0%"></div></div>
         <div class="daily-limit-foot">
-          <span>Xərclənib: <b id="gunlukLimitXerc">—</b></span>
+          <span><span data-i18n="ana.xerclenib">Xərclənib:</span> <b id="gunlukLimitXerc">—</b></span>
           <span class="qalan" id="gunlukLimitQalan">—</span>
         </div>
       </div>
       <div class="insight-strip">
         <div class="insight-box">
-          <div class="k">Günlük ortalama</div>
+          <div class="k" data-i18n="ana.gunlukOrtalama">Günlük ortalama</div>
           <div class="v" id="insightOrtalama">—</div>
         </div>
         <div class="insight-box">
-          <div class="k">Ən çox xərc</div>
+          <div class="k" data-i18n="ana.enCoxXerc">Ən çox xərc</div>
           <div class="v" id="insightTopKategori">—</div>
         </div>
       </div>
       <div id="butonlarKonteyneri" class="grid-buttons"></div>
-      <button class="dashed-btn" id="kateqoriyaEkleBtn" onclick="catPanelYeniAc()" style="display:none;">➕ Yeni kateqoriya əlavə et</button>
-      <button class="dashed-btn" id="duzenlemeBtn" onclick="duzenlemeRejimiDeyis()">✏️ Ekranı düzənlə</button>
-      <button class="dashed-btn" onclick="islemFormModalAc(null)">🕓 Köhnə tarixli xərc əlavə et</button>
+      <button class="dashed-btn" id="kateqoriyaEkleBtn" onclick="catPanelYeniAc()" style="display:none;" data-i18n="ana.yeniKateqoriya">➕ Yeni kateqoriya əlavə et</button>
+      <button class="dashed-btn" id="duzenlemeBtn" onclick="duzenlemeRejimiDeyis()" data-i18n="ana.ekraniDuzenle">✏️ Ekranı düzənlə</button>
+      <button class="dashed-btn" onclick="islemFormModalAc(null)" data-i18n="ana.kohneTarixliXerc">🕓 Köhnə tarixli xərc əlavə et</button>
     `;
+    dilTetbiqEt(appEl); // skelet JS ilə qurulur — data-i18n etiketləri burada tətbiq olunur
   }
 
   function donemeGoreFiltrele() {
@@ -2416,7 +2744,7 @@
 
     const butonlarEl = document.getElementById('butonlarKonteyneri');
     const duzenlemeBtnEl = document.getElementById('duzenlemeBtn');
-    if (duzenlemeBtnEl) duzenlemeBtnEl.innerText = duzenlemeRejimi ? '✅ Hazırdır' : '✏️ Ekranı düzənlə';
+    if (duzenlemeBtnEl) duzenlemeBtnEl.innerText = duzenlemeRejimi ? tr('ana.hazirdir', '✅ Hazırdır') : tr('ana.ekraniDuzenle', '✏️ Ekranı düzənlə');
     const kateqoriyaEkleBtnEl = document.getElementById('kateqoriyaEkleBtn');
     if (kateqoriyaEkleBtnEl) kateqoriyaEkleBtnEl.style.display = duzenlemeRejimi ? 'flex' : 'none';
     if (butonlarEl) {
@@ -3681,11 +4009,11 @@
 
   // ==== Hesablar: Cash / Kredi kartı / Debit bank + transfer ====
   function hesabAdi(tip) {
-    if (tip === 'nagd') return 'Cash Hesab';
-    if (tip === 'debit') return 'Debit bank Hesabım';
-    if (tip === 'depozit') return 'Bank Deposit Hesabım';
-    if (tip === 'kredit') return 'Kredi kartı Hesabım';
-    if (tip === 'krediXett') return 'Kredit xətt';
+    if (tip === 'nagd') return tr('hesabAd.nagd', 'Cash Hesab');
+    if (tip === 'debit') return tr('hesabAd.debit', 'Debit bank Hesabım');
+    if (tip === 'depozit') return tr('hesabAd.depozit', 'Bank Deposit Hesabım');
+    if (tip === 'kredit') return tr('hesabAd.kredit', 'Kredi kartı Hesabım');
+    if (tip === 'krediXett') return tr('hesabAd.krediXett', 'Kredit xətt');
     return tip;
   }
   function hesabIkonu(tip) {
@@ -3698,19 +4026,21 @@
   }
 
   // ---- "+" ilə hesab əlavə etmə: 5 seçim ----
-  const HESAB_SEC_SIYAHI = [
-    { tip: 'nagd', ikon: '💵', ad: 'Cash Hesab', izah: 'Yalnız məbləğ (yalnız +)' },
-    { tip: 'debit', ikon: '🏦', ad: 'Debit Card Hesab', izah: 'Yalnız məbləğ (yalnız +)' },
-    { tip: 'depozit', ikon: '🏛️', ad: 'Deposit Hesabım', izah: 'Yalnız məbləğ (+ və ya -)' },
-    { tip: 'kredit', ikon: '💳', ad: 'Kredit Kart Hesab', izah: 'Limit + istifadə edilə bilən qalıq (- və ya 0)' },
-    { tip: 'krediXett', ikon: '🧾', ad: 'Kredit xətt', izah: 'Ay sayı, başlanğıc tarixi, ödənilməli məbləğ (yalnız -)' }
-  ];
+  function hesabSecSiyahi() {
+    return [
+      { tip: 'nagd', ikon: '💵', ad: tr('hesabAd.nagd', 'Cash Hesab'), izah: tr('hesabSec.izahYalnizPlus', 'Yalnız məbləğ (yalnız +)') },
+      { tip: 'debit', ikon: '🏦', ad: tr('hesabSec.adDebit', 'Debit Card Hesab'), izah: tr('hesabSec.izahYalnizPlus', 'Yalnız məbləğ (yalnız +)') },
+      { tip: 'depozit', ikon: '🏛️', ad: tr('hesabSec.adDepozit', 'Deposit Hesabım'), izah: tr('hesabSec.izahPlusMinus', 'Yalnız məbləğ (+ və ya -)') },
+      { tip: 'kredit', ikon: '💳', ad: tr('hesabSec.adKredit', 'Kredit Kart Hesab'), izah: tr('hesabSec.izahKredit', 'Limit + istifadə edilə bilən qalıq (- və ya 0)') },
+      { tip: 'krediXett', ikon: '🧾', ad: tr('hesabAd.krediXett', 'Kredit xətt'), izah: tr('hesabSec.izahKrediXett', 'Ay sayı, başlanğıc tarixi, ödənilməli məbləğ (yalnız -)') }
+    ];
+  }
 
   function hesabSecModalAc() {
     const konteyner = document.getElementById('hesabSecListesi');
     if (!konteyner) return;
     konteyner.innerHTML = '';
-    HESAB_SEC_SIYAHI.forEach(h => {
+    hesabSecSiyahi().forEach(h => {
       const eklenib = (h.tip === 'kredit') ? (typeof kreditLimit === 'number')
         : (h.tip === 'krediXett') ? !!krediBorcu
         : !!hesabEklenib[h.tip];
@@ -3718,7 +4048,7 @@
       btn.type = 'button';
       btn.className = 'hesab-sec-item';
       btn.onclick = () => hesabSecEt(h.tip);
-      btn.innerHTML = `<span class="ic">${escapeHtml(h.ikon)}</span><span style="flex:1;">${escapeHtml(h.ad)}${eklenib ? ' ✓' : ''}<small>${eklenib ? 'Artıq əlavə edilib — düzəltmək üçün seç' : escapeHtml(h.izah)}</small></span>`;
+      btn.innerHTML = `<span class="ic">${escapeHtml(h.ikon)}</span><span style="flex:1;">${escapeHtml(h.ad)}${eklenib ? ' ✓' : ''}<small>${eklenib ? escapeHtml(tr('hesabSec.artiqElave', 'Artıq əlavə edilib — düzəltmək üçün seç')) : escapeHtml(h.izah)}</small></span>`;
       konteyner.appendChild(btn);
     });
     modalAc('hesabSecModal');
@@ -3758,8 +4088,8 @@
       html += `
       <div class="modal-item">
         <div class="field-row between">
-          <div class="field-row"><span style="font-size:18px;">💵</span><b>Cash Hesab</b></div>
-          <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('nagd')" style="padding:5px 10px;">Düzəlt</button>
+          <div class="field-row"><span style="font-size:18px;">💵</span><b>${escapeHtml(hesabAdi('nagd'))}</b></div>
+          <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('nagd')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
         </div>
         <div style="font-size:19px; font-weight:700; color:var(--brand-ink);">${nagdBakiye.toFixed(2)} AZN</div>
       </div>`;
@@ -3768,8 +4098,8 @@
       html += `
       <div class="modal-item">
         <div class="field-row between">
-          <div class="field-row"><span style="font-size:18px;">🏦</span><b>Debit bank Hesabım</b></div>
-          <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('debit')" style="padding:5px 10px;">Düzəlt</button>
+          <div class="field-row"><span style="font-size:18px;">🏦</span><b>${escapeHtml(hesabAdi('debit'))}</b></div>
+          <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('debit')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
         </div>
         <div style="font-size:19px; font-weight:700; color:var(--brand-ink);">${debitBakiye.toFixed(2)} AZN</div>
       </div>`;
@@ -3778,8 +4108,8 @@
       html += `
       <div class="modal-item">
         <div class="field-row between">
-          <div class="field-row"><span style="font-size:18px;">🏛️</span><b>Bank Deposit Hesabım</b></div>
-          <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('depozit')" style="padding:5px 10px;">Düzəlt</button>
+          <div class="field-row"><span style="font-size:18px;">🏛️</span><b>${escapeHtml(hesabAdi('depozit'))}</b></div>
+          <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('depozit')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
         </div>
         <div style="font-size:19px; font-weight:700; color:${depozitBakiye < 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${depozitBakiye.toFixed(2)} AZN</div>
       </div>`;
@@ -3788,33 +4118,33 @@
       html += `
       <div class="modal-item">
         <div class="field-row between">
-          <div class="field-row"><span style="font-size:18px;">💳</span><b>Kredi kartı Hesabım</b></div>
-          <button class="btn btn-ghost" onclick="hesablarPaneliniKapat(); balanceModalAc();" style="padding:5px 10px;">Düzəlt</button>
+          <div class="field-row"><span style="font-size:18px;">💳</span><b>${escapeHtml(hesabAdi('kredit'))}</b></div>
+          <button class="btn btn-ghost" onclick="hesablarPaneliniKapat(); balanceModalAc();" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
         </div>
         <div style="font-size:19px; font-weight:700; color:${borc < 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${borc.toFixed(2)} AZN</div>
-        <div style="font-size:12px; color:var(--muted);">Limit: ${limit.toFixed(2)} AZN · İstifadə edilə bilən: ${muvcud.toFixed(2)} AZN</div>
+        <div style="font-size:12px; color:var(--muted);">${escapeHtml(tr('hesablar.limitVeMuvcud', 'Limit: {limit} AZN · İstifadə edilə bilən: {muvcud} AZN', { limit: limit.toFixed(2), muvcud: muvcud.toFixed(2) }))}</div>
       </div>`;
     }
     if (krediBorcu) {
       const qalan = krediBorcuQalanHesabla();
       const bitib = krediBorcu.odenmisTaksitSayi >= krediBorcu.taksitSayi;
-      let btnText = 'Bu ayın taksitini ödə';
+      let btnText = tr('hesablar.buAyTaksitOde', 'Bu ayın taksitini ödə');
       let btnDisabled = false;
-      if (bitib) { btnText = '🎉 Kredit bağlanıb'; btnDisabled = true; }
-      const elaveText = (krediBorcu.elaveOdenis > 0) ? ` · əlavə ödəniş: -${krediBorcu.elaveOdenis.toFixed(2)} AZN` : '';
+      if (bitib) { btnText = tr('hesablar.kreditBaglanib', '🎉 Kredit bağlanıb'); btnDisabled = true; }
+      const elaveText = (krediBorcu.elaveOdenis > 0) ? ' · ' + tr('hesablar.elaveOdenis', 'əlavə ödəniş: -{mebleg} AZN', { mebleg: krediBorcu.elaveOdenis.toFixed(2) }) : '';
       html += `
       <div class="modal-item">
         <div class="field-row between">
-          <div class="field-row"><span style="font-size:18px;">🧾</span><b>Kredit xətt</b></div>
-          <button class="btn btn-ghost" onclick="krediBorcuDuzeltModalAc()" style="padding:5px 10px;">Düzəlt</button>
+          <div class="field-row"><span style="font-size:18px;">🧾</span><b>${escapeHtml(hesabAdi('krediXett'))}</b></div>
+          <button class="btn btn-ghost" onclick="krediBorcuDuzeltModalAc()" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
         </div>
         <div style="font-size:19px; font-weight:700; color:${qalan > 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${qalan > 0 ? '-' : ''}${qalan.toFixed(2)} AZN</div>
-        <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">${krediBorcu.odenmisTaksitSayi}/${krediBorcu.taksitSayi} taksit ödənilib · Aylıq: ${krediBorcu.aylikMebleg.toFixed(2)} AZN · ${escapeHtml(tarixFormat(krediBorcu.baslangic))}–${escapeHtml(tarixFormat(krediBorcu.bitis))}${elaveText}</div>
+        <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">${escapeHtml(tr('hesablar.taksitOdenilib', '{odenmis}/{say} taksit ödənilib · Aylıq: {aylik} AZN', { odenmis: krediBorcu.odenmisTaksitSayi, say: krediBorcu.taksitSayi, aylik: krediBorcu.aylikMebleg.toFixed(2) }))} · ${escapeHtml(tarixFormat(krediBorcu.baslangic))}–${escapeHtml(tarixFormat(krediBorcu.bitis))}${escapeHtml(elaveText)}</div>
         <button class="btn btn-primary" ${btnDisabled ? 'disabled' : ''} onclick="krediBorcuOdeModalAc()" style="width:100%;">${escapeHtml(btnText)}</button>
       </div>`;
     }
     if (!html) {
-      html = '<p class="empty-note" style="padding:8px 0;">Hələ heç bir hesab əlavə edilməyib. Yuxarıdakı ➕ düyməsindən başla.</p>';
+      html = '<p class="empty-note" style="padding:8px 0;">' + escapeHtml(tr('hesablar.hecHesabYox', 'Hələ heç bir hesab əlavə edilməyib. Yuxarıdakı ➕ düyməsindən başla.')) + '</p>';
     }
     konteyner.innerHTML = html;
     hesabTransferTarixceGoster();
@@ -3824,7 +4154,7 @@
     const konteyner = document.getElementById('hesabTransferTarixce');
     if (!konteyner) return;
     if (hesabTransferleri.length === 0) {
-      konteyner.innerHTML = '<p class="empty-note" style="padding:8px 0;">Hələ transfer edilməyib.</p>';
+      konteyner.innerHTML = '<p class="empty-note" style="padding:8px 0;">' + escapeHtml(tr('hesablar.hecTransferYox', 'Hələ transfer edilməyib.')) + '</p>';
       return;
     }
     konteyner.innerHTML = '';
@@ -3833,7 +4163,7 @@
       row.className = 'list-item';
       row.innerHTML = `
         <div>
-          <span class="cat">${escapeHtml(hesabIkonu(t.menbeTip))} ${escapeHtml(hesabAdi(t.menbeTip))} → ${escapeHtml(hesabIkonu(t.hedefTip))} ${escapeHtml(hesabAdi(t.hedefTip))}${t.taksit ? ' (taksit)' : ''}</span>
+          <span class="cat">${escapeHtml(hesabIkonu(t.menbeTip))} ${escapeHtml(hesabAdi(t.menbeTip))} → ${escapeHtml(hesabIkonu(t.hedefTip))} ${escapeHtml(hesabAdi(t.hedefTip))}${t.taksit ? ' ' + escapeHtml(tr('hesablar.taksitSuffix', '(taksit)')) : ''}</span>
           <span class="time">${escapeHtml(t.tarix)}</span>
         </div>
         <div class="right">
@@ -3848,7 +4178,7 @@
   let hesabDuzeltTipi = null;
   function hesabDuzeltModalAc(tip) {
     hesabDuzeltTipi = tip;
-    document.getElementById('hesabDuzeltBaslik').innerText = hesabAdi(tip) + ' balansı';
+    document.getElementById('hesabDuzeltBaslik').innerText = tr('hesabDuzelt.baslikTip', '{ad} balansı', { ad: hesabAdi(tip) });
     document.getElementById('hesabDuzeltInput').value = hesabBakiyesiOxu(tip);
     document.getElementById('hesabDuzeltError').innerText = '';
     modalAc('hesabDuzeltModal');
@@ -3858,11 +4188,11 @@
     const p = parseFloat((val || '').replace(',', '.'));
     const errEl = document.getElementById('hesabDuzeltError');
     if (isNaN(p)) {
-      errEl.innerText = 'Düzgün rəqəm yaz.';
+      errEl.innerText = tr('umumi.duzgunReqem', 'Düzgün rəqəm yaz.');
       return;
     }
     if ((hesabDuzeltTipi === 'nagd' || hesabDuzeltTipi === 'debit') && p < 0) {
-      errEl.innerText = hesabAdi(hesabDuzeltTipi) + ' üçün məbləğ yalnız müsbət (+) ola bilər.';
+      errEl.innerText = tr('hesabDuzelt.yalnizMusbet', '{ad} üçün məbləğ yalnız müsbət (+) ola bilər.', { ad: hesabAdi(hesabDuzeltTipi) });
       return;
     }
     if (hesabDuzeltTipi === 'nagd') { nagdBakiye = p; hesabEklenib.nagd = true; }
@@ -3904,7 +4234,7 @@
       siyahi.forEach((tip) => {
         const opt = document.createElement('option');
         opt.value = tip;
-        opt.textContent = hesabIkonu(tip) + ' ' + hesabAdi(tip) + (tip === 'krediXett' ? ' (ödəniş)' : '');
+        opt.textContent = hesabIkonu(tip) + ' ' + hesabAdi(tip) + (tip === 'krediXett' ? ' ' + tr('transfer.odenisSuffix', '(ödəniş)') : '');
         sel.appendChild(opt);
       });
     };
@@ -3917,7 +4247,7 @@
     if (ferqli.length) hedefSel.value = (ferqli.indexOf('kredit') !== -1) ? 'kredit' : ferqli[0];
     document.getElementById('transferMebleg').value = '';
     document.getElementById('transferError').innerText = (menbeler.length && ferqli.length)
-      ? '' : 'Transfer üçün ən azı iki hesab əlavə et (Hesablarım → ➕).';
+      ? '' : tr('transfer.ikiHesabLazim', 'Transfer üçün ən azı iki hesab əlavə et (Hesablarım → ➕).');
     modalAc('transferModal');
   }
 
@@ -3929,25 +4259,25 @@
     const tutar = parseFloat((tutarVal || '').replace(',', '.'));
 
     if (!menbeTip || !hedefTip || !transferHesabVarMi(menbeTip) || !transferHesabVarMi(hedefTip)) {
-      errEl.innerText = 'Seçilən hesab hələ əlavə edilməyib.';
+      errEl.innerText = tr('transfer.hesabElaveEdilmeyib', 'Seçilən hesab hələ əlavə edilməyib.');
       return;
     }
     if (menbeTip === hedefTip) {
-      errEl.innerText = 'Mənbə və hədəf hesab eyni ola bilməz.';
+      errEl.innerText = tr('transfer.eyniHesab', 'Mənbə və hədəf hesab eyni ola bilməz.');
       return;
     }
     if (isNaN(tutar) || tutar <= 0) {
-      errEl.innerText = 'Düzgün məbləğ yaz.';
+      errEl.innerText = tr('umumi.duzgunMebleg', 'Düzgün məbləğ yaz.');
       return;
     }
     if (hedefTip === 'krediXett' && !krediBorcu) {
-      errEl.innerText = 'Əvvəlcə "Kredit xətt" hesabını ➕ ilə əlavə et.';
+      errEl.innerText = tr('transfer.evvelKrediXett', 'Əvvəlcə "Kredit xətt" hesabını ➕ ilə əlavə et.');
       return;
     }
     if (menbeTip !== 'kredit') {
       const mevcud = hesabBakiyesiOxu(menbeTip);
       if (tutar > mevcud) {
-        errEl.innerText = hesabAdi(menbeTip) + ' hesabında kifayət qədər balans yoxdur.';
+        errEl.innerText = tr('transfer.balansYoxdur', '{ad} hesabında kifayət qədər balans yoxdur.', { ad: hesabAdi(menbeTip) });
         return;
       }
     } else {
@@ -3955,7 +4285,7 @@
       const borc = (typeof anaHesap === 'number') ? anaHesap : 0;
       const muvcudLimit = limit + borc; // kredit kartında istifadə edilə bilən limit
       if (tutar > muvcudLimit) {
-        errEl.innerText = 'Kredi kartında kifayət qədər istifadə edilə bilən limit yoxdur.';
+        errEl.innerText = tr('transfer.limitYoxdur', 'Kredi kartında kifayət qədər istifadə edilə bilən limit yoxdur.');
         return;
       }
     }
@@ -3985,7 +4315,7 @@
   function transferSilOnayla(index) {
     const t = hesabTransferleri[index];
     if (!t) return;
-    confirmAc('Transferi ləğv et', hesabAdi(t.menbeTip) + ' → ' + hesabAdi(t.hedefTip) + ' (' + t.tutar.toFixed(2) + ' AZN) geri qaytarılsın?', () => {
+    confirmAc(tr('transfer.legvBaslik', 'Transferi ləğv et'), tr('transfer.legvSual', '{menbe} → {hedef} ({tutar} AZN) geri qaytarılsın?', { menbe: hesabAdi(t.menbeTip), hedef: hesabAdi(t.hedefTip), tutar: t.tutar.toFixed(2) }), () => {
       hesabBakiyesiDeyis(t.menbeTip, t.tutar);
       if (t.taksit) {
         // Taksit ödənişi geri qaytarılır: ödənilmiş taksit sayı 1 azalır

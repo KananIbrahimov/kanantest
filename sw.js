@@ -5,9 +5,16 @@
 
 // VACİB: Hər yeni versiya buraxdıqda bu adı artır (v3 → v4 → v5 ...).
 // Bu, köhnə keşin avtomatik təmizlənməsini təmin edir.
+// (v16: Faz 5 — lang/en.json (İngilis dili) əlavə edildi.)
+// (v15: Faz 7 — boş tərcümə dəyəri az mətninə düşür; lang/template.json + YENI-DIL-ELAVE-ETMEK.md əlavə edildi.)
+// (v14: Faz 6 — lang/languages.json (əl ilə ehtiyat dil siyahısı) keşə əlavə edildi;
+//  GitHub API sorğusu artıq 24 saatda bir edilir, saatlik 60 limiti qorunur.)
+// (v13: lang/index.json (dil siyahısı) keşə əlavə edildi; dil kodu doğrulaması.)
+// (v12: Faz 4-5 — statik HTML + hesablar/transfer mətnləri tərcümə açarlarına keçdi.)
+// (v10: dil faylları (lang/*.json) üçün network-first əlavə edildi.)
 // (v9: ad "Safe Money" olaraq dəyişdi və yeni logo əlavə edildi — köhnə keşlənmiş
 // ikonların/title-ın istifadəçilərdə qalmaması üçün versiya artırıldı.)
-const CACHE_ADI = 'safe-money-cache-v9';
+const CACHE_ADI = 'safe-money-cache-v16';
 
 const KESLENECEK_FAYLLAR = [
   './index.html',
@@ -15,7 +22,11 @@ const KESLENECEK_FAYLLAR = [
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-192.png',
-  './icon-maskable-512.png'
+  './icon-maskable-512.png',
+  './lang/az.json',
+  './lang/en.json',
+  './lang/index.json',
+  './lang/languages.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -62,6 +73,22 @@ self.addEventListener('fetch', (event) => {
           return cavab;
         })
         .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // Dil faylları (lang/*.json): NETWORK-FIRST — yeni tərcümə dərhal görünsün; internet yoxdursa keşdən.
+  if (url.pathname.includes('/lang/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((cavab) => {
+          if (cavab && cavab.ok) {
+            const kopya = cavab.clone();
+            caches.open(CACHE_ADI).then((cache) => cache.put(event.request, kopya));
+          }
+          return cavab;
+        })
+        .catch(() => caches.match(event.request))
     );
     return;
   }
