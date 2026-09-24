@@ -1,0 +1,265 @@
+/* Safe Money — modal, səhifə, qrafik, ayarlar, kilid */
+.modal { position: fixed; inset: 0; background: var(--overlay); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 70; }
+.modal.active { display: flex; }
+#confirmModal { z-index: 70; }
+#newCatModal { z-index: 70; }
+#transferModal { z-index: 70; }
+#hesabDuzeltModal { z-index: 70; }
+#krediBorcuDuzeltModal { z-index: 70; }
+#pinAyarlaModal { z-index: 70; }
+#islemFormModal { z-index: 70; }
+#hesabSecModal { z-index: 70; }
+.monthly-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.monthly-item .left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.monthly-item .icon { font-size: 18px; }
+.monthly-item .name { font-weight: 600; font-size: 13.5px; }
+.monthly-item .amt { font-size: 12px; color: var(--muted); }
+.monthly-item .badge {
+  font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+}
+.monthly-item .badge.paid { background: var(--success-bg); color: var(--success-ink); }
+.monthly-item .badge.unpaid { background: var(--danger-bg); color: var(--danger); cursor: pointer; }
+.monthly-item .del-btn { background: none; border: none; cursor: pointer; font-size: 13px; color: var(--faint); }
+.monthly-item .del-btn:hover { color: var(--danger); }
+
+.ay-row {
+  display: flex; align-items: center; gap: 10px; background: var(--panel-alt); border: 1px solid var(--line);
+  border-radius: var(--radius-md); padding: 10px 12px;
+}
+.ay-row .icon-input {
+  flex: 0 0 34px; width: 34px; border: 1px solid var(--line); background: var(--panel); text-align: center;
+  font-size: 16px; padding: 5px 2px; border-radius: 6px; color: var(--ink);
+}
+.ay-row .icon-input:focus { outline: none; border-color: var(--brand-soft); }
+.ay-row .ay-name-input {
+  flex: 1 1 auto; min-width: 0; border: 1px solid transparent; background: transparent;
+  font-weight: 600; font-size: 13.5px; padding: 6px 6px; border-radius: 6px; color: var(--ink);
+}
+.ay-row .ay-name-input:hover, .ay-row .ay-name-input:focus { border-color: var(--line); background: var(--panel); outline: none; }
+.ay-row .ay-amt-input {
+  flex: 0 0 72px; width: 72px; border: 1px solid var(--line); background: var(--panel);
+  font-size: 13px; font-weight: 600; padding: 6px 7px; border-radius: 6px; color: var(--brand-ink); text-align: right;
+}
+.ay-row .ay-amt-input:focus { outline: none; border-color: var(--brand-soft); }
+.ay-row .ay-checkbox { flex: 0 0 auto; width: 19px; height: 19px; accent-color: var(--brand); cursor: pointer; margin: 0; }
+.ay-row .del-btn { flex: 0 0 auto; background: none; border: none; cursor: pointer; font-size: 13px; color: var(--faint); padding: 4px; }
+.ay-row .taksit-badge { flex: 0 0 auto; font-size: 10px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.ay-row .del-btn:hover { color: var(--danger); }
+.ay-total-row {
+  display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 14.5px;
+  color: var(--brand-ink); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius-md);
+  padding: 10px 14px; margin-bottom: 14px;
+}
+.modal-content { background: var(--panel); width: 100%; max-width: 400px; border-radius: 16px; padding: 22px; box-sizing: border-box; max-height: 88vh; display: flex; flex-direction: column; color: var(--ink); }
+.modal-content h2, .page-inner h2 { font-size: 17px; margin: 0 0 4px; }
+.modal-content p.hint, .page-inner p.hint { font-size: 12.5px; color: var(--muted); margin: 0 0 16px; }
+.modal-list { overflow-y: auto; flex: 1; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; padding-right: 2px; }
+.modal-item { background: var(--panel-alt); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+/* Kateqoriyaların sıralanması (drag-to-reorder) indi Xərclər ekranındakı "Ekranı düzənlə" rejimindədir — aşağıya bax */
+.field-row { display: flex; align-items: center; gap: 8px; }
+.field-row.between { justify-content: space-between; }
+input[type="text"], input[type="number"], input[type="email"], input[type="password"] {
+  padding: 8px 10px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; outline: none; width: 100%;
+  font-family: inherit; background: var(--panel); color: var(--ink);
+}
+input:focus { border-color: var(--brand-soft); }
+.swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid var(--swatch-border); box-shadow: 0 0 0 1px var(--line); }
+.swatch.selected { box-shadow: 0 0 0 2px var(--brand-ink); }
+/* 20 rəngli palitra: 10-10 iki sıra */
+.renk-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px 4px; justify-items: center; padding-top: 2px; }
+.renk-grid .swatch { width: 22px; height: 22px; }
+.btn { border: none; border-radius: 10px; padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.btn-primary { background: var(--brand); color: #fff; }
+.btn-primary:hover { background: var(--brand-soft); }
+.btn-ghost { background: transparent; color: var(--muted); }
+.btn-danger { background: var(--danger-bg); color: var(--danger); }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+.error-text { font-size: 12px; color: var(--danger); min-height: 15px; margin-top: -4px; }
+
+/* Full page sections (opened from the side menu) instead of centered popups */
+.page-screen {
+  position: fixed; inset: 0; background: var(--bg); display: none;
+  flex-direction: column; z-index: 60; overflow-y: auto;
+}
+.page-screen.active { display: flex; animation: pageSlideIn .22s ease; }
+@keyframes pageSlideIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+.page-inner {
+  width: 100%; max-width: 430px; margin: 0 auto; box-sizing: border-box;
+  padding: 20px 14px calc(86px + env(safe-area-inset-bottom, 0px)); flex: 1; display: flex; flex-direction: column; min-height: 100%;
+}
+.page-inner .modal-list { max-height: none; }
+/* Long pages (like Hesablar və Borclar) have more content than fits one screen.
+   Without this, flexbox silently shrinks — and for elements with overflow:hidden/auto,
+   crops — children like .debt-summary-card or .modal-list instead of just letting the
+   page scroll. Forcing every direct child to keep its natural size fixes that. */
+.page-inner > * { flex-shrink: 0; }
+
+.loading-screen { display: flex; align-items: center; justify-content: center; min-height: 60vh; color: var(--muted); font-size: 14px; }
+
+/* Güncel Borclar: combined debt summary chart */
+.debt-summary-card {
+  background: linear-gradient(140deg, var(--brand) 0%, var(--brand-deep) 100%); color: #fff; border-radius: var(--radius-lg);
+  padding: 18px 18px 16px; margin-bottom: 14px; position: relative; overflow: hidden;
+}
+.debt-summary-label { font-size: 12.5px; color: var(--on-brand-1); font-weight: 500; }
+.debt-summary-amount { font-size: 28px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
+.debt-chart-container {
+  width: 100%; height: 12px; background: rgba(255,255,255,0.12); border-radius: 999px;
+  overflow: hidden; display: flex; margin: 14px 0 10px;
+}
+.debt-breakdown { display: flex; flex-direction: column; gap: 6px; }
+.debt-breakdown-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12.5px; color: var(--on-brand-3);
+}
+.debt-breakdown-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+
+/* Dashboard: circular (doughnut) charts */
+.pie-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  padding: 16px 16px 14px; margin-bottom: 12px;
+}
+.pie-card .pie-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+.pie-card-row { display: flex; align-items: center; gap: 16px; }
+.pie-canvas-wrap { position: relative; width: 108px; height: 108px; flex: none; }
+.pie-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
+.pie-center-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; pointer-events: none; }
+.pie-center-label .n { font-size: 14px; font-weight: 700; color: var(--ink); }
+.pie-center-label .l { font-size: 9.5px; color: var(--muted); margin-top: 1px; }
+.pie-legend { display: flex; flex-direction: column; gap: 7px; flex: 1; min-width: 0; }
+.pie-legend-row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink); }
+.pie-legend-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; flex: none; }
+.pie-legend-row .lbl { display: flex; align-items: center; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pie-legend-row .amt { font-weight: 700; flex: none; }
+.pie-empty { font-size: 12.5px; color: var(--muted); padding: 6px 0; }
+
+/* Hesablar: add-account ("+") picker */
+.hesab-add-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 10px; }
+.hesab-add-head h3 { margin: 0; font-size: 14px; color: var(--ink); }
+.hesab-add-btn {
+  width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--brand);
+  color: #fff; font-size: 19px; line-height: 1; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; flex: none;
+}
+.hesab-sec-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 12px 12px; border: 1px solid var(--line); border-radius: var(--radius-md);
+  background: var(--panel-alt); cursor: pointer; margin-bottom: 8px; font-size: 14px; color: var(--ink);
+}
+.hesab-sec-item .ic { font-size: 19px; }
+.hesab-sec-item small { display: block; color: var(--muted); font-size: 11.5px; font-weight: 400; margin-top: 1px; }
+
+/* Monthly installment column chart */
+.taksit-chart { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; }
+.taksit-bar-col { flex: 1 1 0; min-width: 28px; display: flex; flex-direction: column; align-items: center; }
+.taksit-bar-amt { font-size: 9.5px; color: var(--muted); margin-bottom: 4px; font-weight: 600; white-space: nowrap; }
+.taksit-bar-amt.paid { color: var(--success-ink); }
+.taksit-bar { width: 100%; max-width: 26px; height: 46px; border-radius: 6px 6px 3px 3px; background: var(--line); transition: background .2s; }
+.taksit-bar.filled { background: var(--accent); }
+.taksit-bar-month { font-size: 9.5px; color: var(--muted); margin-top: 5px; white-space: nowrap; }
+
+.drive-box { background: var(--panel-alt); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 10px 12px; margin: 0 2px 8px; }
+.drive-box .drive-status { font-size: 12px; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.drive-box .drive-status.ok { color: var(--success-ink); }
+.drive-box .drive-status.err { color: var(--danger); }
+.drive-box .drive-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.drive-box .drive-btns { display: flex; gap: 6px; margin-top: 8px; }
+.drive-box .drive-btns button { flex: 1; font-size: 11.5px; padding: 7px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; color: var(--brand-ink); }
+.drive-box .drive-btns button:hover { border-color: var(--brand-soft); }
+
+/* Ayarlar səhifəsindəki bütün sətir ikonları eyni ölçü/boşluqla düzülsün deyə */
+.ayarlar-ikon { display: inline-flex; align-items: center; justify-content: center; width: 20px; font-size: 15px; margin-right: 8px; flex: 0 0 auto; }
+.ayarlar-metin { display: inline-flex; align-items: center; }
+/* Ayarlar səhifəsindəki bütün qutucuqlar (Kateqoriyalar, Son əməliyyatlar, İşıqlı rejim,
+   Tətbiq kilidi, System, Yenilə, Günlük limit) eyni ölçü/şrift/haşiyə istifadə etsin deyə vahid siniflər */
+.ayarlar-kutu {
+  box-sizing: border-box; width: 100%; border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: 13px 14px; background: transparent; font-family: inherit; text-align: left;
+}
+.ayarlar-setir-ic {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3;
+}
+button.ayarlar-kutu { cursor: pointer; }
+button.ayarlar-kutu:hover { border-color: var(--brand-soft); }
+.error-text:empty { display: none; margin: 0; min-height: 0; }
+
+.theme-toggle-row {
+  display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; color: var(--ink);
+}
+.theme-switch {
+  position: relative; width: 42px; height: 24px; border-radius: 999px; background: var(--line);
+  border: none; cursor: pointer; flex: 0 0 auto; transition: background .2s;
+}
+.theme-switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: transform .2s;
+}
+[data-theme="dark"] .theme-switch { background: var(--brand); }
+[data-theme="dark"] .theme-switch::after { transform: translateX(18px); }
+
+.hesabat-cemi-card {
+  background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius-lg);
+  padding: 14px 16px; margin-bottom: 16px;
+}
+.hesabat-cemi-card .k { font-size: 12.5px; color: var(--accent-ink); font-weight: 600; }
+.hesabat-cemi-card .v { font-size: 22px; font-weight: 700; color: var(--accent-ink-dark); margin-top: 2px; }
+/* Aylıq hesabat: 2 dairəvi qrafik (günlük xərclər / aylıq sabit xərclər) */
+.hesabat-bolme-basliq { font-size: 14px; margin: 18px 0 10px; color: var(--ink); }
+.hesabat-kart { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 16px; }
+.donut-sarici { position: relative; width: 100%; max-width: 250px; aspect-ratio: 1 / 1; margin: 0 auto; }
+.donut-sarici canvas { width: 100% !important; height: 100% !important; }
+.donut-merkez { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; padding: 0 20%; }
+.donut-merkez .t { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+.donut-merkez .b { font-weight: 800; color: var(--ink); line-height: 1.15; margin-top: 2px; white-space: nowrap; }
+.donut-merkez .s { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-top: 3px; }
+.donut-merkez .b.over, .donut-merkez .s.over { color: var(--danger); }
+.donut-caption { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 14px; }
+.donut-caption:empty { display: none; }
+.hesabat-row { margin-bottom: 12px; }
+.hesabat-row-top { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+.hesabat-bar-bg { width: 100%; height: 10px; background: var(--panel-alt); border-radius: 999px; overflow: hidden; }
+.hesabat-bar-fill { height: 100%; border-radius: 999px; transition: width .3s; }
+.trend-row {
+  display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; font-size: 13px;
+  font-weight: 600; background: var(--panel-alt); border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 6px;
+}
+.trend-up { color: var(--danger); }
+.trend-down { color: var(--success-ink); }
+.trend-new { color: var(--accent-ink); }
+
+.date-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 14px; }
+.date-nav-arrow {
+  background: var(--panel); border: 1px solid var(--line); color: var(--brand-ink); width: 34px; height: 34px;
+  border-radius: 50%; font-size: 17px; line-height: 1; cursor: pointer; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.date-nav-arrow:disabled { opacity: 0.3; cursor: default; }
+.date-nav-label { flex: 1; text-align: center; font-weight: 700; font-size: 14px; color: var(--ink); }
+
+/* ==== Tətbiq kilidi (Face ID / Touch ID / PIN) ==== */
+.lock-screen {
+  position: fixed; inset: 0; background: var(--bg); z-index: 200;
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.lock-screen.active { display: flex; }
+/* "Hesab yarat" ekranı: giriş ekranının üstündə açılır, ona görə z-index daha yüksək
+   və içərik uzun ola bilər deyə yuxarıdan başlayıb sürüşə bilir (overflow-y:auto). */
+#qeydiyyatModal { z-index: 205; align-items: flex-start; overflow-y: auto; }
+#qeydiyyatModal .lock-box { margin: 32px auto; text-align: left; }
+#qeydiyyatModal .lock-box > .lock-icon, #qeydiyyatModal .lock-box > h2, #qeydiyyatModal .lock-box > .hint { text-align: center; }
+.lock-box { width: 100%; max-width: 320px; text-align: center; }
+.lock-icon { font-size: 42px; margin-bottom: 10px; }
+.lock-box h2 { margin: 0 0 6px; font-size: 18px; color: var(--ink); }
+#kilidPinInput { text-align: center; letter-spacing: 10px; font-size: 20px; margin-bottom: 8px; }
+.toggle-switch {
+  position: relative; width: 42px; height: 24px; border-radius: 999px; background: var(--line);
+  border: none; cursor: pointer; flex: 0 0 auto; transition: background .2s;
+}
+.toggle-switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: transform .2s;
+}
+.toggle-switch.on { background: var(--brand); }
+.toggle-switch.on::after { transform: translateX(18px); }
