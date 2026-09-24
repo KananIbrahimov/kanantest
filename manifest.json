@@ -1,7 +1,7 @@
 {
-  "name": "Günlük Xərclər",
-  "short_name": "Xərclər",
-  "description": "Günlük gider, kredit kartı borcu, hesablar və büdcə takibi",
+  "name": "Safe Money",
+  "short_name": "Safe Money",
+  "description": "Safe Money — günlük gider, kredit kartı borcu, hesablar və büdcə takibi",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

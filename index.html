@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Günlük Gider Takibi</title>
+<title>Safe Money</title>
 <!-- ==== PWA: manifest.json, sw.js, icon-192.png, icon-512.png ilə eyni qovluqda olmalıdır ====
      Bunları http(s):// üzərindən açmaq lazımdır (file:// ilə Service Worker işləmir,
      Google Drive girişi ilə eynən). Məs: GitHub Pages, Netlify və ya `python3 -m http.server`. -->
@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#0b0809">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Xərclər">
+<meta name="apple-mobile-web-app-title" content="Safe Money">
 <script>
   // TƏHLÜKƏSİZLİK: HTML içərisinə istifadəçi məlumatı yazmazdan əvvəl xüsusi simvolları
   // təhlükəsiz formaya salır. Bu olmasa, kimsə kateqoriya adına zərərli bir script teqi
@@ -584,8 +584,8 @@
      DOM-da cihaz kilidindən ƏVVƏL yerləşir ki, ikisi də aktiv olsa cihaz kilidi üstdə qalsın. -->
 <div class="lock-screen" id="googleGirisEkrani">
   <div class="lock-box">
-    <div class="lock-icon">💰</div>
-    <h2>Günlük Xərclər</h2>
+    <img src="icon-192.png" alt="Safe Money" style="width:64px; height:64px; border-radius:16px; margin-bottom:10px;">
+    <h2>Safe Money</h2>
     <p class="hint" id="emailGirisHint">Davam etmək üçün email və şifrənlə daxil ol. Məlumatların yalnız sənin hesabına bağlı olacaq.</p>
     <input type="email" id="emailGirisEmail" placeholder="E-poçt" autocomplete="username" style="width:100%; margin-bottom:8px; box-sizing:border-box;">
     <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən az 6 simvol)" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
@@ -1303,7 +1303,7 @@
           const cred = await navigator.credentials.create({
             publicKey: {
               challenge,
-              rp: { name: 'Günlük Xərclər' },
+              rp: { name: 'Safe Money' },
               user: { id: userId, name: 'istifadeci', displayName: 'Tətbiq istifadəçisi' },
               pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
               // residentKey: 'discouraged' -> iOS bunu "passkey" kimi yox, adi bir WebAuthn açarı kimi
@@ -2186,8 +2186,9 @@
     const appEl = document.getElementById('app');
     if (!appEl) return;
     appEl.innerHTML = `
-      <div class="top" style="justify-content:center;">
-        <h1>Günlük Xərclər</h1>
+      <div class="top" style="justify-content:center; align-items:center; gap:8px;">
+        <img src="icon-192.png" alt="Safe Money" style="width:28px; height:28px; border-radius:7px;">
+        <h1>Safe Money</h1>
       </div>
       <div class="date-nav">
         <button class="date-nav-arrow" id="tarixGeriBtn" onclick="tarixDeyis(-1)">‹</button>

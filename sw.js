@@ -1,11 +1,13 @@
-// Günlük Xərclər — Service Worker
+// Safe Money — Service Worker
 // Yalnız tətbiqin öz faylını (HTML/manifest/ikonlar) offline üçün keşləyir.
 // Google Drive / Chart.js / Firebase kimi xarici sorğulara toxunmur —
 // onlar həmişə şəbəkədən (internet varsa) çəkilir.
 
 // VACİB: Hər yeni versiya buraxdıqda bu adı artır (v3 → v4 → v5 ...).
 // Bu, köhnə keşin avtomatik təmizlənməsini təmin edir.
-const CACHE_ADI = 'gider-takibi-cache-v8';
+// (v9: ad "Safe Money" olaraq dəyişdi və yeni logo əlavə edildi — köhnə keşlənmiş
+// ikonların/title-ın istifadəçilərdə qalmaması üçün versiya artırıldı.)
+const CACHE_ADI = 'safe-money-cache-v9';
 
 const KESLENECEK_FAYLLAR = [
   './index.html',
