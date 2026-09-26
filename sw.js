@@ -5,6 +5,7 @@
 
 // VACİB: Hər yeni versiya buraxdıqda bu adı artır (v3 → v4 → v5 ...).
 // Bu, köhnə keşin avtomatik təmizlənməsini təmin edir.
+// (v26: Loqo SM monoqramına dəyişdi (hərfli), brend şrifti fonts/brand.woff.)
 // (v25: Yeni premium loqo (qrafit + gümüşü seyf çarxı) və 'SAFE MONEY' yazısı; ikonlar yeniləndi.)
 // (v24: Başlıqlar 3 dildə aydınlaşdırıldı (Borclar, Hesabat); 'Bu ay gündə orta' düzgün hesablanır.)
 // (v23: Son əməliyyatlar — kateqoriya və tarix aralığı filtri; keçmiş tarixə xərc düyməsi bura köçdü.)
@@ -23,7 +24,7 @@
 // (v10: dil faylları (lang/*.json) üçün network-first əlavə edildi.)
 // (v9: ad "Safe Money" olaraq dəyişdi və yeni logo əlavə edildi — köhnə keşlənmiş
 // ikonların/title-ın istifadəçilərdə qalmaması üçün versiya artırıldı.)
-const CACHE_ADI = 'safe-money-cache-v25';
+const CACHE_ADI = 'safe-money-cache-v26';
 
 const KESLENECEK_FAYLLAR = [
   './index.html',
@@ -34,6 +35,7 @@ const KESLENECEK_FAYLLAR = [
   './icon-maskable-512.png',
   './css/main.css',
   './css/components.css',
+  './fonts/brand.woff',
   './js/config.js',
   './js/ui.js',
   './js/auth.js',

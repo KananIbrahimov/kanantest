@@ -297,8 +297,10 @@ body {
 .empty-note { color: var(--muted); text-align: center; font-size: 13.5px; padding: 18px 0; margin: 0; }
 
 
-/* ==== Brend: loqo + yazı (v3.12) ==== */
+/* ==== Brend: SM monoqram loqo + "SAFE MONEY" yazısı (v3.13) ====
+   Şrift: Cormorant Garamond (SIL Open Font License, fonts/OFL.txt) — yalnız lazım olan hərflər, ~kiçik fayl. */
+@font-face { font-family: "SM Brand"; src: url("../fonts/brand.woff") format("woff"); font-weight: 600; font-display: swap; }
 .brand-logo { width: 30px; height: 30px; border-radius: 8px; display: block; }
 .brand-logo-lg { width: 76px; height: 76px; border-radius: 19px; margin: 0 auto 16px; box-shadow: 0 10px 30px var(--shadow); }
-.brand-wordmark { font-size: 13px !important; font-weight: 600 !important; letter-spacing: 0.22em !important; text-transform: uppercase; color: var(--ink); margin: 0; }
-.brand-wordmark-lg { font-size: 16px !important; letter-spacing: 0.26em !important; margin-bottom: 8px !important; }
+.brand-wordmark { font-family: "SM Brand", Georgia, "Times New Roman", serif !important; font-size: 17px !important; font-weight: 600 !important; letter-spacing: 0.2em !important; text-transform: uppercase; color: var(--ink); margin: 0; line-height: 1; }
+.brand-wordmark-lg { font-size: 22px !important; letter-spacing: 0.24em !important; margin-bottom: 10px !important; }
