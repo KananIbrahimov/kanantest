@@ -6,12 +6,14 @@ function temaTetbiqEt(tema) {
   const metaTema = document.querySelector('meta[name="theme-color"]');
   if (metaTema) metaTema.setAttribute('content', tema === 'dark' ? '#0b0809' : '#f6f0f1');
   const lbl = document.getElementById('temaLabel');
-  if (lbl) lbl.innerHTML = tema === 'dark'
-    ? '<span class="ayarlar-ikon">☀️</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.isiqliRejim', 'İşıqlı rejim')) + '</span>'
-    : '<span class="ayarlar-ikon">🌙</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.qaranliqRejim', 'Qaranlıq rejim')) + '</span>';
+  // Açar (switch) "qaranlıq rejim aktivdir" vəziyyətini göstərir — yazı da həmişə eyni: "🌙 Qaranlıq rejim".
+  // (Əvvəl açar aktiv olanda yanında "İşıqlı rejim" yazılırdı və bu, çaşdırırdı.)
+  if (lbl) lbl.innerHTML = '<span class="ayarlar-ikon">🌙</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.qaranliqRejim', 'Qaranlıq rejim')) + '</span>';
 }
 function temaDeyis() {
-  const cari = localStorage.getItem('tema') === 'dark' ? 'dark' : 'light';
+  // DÜZƏLİŞ: seçim saxlanmayıbsa defolt 'dark'-dır (temaIlkYukleme ilə eyni) — əvvəl null 'light' sayılırdı
+  // və ilk basış yenə 'dark' yazırdı, yəni düymə ilk dəfə heç nə etmirdi.
+  const cari = (localStorage.getItem('tema') || 'dark') === 'dark' ? 'dark' : 'light';
   const yeni = cari === 'dark' ? 'light' : 'dark';
   localStorage.setItem('tema', yeni);
   temaTetbiqEt(yeni);
@@ -110,6 +112,17 @@ function tr(key, defolt, params) {
   return s;
 }
 
+// ---- Tarix/saat formatı (3 dil) ----
+// Brauzerin lokal datasına güvənmirik (Android Chrome-da 'az-AZ' çox vaxt yoxdur): format əl ilə qurulur.
+// az / ru: 26.09.2026 · en: 26/09/2026. Saat hər dildə 24 saatlıq: 14:05.
+function iki(n) { return String(n).padStart(2, '0'); }
+function tarixYaz(d) {
+  const ayirici = dilKodu === 'en' ? '/' : '.';
+  return iki(d.getDate()) + ayirici + iki(d.getMonth() + 1) + ayirici + d.getFullYear();
+}
+function saatYaz(d) { return iki(d.getHours()) + ':' + iki(d.getMinutes()); }
+function tarixSaatYaz(d) { return saatYaz(d) + ' · ' + tarixYaz(d); }
+
 // data-i18n etiketli statik elementlərə tərcümələri tətbiq edir. Açar lüğətdə YOXDURSA elementin
 // mövcud (Azərbaycanca) mətninə toxunmur. Yalnız textContent/atribut yazılır — HTML deyil.
 //   data-i18n="açar"              → elementin mətni
@@ -137,7 +150,7 @@ const dilHazirPromise = dilYukle(dilKodu).then(() => {
   try { temaTetbiqEt(localStorage.getItem('tema') || 'dark'); kilidAyarGoster(); } catch (e) { console.warn('[i18n]', e); }
   try {
     const dzBtn = document.getElementById('duzenlemeBtn');
-    if (dzBtn) dzBtn.innerText = duzenlemeRejimi ? tr('ana.hazirdir', '✅ Hazırdır') : tr('ana.ekraniDuzenle', '✏️ Ekranı düzənlə');
+    if (dzBtn) dzBtn.innerText = duzenlemeRejimi ? tr('ana.hazirdir', '✅ Hazırdır') : tr('ana.ekraniDuzenle', '✏️ Ekranı tənzimlə');
   } catch (e) {}
   // Təhlükəsizlik şəbəkəsi: lüğət ekran çəkildikdən SONRA gəlibsə, dinamik ekranları yenidən çək.
   // (ekraniGuncelle özü veriYuklendi=false olanda heç nə etmir — erkən çağırmaq təhlükəsizdir.)
@@ -252,7 +265,7 @@ function dilSec(kod) {
   if (!DIL_KOD_REGEX.test(kod)) return;
   if (kod === dilKodu) { dilPaneliniKapat(); return; }
   try { localStorage.setItem('dil', kod); } catch (e) {
-    document.getElementById('dilXeta').innerText = tr('dil.saxlanmadi', 'Seçim yadda saxlanmadı.');
+    document.getElementById('dilXeta').innerText = tr('dil.saxlanmadi', 'Seçimi yadda saxlamaq alınmadı.');
     return;
   }
   location.reload();

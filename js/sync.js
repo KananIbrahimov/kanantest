@@ -43,10 +43,10 @@ function driveTokenClientHazirla() {
         if (cb) cb();
       } else {
         driveSyncGedirmi = false; driveGeriCagirisFn = null; // düzəliş: pəncərə bağlananda "Əməliyyat gedir…" ilişib qalmasın
-        driveMenyuGuncelle('Giriş alınmadı, yenidən sına.', true);
+        driveMenyuGuncelle(tr('drive.girisAlinmadi', 'Daxil olmaq alınmadı. Yenidən cəhd et.'), true);
       }
     },
-    error_callback: () => { driveSyncGedirmi = false; driveGeriCagirisFn = null; driveMenyuGuncelle('Giriş alınmadı, yenidən sına.', true); }
+    error_callback: () => { driveSyncGedirmi = false; driveGeriCagirisFn = null; driveMenyuGuncelle(tr('drive.girisAlinmadi', 'Daxil olmaq alınmadı. Yenidən cəhd et.'), true); }
   });
 }
 
@@ -55,7 +55,7 @@ function driveTokenGerekliyse(sessiz, sonra) {
     driveTokenClientHazirla();
     if (!driveTokenClient) {
       driveSyncGedirmi = false; driveGeriCagirisFn = null;
-      driveMenyuGuncelle('Google-a qoşulmaq alınmadı, internetini yoxla.', true);
+      driveMenyuGuncelle(tr('drive.qosulmaAlinmadi', 'Google-a qoşulmaq alınmadı. İnterneti yoxla.'), true);
       return;
     }
     if (driveAccessToken && Date.now() < driveTokenBitisZamani) { sonra(); return; }
@@ -63,20 +63,20 @@ function driveTokenGerekliyse(sessiz, sonra) {
     driveTokenClient.requestAccessToken({ prompt: sessiz ? '' : 'consent' });
   }).catch(() => {
     driveSyncGedirmi = false; driveGeriCagirisFn = null;
-    driveMenyuGuncelle('Google-a qoşulmaq alınmadı, internetini yoxla.', true);
+    driveMenyuGuncelle(tr('drive.qosulmaAlinmadi', 'Google-a qoşulmaq alınmadı. İnterneti yoxla.'), true);
   });
 }
 
 function driveBaglan() {
   if (GOOGLE_DRIVE_CLIENT_ID.indexOf('BURAYA_OZ_CLIENT_ID') === 0) {
-    alertAc(tr('ayarlar.clientIdTeyinEdilmeyibXeta', 'Əvvəlcə kodun içindəki GOOGLE_DRIVE_CLIENT_ID sətrinə öz Google Client ID-ni yazmalısan.'));
+    alertAc(tr('ayarlar.clientIdTeyinEdilmeyibXeta', 'Əvvəlcə kodda GOOGLE_DRIVE_CLIENT_ID sətrinə öz Google Client ID-ni yaz.'));
     return;
   }
   driveTokenGerekliyse(false, () => driveMenyuGuncelle());
 }
 
 function driveBaglantiKes() {
-  confirmAc(tr('ayarlar.driveBaglantisiniKesBaslik', 'Drive bağlantısını kəs'), tr('ayarlar.driveBaglantisiniKesSual', 'Drive bağlantısı kəsilsin? Drive-dakı fayl silinmir.'), () => {
+  confirmAc(tr('ayarlar.driveBaglantisiniKesBaslik', 'Drive bağlantısını kəs'), tr('ayarlar.driveBaglantisiniKesSual', 'Drive bağlantısı kəsilsin? Drive-dakı fayllar silinməyəcək.'), () => {
     driveBagli = false; driveAccessToken = null; driveTokenBitisZamani = 0;
     localStorage.setItem('drive_bagli', '0');
     driveMenyuGuncelle();
@@ -91,23 +91,23 @@ function driveMenyuGuncelle(mesaj, xetaMi) {
   if (!statusEl) return;
   if (!driveBagli) {
     statusEl.className = 'drive-status' + (xetaMi ? ' err' : '');
-    statusEl.innerText = xetaMi ? ('⚠️ ' + mesaj) : '☁️ Google Drive-a bağlı deyil';
-    subEl.innerText = tr('ayarlar.driveBaglanaBilersen', 'Bağlansan, "Göndər" və "Çək" düymələri ilə məlumatını özün idarə edə biləcəksən.');
-    btnsEl.innerHTML = `<button onclick="driveBaglan()">${tr('ayarlar.baglan', 'Bağlan')}</button>`;
+    statusEl.innerText = xetaMi ? ('⚠️ ' + mesaj) : tr('drive.bagliDeyil', '☁️ Google Drive-a qoşulmayıb');
+    subEl.innerText = tr('ayarlar.driveBaglanaBilersen', 'Qoşulandan sonra məlumatlarını "Göndər" və "Yüklə" düymələri ilə özün idarə edəcəksən.');
+    btnsEl.innerHTML = `<button onclick="driveBaglan()">${tr('ayarlar.baglan', 'Qoşul')}</button>`;
     return;
   }
   if (driveSyncGedirmi) {
     statusEl.className = 'drive-status';
-    statusEl.innerText = tr('ayarlar.driveEmeliyyatGedir', '☁️ Əməliyyat gedir…');
+    statusEl.innerText = tr('ayarlar.driveEmeliyyatGedir', '☁️ İcra olunur…');
   } else if (xetaMi) {
     statusEl.className = 'drive-status err';
     statusEl.innerText = '⚠️ ' + mesaj;
   } else {
     statusEl.className = 'drive-status ok';
-    statusEl.innerText = tr('ayarlar.driveBagli', '✅ Drive-a bağlı');
+    statusEl.innerText = tr('ayarlar.driveBagli', '✅ Drive-a qoşulub');
   }
-  subEl.innerText = driveSonSync ? ('Son əməliyyat: ' + driveSonSync) : 'Hələ göndərilməyib/çəkilməyib.';
-  btnsEl.innerHTML = `<button onclick="driveManualGonder()">📤 ${tr('ayarlar.driveGonder', 'Drive-a göndər')}</button><button onclick="driveManualCek()">📥 ${tr('ayarlar.driveCek', 'Drive-dan çək')}</button><button onclick="driveBaglantiKes()">${tr('ayarlar.baglantiniKes', 'Bağlantını kəs')}</button>`;
+  subEl.innerText = driveSonSync ? tr('drive.sonEmeliyyat', 'Son əməliyyat: {vaxt}', { vaxt: driveSonSync }) : tr('drive.helelik', 'Hələ heç nə göndərilməyib və ya yüklənməyib.');
+  btnsEl.innerHTML = `<button onclick="driveManualGonder()">📤 ${tr('ayarlar.driveGonder', 'Drive-a göndər')}</button><button onclick="driveManualCek()">📥 ${tr('ayarlar.driveCek', 'Drive-dan yüklə')}</button><button onclick="driveBaglantiKes()">${tr('ayarlar.baglantiniKes', 'Bağlantını kəs')}</button>`;
 }
 
 function driveBackupVerisi() {
@@ -135,8 +135,17 @@ async function driveFayliOxu(fileId) {
 }
 
 function driveVerisiniTetbiqEt(parsed) {
-  kategoriler = parsed.kategoriler || varsayilanKategoriler;
-  giderler = parsed.giderler || [];
+  // Kateqoriyaları normallaşdır: köhnə backup-larda sahələr çatışmaya bilər (sabitTutar, renk, ikon).
+  const hamKat = Array.isArray(parsed.kategoriler) && parsed.kategoriler.length ? parsed.kategoriler : varsayilanKategoriler;
+  kategoriler = hamKat.filter(k => k && typeof k.ad === 'string' && k.ad.trim()).map(k => ({
+    ...k,
+    sabitTutar: (typeof k.sabitTutar === 'number' && isFinite(k.sabitTutar) && k.sabitTutar > 0) ? k.sabitTutar : null,
+    renk: k.renk || '#9a8a8f',
+    ikon: k.ikon || '💰'
+  }));
+  if (!kategoriler.length) kategoriler = varsayilanKategoriler.map(k => ({ ...k }));
+  // Pozulmuş qeydlər (məbləği rəqəm olmayan) cəmləri NaN etməsin deyə süzülür.
+  giderler = (Array.isArray(parsed.giderler) ? parsed.giderler : []).filter(g => g && typeof g.tutar === 'number' && isFinite(g.tutar));
   anaHesap = (typeof parsed.anaHesap === 'number') ? parsed.anaHesap : null;
   kreditLimit = (typeof parsed.kreditLimit === 'number') ? parsed.kreditLimit : null;
   krediBorcu = parsed.krediBorcu || krediBorcuKohnaBackupdanCixar(parsed.aylikXerclar);
@@ -182,7 +191,7 @@ async function driveYukleEt() {
 
 function driveSonSyncQeydEt() {
   const simdi = new Date();
-  driveSonSync = simdi.toLocaleTimeString(dilKodu === 'en' ? 'en-GB' : 'az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + simdi.toLocaleDateString(dilKodu === 'en' ? 'en-GB' : 'az-AZ');
+  driveSonSync = tarixSaatYaz(simdi);
   localStorage.setItem('drive_son_sync', driveSonSync);
 }
 
@@ -203,7 +212,7 @@ function driveManualGonder() {
       driveMenyuGuncelle();
     } catch (e) {
       driveSyncGedirmi = false;
-      driveMenyuGuncelle('Göndərmə alınmadı: ' + (e && e.message ? e.message : e), true);
+      driveMenyuGuncelle(tr('drive.gonderilmedi', 'Göndərmək alınmadı: {xeta}', { xeta: (e && e.message ? e.message : e) }), true);
     }
   });
 }
@@ -220,13 +229,13 @@ function driveManualCek() {
       driveSyncGedirmi = false;
       driveMenyuGuncelle();
       if (!fayllar.length) {
-        driveMenyuGuncelle('Drive-da hələ heç bir backup tapılmadı.', true);
+        driveMenyuGuncelle(tr('drive.backupYoxdur', 'Drive-da hələ ehtiyat nüsxə yoxdur.'), true);
         return;
       }
       driveBackupSecimGoster(fayllar);
     } catch (e) {
       driveSyncGedirmi = false;
-      driveMenyuGuncelle('Siyahı alınmadı: ' + (e && e.message ? e.message : e), true);
+      driveMenyuGuncelle(tr('drive.siyahiAlinmadi', 'Siyahını yükləmək alınmadı: {xeta}', { xeta: (e && e.message ? e.message : e) }), true);
     }
   });
 }
@@ -239,7 +248,7 @@ function driveBackupSecimGoster(fayllar) {
     const item = document.createElement('div');
     item.className = 'modal-item';
     item.style.cursor = 'pointer';
-    item.innerHTML = `<div class="field-row between"><span>🗓️ ${escapeHtml(driveTarixSaatFormat(f.createdTime))}</span><span style="color:var(--brand-ink); font-size:12px; font-weight:600;">Seç →</span></div>`;
+    item.innerHTML = `<div class="field-row between"><span>🗓️ ${escapeHtml(driveTarixSaatFormat(f.createdTime))}</span><span style="color:var(--brand-ink); font-size:12px; font-weight:600;">${escapeHtml(tr('drive.sec', 'Seç →'))}</span></div>`;
     item.onclick = () => driveBackupSecildi(f.id, f.createdTime);
     konteyner.appendChild(item);
   });
@@ -248,7 +257,7 @@ function driveBackupSecimGoster(fayllar) {
 
 function driveBackupSecildi(fileId, createdTime) {
   modalKapat('driveBackupSecModal');
-  confirmAc('Bu backup tətbiq edilsin?', driveTarixSaatFormat(createdTime) + ' tarixli backup cari məlumatının üstünə yazılsın? Bu geri qaytarıla bilməz.', () => {
+  confirmAc(tr('drive.berpaBaslik', 'Ehtiyat nüsxə bərpa edilsin?'), tr('drive.berpaSual', '{tarix} tarixli nüsxə indiki məlumatların yerinə yazılacaq. Bu əməliyyatı geri qaytarmaq olmur.', { tarix: driveTarixSaatFormat(createdTime) }), () => {
     driveSyncGedirmi = true;
     driveMenyuGuncelle();
     driveTokenGerekliyse(false, async () => {
@@ -268,7 +277,7 @@ function driveBackupSecildi(fileId, createdTime) {
         driveMenyuGuncelle();
       } catch (e) {
         driveSyncGedirmi = false;
-        driveMenyuGuncelle('Tətbiq alınmadı: ' + (e && e.message ? e.message : e), true);
+        driveMenyuGuncelle(tr('drive.berpaAlinmadi', 'Bərpa alınmadı: {xeta}', { xeta: (e && e.message ? e.message : e) }), true);
       }
     });
   });
@@ -330,6 +339,15 @@ function firebaseBaslat() {
 // keçib-qayıdanda sessiyanı itirir — bu, sınaqla təsdiqləndi. Email/şifrə isə
 // heç bir xarici səhifəyə getmir, hər şey birbaşa səhifənin öz içində baş verir,
 // ona görə standalone rejimdə də 100% etibarlı işləyir.
+// Firebase xəta kodlarını istifadəçi üçün anlaşılan mətnə çevirir (tanınmayan kod olduğu kimi qalır).
+function firebaseXetaMetni(e) {
+  const kod = e && e.code ? e.code : '';
+  if (kod === 'auth/too-many-requests') return tr('xeta.cokCehd', 'Həddən çox cəhd edildi. Bir neçə dəqiqə gözlə və yenidən yoxla.');
+  if (kod === 'auth/network-request-failed') return tr('xeta.internet', 'İnternet bağlantısı yoxdur.');
+  if (kod === 'auth/user-disabled') return tr('xeta.hesabBloklanib', 'Bu hesab deaktiv edilib.');
+  return kod || (e && e.message) || tr('umumi.namelumXeta', 'naməlum xəta');
+}
+
 function emailSifreOxu() {
   const email = document.getElementById('emailGirisEmail').value.trim();
   const sifre = document.getElementById('emailGirisSifre').value;
@@ -345,22 +363,22 @@ function emailIleGirisEt() {
   const { email, sifre } = emailSifreOxu();
   xetaEl.innerText = '';
   document.getElementById('tesdiqYenidenBtn').style.display = 'none';
-  if (!email || !sifre) { xetaEl.innerText = tr('giris.epoctVeSifreYaz', 'E-poçt və şifrəni yaz.'); return; }
+  if (!email || !sifre) { xetaEl.innerText = tr('giris.epoctVeSifreYaz', 'E-poçtu və şifrəni daxil et.'); return; }
   firebaseBaslat().then((hazir) => {
-    if (!hazir) { xetaEl.innerText = tr('giris.baglantiAlinmadi', 'Bağlantı alınmadı, internetini yoxla və yenidən cəhd et.'); return; }
+    if (!hazir) { xetaEl.innerText = tr('giris.baglantiAlinmadi', 'Bağlantı alınmadı. İnterneti yoxla və yenidən cəhd et.'); return; }
     firebase.auth().signInWithEmailAndPassword(email, sifre).then((deyisim) => {
       const istifadeci = deyisim.user;
       if (istifadeci && !istifadeci.emailVerified) {
         tesdiqGozleyenIstifadeci = istifadeci;
-        xetaEl.innerText = tr('giris.epoctTesdiqlenmeyibUzun', 'E-poçtun hələ təsdiqlənməyib. Poçt qutunu (spam qovluğu da daxil) yoxla və linkə klikləyəndən sonra yenidən daxil ol.');
+        xetaEl.innerText = tr('giris.epoctTesdiqlenmeyibUzun', 'E-poçtun hələ təsdiqlənməyib. Poçt qutunu ("Spam" qovluğunu da) yoxla, linkə keçid et və yenidən daxil ol.');
         document.getElementById('tesdiqYenidenBtn').style.display = 'block';
         firebase.auth().signOut();
       }
     }).catch((e) => {
       console.warn('Email giriş xətası:', e);
-      if (e && e.code === 'auth/user-not-found') xetaEl.innerText = tr('giris.hesabTapilmadi', 'Bu e-poçtla hesab tapılmadı — əvvəlcə "Hesab yarat" ilə qeydiyyatdan keç.');
-      else if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) xetaEl.innerText = tr('giris.sifreSehvdir', 'Şifrə səhvdir.');
-      else xetaEl.innerText = tr('giris.girisAlinmadi', 'Giriş alınmadı: {xeta}', { xeta: (e && e.code ? e.code : (e && e.message ? e.message : 'naməlum xəta')) });
+      if (e && e.code === 'auth/user-not-found') xetaEl.innerText = tr('giris.hesabTapilmadi', 'Bu e-poçtla hesab tapılmadı. Əvvəlcə "Hesab yarat" ilə qeydiyyatdan keç.');
+      else if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) xetaEl.innerText = tr('giris.sifreSehvdir', 'Şifrə yanlışdır.');
+      else xetaEl.innerText = tr('giris.girisAlinmadi', 'Daxil olmaq alınmadı: {xeta}', { xeta: firebaseXetaMetni(e) });
     });
   });
 }
@@ -407,15 +425,15 @@ function qeydiyyatGonder() {
   const sifre2 = document.getElementById('qeydiyyatSifre2').value;
   xetaEl.innerText = '';
 
-  if (!ad || !soyad) { xetaEl.innerText = tr('qeyd.adSoyadYaz', 'Ad və soyadını yaz.'); return; }
-  if (!email) { xetaEl.innerText = tr('qeyd.epoctunuYaz', 'E-poçtunu yaz.'); return; }
-  if (!/^[^\s@]+@gmail\.com$/i.test(email)) { xetaEl.innerText = tr('qeyd.yalnizGmailXeta', 'Yalnız Gmail (@gmail.com) ünvanı ilə qeydiyyatdan keçmək olar.'); return; }
-  if (!sifre1 || !sifre2) { xetaEl.innerText = tr('qeyd.sifreni2DefeYaz', 'Şifrəni 2 dəfə yaz.'); return; }
-  if (sifre1 !== sifre2) { xetaEl.innerText = tr('qeyd.sifrelerUstUsteDusmur', 'Yazdığın 2 şifrə üst-üstə düşmür.'); return; }
-  if (!sifreGuclumu(sifre1)) { xetaEl.innerText = tr('qeyd.sifreQaydasiXeta', 'Şifrə ən az 6 simvol olmalı və ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol daxil etməlidir (məs: Aa12345@).'); return; }
+  if (!ad || !soyad) { xetaEl.innerText = tr('qeyd.adSoyadYaz', 'Adını və soyadını yaz.'); return; }
+  if (!email) { xetaEl.innerText = tr('qeyd.epoctunuYaz', 'E-poçt ünvanını yaz.'); return; }
+  if (!/^[^\s@]+@gmail\.com$/i.test(email)) { xetaEl.innerText = tr('qeyd.yalnizGmailXeta', 'Qeydiyyat yalnız Gmail (@gmail.com) ünvanı ilə mümkündür.'); return; }
+  if (!sifre1 || !sifre2) { xetaEl.innerText = tr('qeyd.sifreni2DefeYaz', 'Şifrəni iki dəfə yaz.'); return; }
+  if (sifre1 !== sifre2) { xetaEl.innerText = tr('qeyd.sifrelerUstUsteDusmur', 'Şifrələr eyni deyil.'); return; }
+  if (!sifreGuclumu(sifre1)) { xetaEl.innerText = tr('qeyd.sifreQaydasiXeta', 'Şifrə ən azı 6 simvoldan ibarət olmalı və 1 böyük hərf, 1 kiçik hərf və 1 xüsusi simvol daxil etməlidir (məs.: Aa12345@).'); return; }
 
   firebaseBaslat().then((hazir) => {
-    if (!hazir) { xetaEl.innerText = tr('giris.baglantiAlinmadi', 'Bağlantı alınmadı, internetini yoxla və yenidən cəhd et.'); return; }
+    if (!hazir) { xetaEl.innerText = tr('giris.baglantiAlinmadi', 'Bağlantı alınmadı. İnterneti yoxla və yenidən cəhd et.'); return; }
     firebase.auth().createUserWithEmailAndPassword(email, sifre1).then((deyisim) => {
       const istifadeci = deyisim.user;
       gozleyenProfilYaz(email, { ad, soyad });
@@ -424,32 +442,32 @@ function qeydiyyatGonder() {
         modalKapat('qeydiyyatModal');
         const girisXetaEl = document.getElementById('googleGirisXeta');
         document.getElementById('emailGirisEmail').value = email;
-        girisXetaEl.innerText = tr('qeyd.hesabYaradildiMesaj', 'Hesab yaradıldı! Sənə təsdiq linki göndərdik — poçtunu (spam qovluğu da daxil) yoxla, linkə klikləyəndən sonra "Daxil ol" ilə giriş et.');
+        girisXetaEl.innerText = tr('qeyd.hesabYaradildiMesaj', 'Hesab yaradıldı! Təsdiq linkini e-poçtuna göndərdik. Poçtunu ("Spam" qovluğunu da) yoxla, linkə keçid et və sonra "Daxil ol" düyməsinə bas.');
         document.getElementById('tesdiqYenidenBtn').style.display = 'block';
         return firebase.auth().signOut();
       });
     }).catch((e) => {
       console.warn('Email qeydiyyat xətası:', e);
-      if (e && e.code === 'auth/email-already-in-use') xetaEl.innerText = tr('qeyd.hesabArtiqVarXeta', 'Bu e-poçtla artıq hesab var — "Ləğv et" edib "Daxil ol" düyməsini istifadə et.');
-      else if (e && e.code === 'auth/invalid-email') xetaEl.innerText = tr('qeyd.epoctDuzgunDeyil', 'E-poçt düzgün deyil.');
+      if (e && e.code === 'auth/email-already-in-use') xetaEl.innerText = tr('qeyd.hesabArtiqVarXeta', 'Bu e-poçtla artıq hesab var. "Geri" düyməsinə bas və "Daxil ol" ilə gir.');
+      else if (e && e.code === 'auth/invalid-email') xetaEl.innerText = tr('qeyd.epoctDuzgunDeyil', 'E-poçt ünvanı düzgün deyil.');
       else if (e && e.code === 'auth/weak-password') xetaEl.innerText = tr('qeyd.sifreCoxZeifdir', 'Şifrə çox zəifdir.');
-      else xetaEl.innerText = tr('qeyd.qeydiyyatAlinmadi', 'Qeydiyyat alınmadı: {xeta}', { xeta: (e && e.code ? e.code : (e && e.message ? e.message : 'naməlum xəta')) });
+      else xetaEl.innerText = tr('qeyd.qeydiyyatAlinmadi', 'Qeydiyyat alınmadı: {xeta}', { xeta: firebaseXetaMetni(e) });
     });
   });
 }
 
 function tesdiqEmailiYenidenGonder() {
   const xetaEl = document.getElementById('googleGirisXeta');
-  if (!tesdiqGozleyenIstifadeci) { xetaEl.innerText = tr('giris.evvelceDaxilOlVeyaHesabYarat', 'Əvvəlcə "Daxil ol" və ya "Hesab yarat" ilə cəhd et.'); return; }
+  if (!tesdiqGozleyenIstifadeci) { xetaEl.innerText = tr('giris.evvelceDaxilOlVeyaHesabYarat', 'Əvvəlcə "Daxil ol" və ya "Hesab yarat" düyməsini sına.'); return; }
   tesdiqGozleyenIstifadeci.sendEmailVerification().then(() => {
-    xetaEl.innerText = tr('giris.tesdiqEpoctuYenidenGonderildi', 'Təsdiq e-poçtu yenidən göndərildi.');
+    xetaEl.innerText = tr('giris.tesdiqEpoctuYenidenGonderildi', 'Təsdiq məktubu yenidən göndərildi.');
   }).catch((e) => {
-    xetaEl.innerText = tr('giris.gonderilmedi', 'Göndərilmədi: {xeta} — bir az sonra yenidən cəhd et.', { xeta: (e && e.code ? e.code : 'naməlum xəta') });
+    xetaEl.innerText = tr('giris.gonderilmedi', 'Göndərmək alınmadı: {xeta}. Bir az sonra yenidən cəhd et.', { xeta: firebaseXetaMetni(e) });
   });
 }
 
 function cixisEt() {
-  confirmAc(tr('ayarlar.cixisEt', 'Çıxış et'), tr('ayarlar.cixisSual', 'Hesabdan çıxmaq istəyirsən? Bu cihazda tətbiq yenidən giriş ekranını göstərəcək.'), () => {
+  confirmAc(tr('ayarlar.cixisEt', 'Çıxış et'), tr('ayarlar.cixisSual', 'Hesabdan çıxmaq istəyirsən? Bu cihazda yenidən giriş ekranı açılacaq.'), () => {
     if (firebaseUnsubscribe) { firebaseUnsubscribe(); firebaseUnsubscribe = null; }
     firebase.auth().signOut().then(() => location.reload());
   });
@@ -463,14 +481,14 @@ async function uygulamaGirisBaslat() {
   const hazir = await firebaseBaslat();
   if (!hazir) {
     document.getElementById('googleGirisEkrani').classList.add('active');
-    document.getElementById('googleGirisXeta').innerText = tr('giris.baglantiAlinmadiSehifeniYenile', 'Bağlantı alınmadı, internetini yoxla və səhifəni yenilə.');
+    document.getElementById('googleGirisXeta').innerText = tr('giris.baglantiAlinmadiSehifeniYenile', 'Bağlantı alınmadı. İnterneti yoxla və səhifəni yenilə.');
     return;
   }
   firebase.auth().onAuthStateChanged((istifadeci) => {
     if (istifadeci && !istifadeci.emailVerified) {
       // Köhnə sessiyadan qalan, hələ təsdiqlənməmiş istifadəçi — buraxma.
       tesdiqGozleyenIstifadeci = istifadeci;
-      document.getElementById('googleGirisXeta').innerText = tr('giris.epoctTesdiqlenmeyibQisa', 'E-poçtun hələ təsdiqlənməyib. Poçtunu yoxla və linkə klikləyəndən sonra yenidən daxil ol.');
+      document.getElementById('googleGirisXeta').innerText = tr('giris.epoctTesdiqlenmeyibQisa', 'E-poçtun hələ təsdiqlənməyib. Poçtunu yoxla, linkə keçid et və yenidən daxil ol.');
       document.getElementById('tesdiqYenidenBtn').style.display = 'block';
       document.getElementById('googleGirisEkrani').classList.add('active');
       firebase.auth().signOut();
@@ -500,18 +518,18 @@ function firebasePanelGuncelle(mesaj, xetaMi) {
   if (!statusEl) return;
 
   if (xetaMi) {
-    statusEl.innerText = '⚠️ ' + (mesaj || 'Xəta baş verdi.');
+    statusEl.innerText = '⚠️ ' + (mesaj || tr('umumi.xetaBasVerdi', 'Xəta baş verdi.'));
   } else if (cariGoogleIstifadeci) {
-    statusEl.innerText = tr('ayarlar.anlikSinxronizasiyaAktiv', '⚡ Anlıq sinxronizasiya aktiv');
+    statusEl.innerText = tr('ayarlar.anlikSinxronizasiyaAktiv', '⚡ Canlı sinxronizasiya aktivdir');
   } else {
-    statusEl.innerText = tr('ayarlar.baglanmayib', '⚡ Bağlanmayıb');
+    statusEl.innerText = tr('ayarlar.baglanmayib', '⚡ Qoşulmayıb');
   }
 
   if (cariGoogleIstifadeci) {
-    subEl.innerText = (istifadeciProfili && istifadeciProfili.ad) ? (istifadeciProfili.ad + ' ' + istifadeciProfili.soyad) : (cariGoogleIstifadeci.email || 'Hesabla bağlısan.');
+    subEl.innerText = (istifadeciProfili && istifadeciProfili.ad) ? (istifadeciProfili.ad + ' ' + istifadeciProfili.soyad) : (cariGoogleIstifadeci.email || tr('ayarlar.hesablaBaglisan', 'Hesaba daxil olmusan.'));
     btnsEl.innerHTML = `<button onclick="cixisEt()">${tr('ayarlar.cixisEt', 'Çıxış et')}</button>`;
   } else {
-    subEl.innerText = tr('ayarlar.daxilOlmamisan', 'Daxil olmamısan.');
+    subEl.innerText = tr('ayarlar.daxilOlmamisan', 'Hesaba daxil olmamısan.');
     btnsEl.innerHTML = '';
   }
 
@@ -597,7 +615,7 @@ function firebaseDinlemeyeBasla() {
     buludVerisiTetbiqSonrasi();
   }, (err) => {
     console.warn('Firestore dinləmə xətası:', err);
-    firebasePanelGuncelle('Dinləmə kəsildi.', true);
+    firebasePanelGuncelle(tr('sinx.dinlemeKesildi', 'Canlı sinxronizasiya dayandı.'), true);
   });
 }
 
@@ -638,16 +656,16 @@ async function firebaseYazEt() {
       yazilmisSurum = yerliSurum;
       veriMenbeGuvenli = true;
       buludVerisiTetbiqSonrasi();
-      firebasePanelGuncelle('Başqa cihazda daha yeni dəyişiklik var — o yükləndi. Son əməliyyatını yoxla, lazımsa təkrarla.', true);
-      toastGoster('⚠️ Başqa cihazda daha yeni dəyişiklik var — o yükləndi. Son əməliyyatını yoxla, lazımsa təkrarla.');
+      firebasePanelGuncelle(tr('sinx.konflikt', 'Başqa cihazda daha yeni dəyişiklik var və o yükləndi. Son əməliyyatını yoxla, lazım olsa təkrarla.'), true);
+      toastGoster('⚠️ ' + tr('sinx.konflikt', 'Başqa cihazda daha yeni dəyişiklik var və o yükləndi. Son əməliyyatını yoxla, lazım olsa təkrarla.'));
     } else {
       bazaRev = yeniRev;
       yazilmisSurum = yazilanSurum;
     }
   } catch (e) {
     console.warn('Firestore yazma xətası:', e);
-    firebasePanelGuncelle('Göndərmə alınmadı — yenidən cəhd olunur.', true);
-    toastGoster('⚠️ Dəyişiklik buluda göndərilmədi — internetini yoxla, avtomatik yenidən cəhd olunur.', 'yazma-xeta');
+    firebasePanelGuncelle(tr('sinx.gonderilmediPanel', 'Göndərmək alınmadı — yenidən cəhd edilir.'), true);
+    toastGoster('⚠️ ' + tr('sinx.gonderilmediToast', 'Dəyişiklik buluda saxlanmadı. İnterneti yoxla — avtomatik yenidən cəhd edilir.'), 'yazma-xeta');
     yazmaGedir = false;
     clearTimeout(yazmaTekrarTimer);
     yazmaTekrarTimer = setTimeout(firebaseYazPlanla, 5000);

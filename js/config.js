@@ -6,6 +6,12 @@ function escapeHtml(s) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
   });
 }
+// Pul məbləğini qəpiyə (2 onluq) yuvarlaqlaşdırır. JavaScript-də 0.3 - 0.1 = 0.19999999999999998 olur;
+// bu yuvarlaqlaşdırma olmadan "bütün qalığı köçür" kimi əməliyyatlar "balans yoxdur" xətası verirdi.
+function pulYuvarla(x) {
+  const n = Number(x);
+  return isFinite(n) ? Math.round(n * 100) / 100 : 0;
+}
 // ==================== Google Drive avtomatik backup ====================
 // 1) Google Cloud Console-da OAuth Client ID yarat (Web application tipi) və aşağıya yapışdır.
 // 2) Bu faylı http(s):// üzərindən aç (file:// işləmir) — o ünvanı Client ID-nin

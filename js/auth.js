@@ -18,7 +18,7 @@ function kilidYoxla() {
   } else {
     faceBtn.style.display = 'none';
     pinWrap.style.display = 'block';
-    hint.innerText = tr('kilid.pinHint', 'Davam etmək üçün PIN kodunu yaz.');
+    hint.innerText = tr('kilid.pinHint', 'Davam etmək üçün PIN kodu daxil et.');
   }
 }
 
@@ -42,7 +42,7 @@ async function kilidWebAuthnDogrula() {
     });
     kilidAc();
   } catch (e) {
-    errEl.innerText = tr('kilid.tesdiqlenmediXeta', 'Təsdiqlənmədi. Yenidən sına və ya PIN istifadə et.');
+    errEl.innerText = tr('kilid.tesdiqlenmediXeta', 'Təsdiqlənmədi. Yenidən cəhd et və ya PIN koddan istifadə et.');
     if (kilidPin) document.getElementById('kilidPinWrap').style.display = 'block';
   }
 }
@@ -53,7 +53,7 @@ function kilidPinIleAc() {
     document.getElementById('kilidPinInput').value = '';
     kilidAc();
   } else {
-    document.getElementById('kilidError').innerText = tr('kilid.yanlisPin', 'Yanlış PIN.');
+    document.getElementById('kilidError').innerText = tr('kilid.yanlisPin', 'PIN kod yanlışdır.');
   }
 }
 
@@ -71,7 +71,7 @@ function kilidAyarGoster() {
 
 function kilidToggle() {
   if (kilidVar) {
-    confirmAc(tr('kilid.sondurBaslik', 'Kilidi söndür'), tr('kilid.sondurSual', 'Tətbiq kilidini deaktiv etmək istəyirsən?'), () => {
+    confirmAc(tr('kilid.sondurBaslik', 'Kilidi söndür'), tr('kilid.sondurSual', 'Tətbiq kilidini söndürmək istəyirsən?'), () => {
       kilidVar = false; kilidCredentialId = null; kilidPin = null;
       localStorage.removeItem('kilit_aktiv');
       localStorage.removeItem('kilit_webauthn_id');
@@ -87,7 +87,7 @@ async function kilidKurulumBaslat() {
   const errEl = document.getElementById('kilidAyarError');
   errEl.innerText = '';
   if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-    errEl.innerText = tr('kilid.httpsTelebOlunur', 'Face ID/Touch ID üçün tətbiq https:// üzərindən açılmalıdır. Hələlik PIN qurulur.');
+    errEl.innerText = tr('kilid.httpsTelebOlunur', 'Face ID / Touch ID yalnız https:// ünvanında işləyir. Hələlik PIN təyin edək.');
     pinAyarlaModalAc();
     return;
   }
@@ -101,7 +101,7 @@ async function kilidKurulumBaslat() {
           publicKey: {
             challenge,
             rp: { name: 'Safe Money' },
-            user: { id: userId, name: 'istifadeci', displayName: 'Tətbiq istifadəçisi' },
+            user: { id: userId, name: 'istifadeci', displayName: 'Safe Money' },
             pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
             // residentKey: 'discouraged' -> iOS bunu "passkey" kimi yox, adi bir WebAuthn açarı kimi
             // qeydə alır. Bu sayədə hər dəfə "Giriş Yap / Geçiş Anahtarını Kullan" marka ekranı
@@ -132,7 +132,7 @@ function pinAyarlaModalAc() {
 function pinAyarlaOnayla() {
   const val = document.getElementById('pinAyarlaInput').value.trim();
   if (!/^\d{4}$/.test(val)) {
-    document.getElementById('pinAyarlaError').innerText = tr('pin.dordReqemliXeta', '4 rəqəmli bir PIN yaz.');
+    document.getElementById('pinAyarlaError').innerText = tr('pin.dordReqemliXeta', '4 rəqəmli PIN kod yaz.');
     return;
   }
   kilidPin = val;

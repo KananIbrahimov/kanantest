@@ -1,5 +1,5 @@
 /* Safe Money — vəziyyət, yükləmə, yadda saxlama */
-const APP_VERSION = '3.6'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
+const APP_VERSION = '3.8'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
 let aktifDonem = 'gunluk';
 let goruntulenenTarix = new Date(); goruntulenenTarix.setHours(0, 0, 0, 0);
 let kategoriler = [];
@@ -81,7 +81,8 @@ function krediBorcuKohnaBackupdanCixar(eskiAylikXerclar) {
 // Bu, "yalnız Firebase-dən qidalanma" tələbinin dəqiq icrasıdır: köhnə, sinxron
 // olmamış yerli məlumat heç vaxt ekrana çıxıb çaşdırmayacaq.
 function yerliVeriniYukle() {
-  kategoriler = varsayilanKategoriler;
+  // Yeni hesab üçün defolt kateqoriyalar istifadəçinin seçdiyi dildə yaradılır (mövcud hesablara toxunulmur).
+  kategoriler = varsayilanKategoriler.map(k => ({ ...k, ad: tr('defKat.' + k.ad.toLowerCase(), k.ad) }));
   giderler = varsayilanGiderler.map(g => ({ ...g }));
   anaHesap = null;
   kreditLimit = null;
@@ -138,7 +139,7 @@ async function veriYukle() {
     // (bağlantı xətası/vaxt aşımı) heç nə yazmırıq — real buludda olan datanı
     // təsadüfən boşla əvəz etməmək üçün.
     if (senedTesdiqlenmisBosdur) { bazaRev = 0; veriMenbeGuvenli = true; firebaseYazEt(); }
-    else if (senkronKey) { firebasePanelGuncelle('Buluda qoşulmadı — yenidən cəhd et.', true); veriMenbeGuvenli = false; }
+    else if (senkronKey) { firebasePanelGuncelle(tr('sinx.qosulmadi', 'Buluda qoşulmaq alınmadı — yenidən cəhd et.'), true); veriMenbeGuvenli = false; }
     else { veriMenbeGuvenli = true; } // Sync Key ümumiyyətlə yoxdur — təklikdə rejim qəsdən icazəlidir
   } else {
     veriMenbeGuvenli = true;
@@ -175,8 +176,8 @@ async function veriKaydet() {
     // onu silə bilər. İstifadəçiyə də xəbər ver ki, dəyişiklik itməsin.
     if (senkronKey && !veriMenbeGuvenli) {
       console.warn('Yadda saxlama bloklandı: bulud mənbəyi hələ təsdiqlənməyib (bağlantı gözlənilir).');
-      firebasePanelGuncelle('Bulud hələ təsdiqlənməyib — dəyişiklik göndərilmədi, bağlantını yoxla.', true);
-      toastGoster('⚠️ Bulud hələ təsdiqlənməyib — dəyişiklik göndərilmədi. İnterneti yoxla və səhifəni yenilə.', 'blok');
+      firebasePanelGuncelle(tr('sinx.tesdiqlenmeyibPanel', 'Bulud hələ hazır deyil — dəyişiklik göndərilmədi. Bağlantını yoxla.'), true);
+      toastGoster('⚠️ ' + tr('sinx.tesdiqlenmeyibToast', 'Bulud hələ hazır deyil — dəyişiklik göndərilmədi. İnterneti yoxla və səhifəni yenilə.'), 'blok');
       return;
     }
     // QƏSDƏN localStorage-a YAZILMIR — məlumatın YEGANƏ mənbəyi Firestore-dur.

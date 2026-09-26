@@ -90,7 +90,7 @@ function tarixDunenmi(tarix) {
 }
 
 function tarixFormatla(tarix) {
-  return tarix.toLocaleDateString(dilKodu === 'en' ? 'en-GB' : 'az-AZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return tarixYaz(tarix);
 }
 
 function tarixDeyis(delta) {
@@ -112,14 +112,14 @@ function gunlukLimitGuncelle(bugunkuToplam) {
   const lblEl = document.getElementById('gunlukLimitLbl');
   if (lblEl) {
     lblEl.innerText = limitTeyinEdilib
-      ? tr('ana.gunlukLimitDeyer', 'Günlük limit: {limit} AZN', { limit: limit.toFixed(2) })
-      : tr('ana.gunlukLimitTeyinEdilmeyib', 'Günlük limit təyin edilməyib');
+      ? tr('ana.gunlukLimitDeyer', 'Gündəlik limit: {limit} AZN', { limit: limit.toFixed(2) })
+      : tr('ana.gunlukLimitTeyinEdilmeyib', 'Gündəlik limit təyin edilməyib');
     lblEl.classList.toggle('over', asilib);
   }
 
   const pctEl = document.getElementById('gunlukLimitYuzde');
   if (pctEl) {
-    pctEl.innerText = limitTeyinEdilib ? ('%' + yuzde.toFixed(0)) : '—';
+    pctEl.innerText = limitTeyinEdilib ? (yuzde.toFixed(0) + '%') : '—';
     pctEl.classList.toggle('over', asilib);
   }
 
@@ -138,7 +138,7 @@ function gunlukLimitGuncelle(bugunkuToplam) {
     qalanEl.innerText = !limitTeyinEdilib
       ? '—'
       : (asilib
-        ? tr('ana.limitAsildi', 'Limit aşıldı: +{miqdar} AZN', { miqdar: Math.abs(qalan).toFixed(2) })
+        ? tr('ana.limitAsildi', 'Limit {miqdar} AZN aşılıb', { miqdar: Math.abs(qalan).toFixed(2) })
         : tr('ana.qaliq', 'Qalıq: {miqdar} AZN', { miqdar: qalan.toFixed(2) }));
   }
 
@@ -162,7 +162,7 @@ function ekraniGuncelle() {
   const tarixBugun = tarixBugunmu(goruntulenenTarix);
   const tarixEtiketiEl = document.getElementById('tarixEtiketi');
   if (tarixEtiketiEl) {
-    const gunEtiketi = tarixBugun ? tr('ana.bugun', 'Bugün') : (tarixDunenmi(goruntulenenTarix) ? tr('ana.dunen', 'Dünən') : '');
+    const gunEtiketi = tarixBugun ? tr('ana.bugun', 'Bu gün') : (tarixDunenmi(goruntulenenTarix) ? tr('ana.dunen', 'Dünən') : '');
     tarixEtiketiEl.innerText = gunEtiketi + (gunEtiketi ? ' · ' : '') + tarixFormatla(goruntulenenTarix);
   }
   const ireliBtn = document.getElementById('tarixIrəliBtn');
@@ -170,10 +170,10 @@ function ekraniGuncelle() {
   const donemBaslikEl = document.getElementById('donemBaslik');
   if (donemBaslikEl) {
     donemBaslikEl.innerText = tarixBugun
-      ? tr('ana.bugunkuUmumiXerc', 'Bugünkü ümumi xərc')
+      ? tr('ana.bugunkuUmumiXerc', 'Bugünkü xərclər')
       : (tarixDunenmi(goruntulenenTarix)
-        ? tr('ana.dunenkiUmumiXerc', 'Dünənki ümumi xərc')
-        : tr('ana.tarixliXerc', '{tarix} tarixli xərc', { tarix: tarixFormatla(goruntulenenTarix) }));
+        ? tr('ana.dunenkiUmumiXerc', 'Dünənki xərclər')
+        : tr('ana.tarixliXerc', '{tarix} — xərclər', { tarix: tarixFormatla(goruntulenenTarix) }));
   }
   const butonlarKonteynerEl = document.getElementById('butonlarKonteyneri');
   if (butonlarKonteynerEl) butonlarKonteynerEl.style.display = tarixBugun ? '' : 'none';
@@ -190,7 +190,7 @@ function ekraniGuncelle() {
   const toplamTutarEl = document.getElementById('toplamTutar');
   if (toplamTutarEl) toplamTutarEl.innerText = toplam.toFixed(2) + ' AZN';
   const donemAltEl = document.getElementById('donemAlt');
-  if (donemAltEl) donemAltEl.innerText = filtrelenmis.length + ' əməliyyat';
+  if (donemAltEl) donemAltEl.innerText = tr('ana.emeliyyatSayi', '{say} əməliyyat', { say: filtrelenmis.length });
 
   const progressEl = document.getElementById('progressCubuk');
   const breakdownEl = document.getElementById('breakdown');
@@ -208,7 +208,7 @@ function ekraniGuncelle() {
         if (progressEl) progressEl.appendChild(parca);
         const row = document.createElement('div');
         row.className = 'breakdown-row';
-        row.innerHTML = `<span><span class="dot" style="background:${escapeHtml(kat.renk)}"></span>${escapeHtml(kat.ikon)} ${escapeHtml(kat.ad)}</span><span>${tutar.toFixed(2)} AZN · %${yuzde.toFixed(0)}</span>`;
+        row.innerHTML = `<span><span class="dot" style="background:${escapeHtml(kat.renk)}"></span>${escapeHtml(kat.ikon)} ${escapeHtml(kat.ad)}</span><span>${tutar.toFixed(2)} AZN · ${yuzde.toFixed(0)}%</span>`;
         if (breakdownEl) breakdownEl.appendChild(row);
         if (tutar > topKategoriTutar) { topKategoriTutar = tutar; topKategoriAd = kat.ad; }
       }
@@ -223,7 +223,7 @@ function ekraniGuncelle() {
       if (progressEl) progressEl.appendChild(parcaD);
       const rowD = document.createElement('div');
       rowD.className = 'breakdown-row';
-      rowD.innerHTML = `<span><span class="dot" style="background:#9a8a8f"></span>📦 ${tr('ana.diger', 'Digər')}</span><span>${digerTutar.toFixed(2)} AZN · %${yuzdeD.toFixed(0)}</span>`;
+      rowD.innerHTML = `<span><span class="dot" style="background:#9a8a8f"></span>📦 ${tr('ana.diger', 'Digər')}</span><span>${digerTutar.toFixed(2)} AZN · ${yuzdeD.toFixed(0)}%</span>`;
       if (breakdownEl) breakdownEl.appendChild(rowD);
     }
   } else {
@@ -243,7 +243,7 @@ function ekraniGuncelle() {
 
   const butonlarEl = document.getElementById('butonlarKonteyneri');
   const duzenlemeBtnEl = document.getElementById('duzenlemeBtn');
-  if (duzenlemeBtnEl) duzenlemeBtnEl.innerText = duzenlemeRejimi ? tr('ana.hazirdir', '✅ Hazırdır') : tr('ana.ekraniDuzenle', '✏️ Ekranı düzənlə');
+  if (duzenlemeBtnEl) duzenlemeBtnEl.innerText = duzenlemeRejimi ? tr('ana.hazirdir', '✅ Hazırdır') : tr('ana.ekraniDuzenle', '✏️ Ekranı tənzimlə');
   const kateqoriyaEkleBtnEl = document.getElementById('kateqoriyaEkleBtn');
   if (kateqoriyaEkleBtnEl) kateqoriyaEkleBtnEl.style.display = duzenlemeRejimi ? 'flex' : 'none';
   if (butonlarEl) {
@@ -253,7 +253,7 @@ function ekraniGuncelle() {
       btn.className = 'cat-btn' + (duzenlemeRejimi ? ' duzenleme-jiggle' : '');
       btn.dataset.origIndex = index;
       btn.style.background = kat.renk;
-      const altYazi = kat.sabitTutar !== null ? kat.sabitTutar.toFixed(2) + ' AZN' : 'Tutar soruşulur';
+      const altYazi = sabitTutarVar(kat) ? kat.sabitTutar.toFixed(2) + ' AZN' : tr('ana.tutarSorusulur', 'Məbləğ soruşulacaq');
       btn.innerHTML = `<span class="name">${escapeHtml(kat.ikon)} ${escapeHtml(kat.ad)}</span><span class="sub">${escapeHtml(altYazi)}</span>`;
       if (duzenlemeRejimi) {
         btn.style.animationDelay = (Math.random() * -0.3).toFixed(2) + 's'; // hamısı eyni anda "yellənməsin" deyə
@@ -297,23 +297,32 @@ function ekraniGuncelle() {
     return tb - ta;
   });
 
-  const gosterilecekGiderSayisi = giderler.filter(g => !g.aylikRef).length;
-  let listeHtml = '';
-  if (gosterilecekGiderSayisi === 0) {
-    listeHtml = '<p class="empty-note">Hələ heç bir xərc əlavə olunmayıb.</p>';
-  } else {
-    giderler.forEach((g, index) => {
-      if (g.aylikRef) return; // aylıq xərclər / kredit borcu ödəmələri yalnız kredit kartına yansıyır
-      listeHtml += `<li class="list-item"><div><span class="cat">${escapeHtml(g.kategori)}${g.sebeb ? ' — ' + escapeHtml(g.sebeb) : ''}</span><span class="time">${escapeHtml(g.tarix)}</span></div>
-        <div class="right"><span class="amt">${g.tutar.toFixed(2)} AZN</span><button onclick="islemFormModalAc(${index})" title="Düzəlt" style="color:var(--brand-ink);">✏️</button><button onclick="giderSilOnayla(${index})" title="Sil">✕</button></div></li>`;
-    });
-  }
+  // DÜZƏLİŞ: ana ekrandakı "🧾 Günün xərcləri" yalnız baxılan günün xərclərini göstərir
+  // (əvvəl bütün tarixçə burada da çıxırdı). Tam tarixçə Ayarlar → Son əməliyyatlar-dadır.
+  const gunAcari = goruntulenenTarix.toDateString();
+  const setirHtml = (g, index) => `<li class="list-item"><div><span class="cat">${escapeHtml(g.kategori)}${g.sebeb ? ' — ' + escapeHtml(g.sebeb) : ''}</span><span class="time">${escapeHtml(g.tarix)}</span></div>
+        <div class="right"><span class="amt">${g.tutar.toFixed(2)} AZN</span><button onclick="islemFormModalAc(${index})" title="${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}" style="color:var(--brand-ink);">✏️</button><button onclick="giderSilOnayla(${index})" title="${escapeHtml(tr('islemForm.sil', 'Sil'))}">✕</button></div></li>`;
+  let gunHtml = '', hamisiHtml = '';
+  giderler.forEach((g, index) => {
+    if (g.aylikRef) return; // aylıq xərclər / kredit borcu ödəmələri yalnız kredit kartına yansıyır
+    const setir = setirHtml(g, index);
+    hamisiHtml += setir;
+    if (g.tamTarix && new Date(g.tamTarix).toDateString() === gunAcari) gunHtml += setir;
+  });
+  if (!hamisiHtml) hamisiHtml = '<li class="empty-note">' + escapeHtml(tr('ana.hecXercYox', 'Hələ heç bir xərc əlavə etməmisən.')) + '</li>';
+  if (!gunHtml) gunHtml = '<li class="empty-note">' + escapeHtml(tr('ana.buGunXercYox', 'Bu gün üçün xərc yoxdur.')) + '</li>';
   const listeEl = document.getElementById('giderListesi');
-  if (listeEl) listeEl.innerHTML = listeHtml;
+  if (listeEl) listeEl.innerHTML = gunHtml;
   const sonEmeliyyatlarEl = document.getElementById('sonEmeliyyatlarListesi');
-  if (sonEmeliyyatlarEl) sonEmeliyyatlarEl.innerHTML = listeHtml;
+  if (sonEmeliyyatlarEl) sonEmeliyyatlarEl.innerHTML = hamisiHtml;
   // DİQQƏT: burada artıq veriKaydet() YOXDUR. Ekran yeniləmək buluda yazmamalıdır —
   // əks halda iki cihaz bir-birinin yazısını sonsuz təkrar yazırdı. Yazma yalnız real dəyişiklik edən yerlərdə çağırılır.
+}
+
+// DÜZƏLİŞ: köhnə/natamam datada sabitTutar ümumiyyətlə olmaya bilər (undefined). Əvvəl "!== null" yoxlaması
+// bunu "sabit tutar var" sayırdı: ana ekran .toFixed xətası ilə çökürdü, toxunuş isə NaN AZN xərc yazırdı.
+function sabitTutarVar(kat) {
+  return !!kat && typeof kat.sabitTutar === 'number' && isFinite(kat.sabitTutar) && kat.sabitTutar > 0;
 }
 
 function kategoriSebebSorulsun(kat) {
@@ -462,7 +471,7 @@ function kateqoriyaSuruklemeBitir() {
 function kategoriyeTikla(index) {
   const kat = kategoriler[index];
   if (!kat) return;
-  if (kat.sabitTutar !== null && !kategoriSebebSorulsun(kat)) {
+  if (sabitTutarVar(kat) && !kategoriSebebSorulsun(kat)) {
     giderEkle(kat.ad, kat.sabitTutar);
   } else {
     amountModalAc(index);
@@ -474,11 +483,11 @@ function giderEkle(kategori, tutar, sebeb) {
   const kayit = {
     kategori, tutar,
     tamTarix: simdi.toISOString(),
-    tarix: simdi.toLocaleTimeString(dilKodu === 'en' ? 'en-GB' : 'az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + simdi.toLocaleDateString(dilKodu === 'en' ? 'en-GB' : 'az-AZ')
+    tarix: tarixSaatYaz(simdi)
   };
   if (sebeb) kayit.sebeb = sebeb;
   giderler.unshift(kayit);
-  if (typeof anaHesap === 'number') anaHesap -= tutar;
+  if (typeof anaHesap === 'number') anaHesap = pulYuvarla(anaHesap - tutar);
   veriKaydet();
   ekraniGuncelle();
 }
@@ -512,7 +521,7 @@ function islemFormModalAc(index) {
   const g = duzeltMi ? giderler[islemFormIndex] : null;
 
   const baslikEl = document.getElementById('islemFormBaslik');
-  if (baslikEl) baslikEl.innerText = duzeltMi ? 'Xərci düzəlt' : 'Köhnə tarixli xərc əlavə et';
+  if (baslikEl) baslikEl.innerText = duzeltMi ? tr('islemForm.xerciDuzelt', 'Xərci dəyiş') : tr('islemForm.kohneTarixliBaslik', 'Keçmiş tarixə xərc');
   islemKategoriSecenekleriDoldur(duzeltMi && g ? g.kategori : (kategoriler[0] ? kategoriler[0].ad : ''));
   const tutarEl = document.getElementById('islemFormTutar');
   if (tutarEl) tutarEl.value = duzeltMi && g ? g.tutar : '';
@@ -537,36 +546,36 @@ function islemFormOnayla() {
   const errEl = document.getElementById('islemFormError');
   const kategori = document.getElementById('islemFormKategori').value;
   const tutarVal = document.getElementById('islemFormTutar').value;
-  const tutar = parseFloat((tutarVal || '').replace(',', '.'));
+  const tutar = pulYuvarla(parseFloat((tutarVal || '').replace(',', '.'))); // NaN → 0 → aşağıda xəta verir
   const sebeb = document.getElementById('islemFormSebeb').value.trim();
   const tarixVal = document.getElementById('islemFormTarix').value;
   const bugunStr = yerliTarixStr(new Date());
 
   if (!kategori) { if (errEl) errEl.innerText = tr('islemForm.kateqoriyaSecXeta', 'Kateqoriya seç.'); return; }
-  if (isNaN(tutar) || tutar <= 0) { if (errEl) errEl.innerText = tr('umumi.duzgunBirMebleg', 'Düzgün bir məbləğ yaz.'); return; }
+  if (isNaN(tutar) || tutar <= 0) { if (errEl) errEl.innerText = tr('umumi.duzgunBirMebleg', 'Düzgün məbləğ yaz.'); return; }
   if (!tarixVal) { if (errEl) errEl.innerText = tr('islemForm.tarixSecXeta', 'Tarix seç.'); return; }
-  if (tarixVal > bugunStr) { if (errEl) errEl.innerText = tr('islemForm.gelecekTarixXeta', 'Gələcək tarix seçilə bilməz.'); return; }
+  if (tarixVal > bugunStr) { if (errEl) errEl.innerText = tr('islemForm.gelecekTarixXeta', 'Gələcək tarixi seçmək olmaz.'); return; }
 
   if (islemFormIndex !== null) {
     const g = giderler[islemFormIndex];
     if (!g) { modalKapat('islemFormModal'); return; }
-    if (typeof anaHesap === 'number') anaHesap += g.tutar; // köhnə məbləği geri qaytar
+    if (typeof anaHesap === 'number') anaHesap = pulYuvarla(anaHesap + g.tutar); // köhnə məbləği geri qaytar
     const dt = tamTarixQur(tarixVal, g.tamTarix);
     g.kategori = kategori;
     g.tutar = tutar;
     if (sebeb) g.sebeb = sebeb; else delete g.sebeb;
     g.tamTarix = dt.toISOString();
-    g.tarix = dt.toLocaleTimeString(dilKodu === 'en' ? 'en-GB' : 'az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + dt.toLocaleDateString(dilKodu === 'en' ? 'en-GB' : 'az-AZ');
-    if (typeof anaHesap === 'number') anaHesap -= tutar;
+    g.tarix = tarixSaatYaz(dt);
+    if (typeof anaHesap === 'number') anaHesap = pulYuvarla(anaHesap - tutar);
   } else {
     const dt = tamTarixQur(tarixVal, null);
     const kayit = {
       kategori, tutar, tamTarix: dt.toISOString(),
-      tarix: dt.toLocaleTimeString(dilKodu === 'en' ? 'en-GB' : 'az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + dt.toLocaleDateString(dilKodu === 'en' ? 'en-GB' : 'az-AZ')
+      tarix: tarixSaatYaz(dt)
     };
     if (sebeb) kayit.sebeb = sebeb;
     giderler.unshift(kayit);
-    if (typeof anaHesap === 'number') anaHesap -= tutar;
+    if (typeof anaHesap === 'number') anaHesap = pulYuvarla(anaHesap - tutar);
   }
   modalKapat('islemFormModal');
   veriKaydet();
@@ -592,9 +601,9 @@ function amountModalAc(index) {
   amountModalKategoriAdi = kat.ad;
   const sebebSorulsun = kategoriSebebSorulsun(kat);
   const titleEl = document.getElementById('amountModalTitle');
-  if (titleEl) titleEl.innerText = kat.ad + ' üçün tutar';
+  if (titleEl) titleEl.innerText = tr('mebleg.basliqKat', '{ad}: məbləğ', { ad: kat.ad });
   const inputEl = document.getElementById('amountInput');
-  if (inputEl) inputEl.value = kat.sabitTutar !== null ? kat.sabitTutar : '';
+  if (inputEl) inputEl.value = sabitTutarVar(kat) ? kat.sabitTutar : '';
   const errEl = document.getElementById('amountError');
   if (errEl) errEl.innerText = '';
   const reasonWrap = document.getElementById('amountReasonWrap');
@@ -615,16 +624,16 @@ function amountModalOnayla() {
   }
   const sebebSorulsun = kategoriSebebSorulsun(kat);
   const val = document.getElementById('amountInput').value;
-  const tutar = parseFloat((val || '').replace(',', '.'));
+  const tutar = pulYuvarla(parseFloat((val || '').replace(',', '.')));
   if (isNaN(tutar) || tutar <= 0) {
-    if (errEl) errEl.innerText = tr('mebleg.duzgunMeblegDaxilEt', 'Zəhmət olmasa düzgün bir məbləğ daxil et.');
+    if (errEl) errEl.innerText = tr('mebleg.duzgunMeblegDaxilEt', 'Düzgün məbləğ daxil et.');
     return;
   }
   let sebeb = '';
   if (sebebSorulsun) {
     sebeb = document.getElementById('amountReasonInput').value.trim();
     if (!sebeb) {
-      if (errEl) errEl.innerText = tr('mebleg.sebebiYaz', 'Zəhmət olmasa səbəbini yaz.');
+      if (errEl) errEl.innerText = tr('mebleg.sebebiYaz', 'Qısa qeyd yaz.');
       return;
     }
   }
@@ -647,11 +656,11 @@ function balanceModalOnayla() {
   const limit = parseFloat((limitVal || '').replace(',', '.'));
   const balans = parseFloat((balansVal || '').replace(',', '.'));
   if (limitVal.trim() !== '' && (isNaN(limit) || limit < 0)) {
-    document.getElementById('balanceError').innerText = tr('hesabDuzelt.limitReqemXeta', 'Limit düzgün bir rəqəm olmalıdır.');
+    document.getElementById('balanceError').innerText = tr('hesabDuzelt.limitReqemXeta', 'Limit düzgün rəqəm olmalıdır.');
     return;
   }
   if (isNaN(balans)) {
-    document.getElementById('balanceError').innerText = tr('hesabDuzelt.qaliqReqemXeta', 'Faktiki qalıq düzgün bir rəqəm olmalıdır.');
+    document.getElementById('balanceError').innerText = tr('hesabDuzelt.qaliqReqemXeta', 'Cari borc düzgün rəqəm olmalıdır.');
     return;
   }
   kreditLimit = limitVal.trim() !== '' ? limit : null;
@@ -675,7 +684,7 @@ function yeniKategoriModalAc() {
 function yeniKategoriOnayla() {
   const ad = document.getElementById('newCatName').value.trim();
   if (!ad) {
-    document.getElementById('newCatError').innerText = tr('kateqoriyalar.adBosXeta', 'Kateqoriya adı boş ola bilməz.');
+    document.getElementById('newCatError').innerText = tr('kateqoriyalar.adBosXeta', 'Kateqoriyanın adı boş ola bilməz.');
     return;
   }
   if (kategoriler.some(k => k.ad.toLocaleLowerCase('az-AZ') === ad.toLocaleLowerCase('az-AZ'))) {
@@ -717,11 +726,11 @@ function catPanelDuzenleAc(index) {
   const kat = kategoriler[index];
   if (!kat) return;
   catPanelIndex = index;
-  document.getElementById('catPanelBaslik').innerText = tr('katDuzenle.kateqoriyaniDuzenle', 'Kateqoriyanı düzənlə');
+  document.getElementById('catPanelBaslik').innerText = tr('katDuzenle.kateqoriyaniDuzenle', 'Kateqoriyanı dəyiş');
   document.getElementById('catPanelIkon').value = kat.ikon;
   document.getElementById('catPanelAd').value = kat.ad;
   document.getElementById('catPanelAylik').checked = !!kat.aylik;
-  document.getElementById('catPanelSabit').value = kat.sabitTutar !== null ? kat.sabitTutar : '';
+  document.getElementById('catPanelSabit').value = sabitTutarVar(kat) ? kat.sabitTutar : '';
   document.getElementById('catPanelSebeb').checked = !!kat.sebebSoruş;
   catPanelSecilenRenk = kat.renk;
   catPanelRenkleriCiz();
@@ -753,7 +762,7 @@ function catPanelSil() {
   if (catPanelIndex === null) return;
   if (kategoriler.length <= 1) { confirmAc(tr('umumi.mumkunDeyil', 'Mümkün deyil'), tr('kateqoriyalar.enAziBirQalmalidir', 'Ən azı bir kateqoriya qalmalıdır.'), () => {}); return; }
   const index = catPanelIndex;
-  confirmAc(tr('kateqoriyalar.kateqoriyaniSil', 'Kateqoriyanı sil'), tr('kateqoriyalar.silmekEminsen', '{ad} kateqoriyasını silmək istədiyinə əminsən?', { ad: kategoriler[index].ad }), () => {
+  confirmAc(tr('kateqoriyalar.kateqoriyaniSil', 'Kateqoriyanı sil'), tr('kateqoriyalar.silmekEminsen', '"{ad}" kateqoriyasını silmək istədiyinə əminsən?', { ad: kategoriler[index].ad }), () => {
     kategoriler.splice(index, 1);
     veriKaydet();
     modalKapat('catPanelModal');
@@ -765,7 +774,7 @@ function catPanelSil() {
 function catPanelSaxla() {
   const ad = document.getElementById('catPanelAd').value.trim();
   const ikon = document.getElementById('catPanelIkon').value.trim() || '💰';
-  if (!ad) { document.getElementById('catPanelError').innerText = tr('kateqoriyalar.adBosXeta', 'Kateqoriya adı boş ola bilməz.'); return; }
+  if (!ad) { document.getElementById('catPanelError').innerText = tr('kateqoriyalar.adBosXeta', 'Kateqoriyanın adı boş ola bilməz.'); return; }
   const kicik = (x) => x.toLocaleLowerCase('az-AZ');
   const tekrarVarmi = kategoriler.some((k, j) => j !== catPanelIndex && kicik(k.ad) === kicik(ad));
   if (tekrarVarmi) { document.getElementById('catPanelError').innerText = tr('kateqoriyalar.adTekrarXeta', 'Bu adda kateqoriya artıq var.'); return; }
@@ -773,7 +782,7 @@ function catPanelSaxla() {
   let sabitTutar = null;
   if (sabitVal.trim() !== '') {
     const p = parseFloat(sabitVal.replace(',', '.'));
-    if (!isNaN(p) && p >= 0) sabitTutar = p;
+    if (!isNaN(p) && p > 0) sabitTutar = pulYuvarla(p);
   }
   const aylik = document.getElementById('catPanelAylik').checked;
   const sebeb = document.getElementById('catPanelSebeb').checked;
@@ -804,7 +813,9 @@ function confirmAc(title, text, onConfirm, okOnly) {
   const btn = document.getElementById('confirmActionBtn');
   const yeniBtn = btn.cloneNode(true);
   btn.parentNode.replaceChild(yeniBtn, btn);
-  yeniBtn.addEventListener('click', () => { onConfirm(); modalKapat('confirmModal'); });
+  // DÜZƏLİŞ: əvvəlcə pəncərəni bağla, sonra əməliyyatı icra et. Əks halda onConfirm() içində
+  // açılan yeni xəbərdarlıq (alertAc) dərhal bağlanırdı və istifadəçi onu heç görmürdü.
+  yeniBtn.addEventListener('click', () => { modalKapat('confirmModal'); onConfirm(); });
   const modalEl = document.getElementById('confirmModal');
   if (modalEl) {
     modalEl.querySelectorAll('button').forEach(b => {
@@ -816,24 +827,24 @@ function confirmAc(title, text, onConfirm, okOnly) {
 
 // Native alert() əvəzinə: yalnız "OK" düyməli confirm modalı — i18n-ə tam inteqrasiya olunur.
 function alertAc(text, title, onOk) {
-  confirmAc(title || tr('umumi.xeberdarliq', 'Xəbərdarlıq'), text, onOk || (() => {}), true);
+  confirmAc(title || tr('umumi.xeberdarliq', 'Diqqət'), text, onOk || (() => {}), true);
 }
 function giderSilOnayla(index) {
   const hedef = giderler[index]; // sıra nömrəsi yox, qeydin özünü izləyirik (arada sinxron olsa səhv qeyd silinməsin)
-  confirmAc(tr('islemForm.xerciSil', 'Xərci sil'), tr('islemForm.buQeydiSilmekEminsen', 'Bu qeydi silmək istədiyinə əminsən?'), () => {
+  confirmAc(tr('islemForm.xerciSil', 'Xərci sil'), tr('islemForm.buQeydiSilmekEminsen', 'Bu xərci silmək istədiyinə əminsən?'), () => {
     const idx = giderler.indexOf(hedef);
-    if (!hedef || idx === -1) { alertAc(tr('umumi.siyahiYenilendiXeta', 'Siyahı arada yeniləndi. Yenidən sına.')); ekraniGuncelle(); return; }
-    if (typeof anaHesap === 'number' && typeof hedef.tutar === 'number') anaHesap += hedef.tutar;
+    if (!hedef || idx === -1) { alertAc(tr('umumi.siyahiYenilendiXeta', 'Siyahı bu arada yeniləndi. Yenidən cəhd et.')); ekraniGuncelle(); return; }
+    if (typeof anaHesap === 'number' && typeof hedef.tutar === 'number') anaHesap = pulYuvarla(anaHesap + hedef.tutar);
     giderler.splice(idx, 1);
     veriKaydet();
     ekraniGuncelle();
   });
 }
 function listeyiTemizleOnayla() {
-  confirmAc(tr('sonEmeliyyat.hamisiniSil', 'Hamısını sil'), tr('sonEmeliyyat.hamisiniSilSual', 'Bütün xərc tarixçəsini silmək istədiyinə əminsən? Bu geri alınmır.'), () => {
+  confirmAc(tr('sonEmeliyyat.hamisiniSil', 'Hamısını sil'), tr('sonEmeliyyat.hamisiniSilSual', 'Bütün xərc tarixçəsi silinsin? Bu əməliyyatı geri qaytarmaq olmur.'), () => {
     if (typeof anaHesap === 'number') {
       const geriQaytar = giderler.filter(g => !g.aylikRef).reduce((acc, g) => acc + (typeof g.tutar === 'number' ? g.tutar : 0), 0);
-      anaHesap += geriQaytar;
+      anaHesap = pulYuvarla(anaHesap + geriQaytar);
     }
     giderler = giderler.filter(g => !!g.aylikRef);
     veriKaydet();
@@ -842,7 +853,7 @@ function listeyiTemizleOnayla() {
 }
 function kategoriSilOnayla(index) {
   if (kategoriler.length <= 1) { confirmAc(tr('umumi.mumkunDeyil', 'Mümkün deyil'), tr('kateqoriyalar.enAziBirQalmalidir', 'Ən azı bir kateqoriya qalmalıdır.'), () => {}); return; }
-  confirmAc(tr('kateqoriyalar.kateqoriyaniSil', 'Kateqoriyanı sil'), tr('kateqoriyalar.silmekEminsen', '{ad} kateqoriyasını silmək istədiyinə əminsən?', { ad: kategoriler[index].ad }), () => {
+  confirmAc(tr('kateqoriyalar.kateqoriyaniSil', 'Kateqoriyanı sil'), tr('kateqoriyalar.silmekEminsen', '"{ad}" kateqoriyasını silmək istədiyinə əminsən?', { ad: kategoriler[index].ad }), () => {
     kategoriler.splice(index, 1); veriKaydet(); modalListesiniDoldur(); ekraniGuncelle();
   });
 }
@@ -870,16 +881,16 @@ function modalListesiniDoldur() {
       </div>
       <label class="field-row" style="gap:8px; font-size:13px; font-weight:600; color:var(--ink); border-top:1px solid var(--line); padding-top:8px; cursor:pointer;">
         <input type="checkbox" ${kat.aylik ? 'checked' : ''} onchange="kategoriAylikToggle(${index}, this.checked)" style="width:auto;">
-        <span>📌 Aylıq sabit xərc <span style="font-weight:400; color:var(--muted);">(tiksiz = günlük)</span></span>
+        <span>${escapeHtml(tr('katDuzenle.aylikSabitXerc', '📌 Aylıq sabit xərc'))} <span style="font-weight:400; color:var(--muted);">${escapeHtml(tr('katDuzenle.tiksizGunluk', '(seçilməyibsə — gündəlik)'))}</span></span>
       </label>
       <div class="field-row" style="font-size:12px; color:var(--muted); gap:6px;">
-        <span>Sabit tutar:</span>
-        <input type="number" step="0.01" value="${kat.sabitTutar !== null ? kat.sabitTutar : ''}" placeholder="Soruş" onchange="kategoriSabitTutarGuncelle(${index}, this.value)" style="width:78px;">
+        <span>${escapeHtml(tr('katDuzenle.sabitTutar', 'Sabit məbləğ:'))}</span>
+        <input type="number" step="0.01" value="${sabitTutarVar(kat) ? kat.sabitTutar : ''}" placeholder="${escapeHtml(tr('katDuzenle.sorusPlaceholder', 'Soruş'))}" onchange="kategoriSabitTutarGuncelle(${index}, this.value)" style="width:78px;">
       </div>
       <div class="renk-grid">${renkler}</div>
       <label class="field-row" style="gap:6px; font-size:12px; color:var(--muted); padding-top:2px; cursor:pointer;">
         <input type="checkbox" ${kat.sebebSoruş ? 'checked' : ''} onchange="kategoriSebebToggle(${index}, this.checked)" style="width:auto;">
-        <span>Əlavə edərkən səbəb də soruşulsun</span>
+        <span>${escapeHtml(tr('katDuzenle.elaveEderkenSebebDe', 'Əlavə edəndə qeyd də soruşulsun'))}</span>
       </label>
     `;
     konteyner.appendChild(item);
@@ -907,7 +918,7 @@ window.kategoriIkonGuncelle = (i, val) => { if (val.trim() && kategoriler[i]) { 
 window.kategoriSabitTutarGuncelle = (i, val) => {
   if (!kategoriler[i]) return;
   if (val.trim() === '') kategoriler[i].sabitTutar = null;
-  else { const p = parseFloat(val.replace(',', '.')); kategoriler[i].sabitTutar = (!isNaN(p) && p >= 0) ? p : null; }
+  else { const p = parseFloat(val.replace(',', '.')); kategoriler[i].sabitTutar = (!isNaN(p) && p > 0) ? pulYuvarla(p) : null; }
   veriKaydet();
 };
 window.kategoriRenkGuncelle = (i, renk) => { if (kategoriler[i]) { kategoriler[i].renk = renk; veriKaydet(); } modalListesiniDoldur(); };
@@ -954,11 +965,11 @@ function krediBorcuDuzeltOnayla() {
   const sayi = parseInt(sayiVal, 10);
 
   if (isNaN(mebleg) || mebleg <= 0) {
-    errEl.innerText = tr('krediBorc.ayliqTaksitXeta', 'Aylıq taksit məbləğini düzgün yaz.');
+    errEl.innerText = tr('krediBorc.ayliqTaksitXeta', 'Aylıq taksitin məbləğini düzgün yaz.');
     return;
   }
   if (isNaN(sayi) || sayi <= 0) {
-    errEl.innerText = tr('krediBorc.taksitSayiXeta', 'Taksit sayısını düzgün yaz.');
+    errEl.innerText = tr('krediBorc.taksitSayiXeta', 'Taksit sayını düzgün yaz.');
     return;
   }
   if (!baslangicVal) {
@@ -1027,14 +1038,14 @@ function krediBorcuOdeModalAc() {
     const opt = document.createElement('option');
     opt.value = tip;
     const bilgi = (tip === 'kredit')
-      ? 'istifadə edilə bilən: ' + hesabMovcudMebleg(tip).toFixed(2) + ' AZN'
+      ? tr('taksitOde.istifadeEdileBilen', 'istifadə edilə bilər: {mebleg} AZN', { mebleg: hesabMovcudMebleg(tip).toFixed(2) })
       : hesabMovcudMebleg(tip).toFixed(2) + ' AZN';
     opt.textContent = hesabIkonu(tip) + ' ' + hesabAdi(tip) + ' — ' + bilgi;
     sel.appendChild(opt);
   });
   const nomre = krediBorcu.odenmisTaksitSayi + 1;
   document.getElementById('taksitOdeInfo').innerText =
-    nomre + '/' + krediBorcu.taksitSayi + '-ci taksit · ' + krediBorcu.aylikMebleg.toFixed(2) + ' AZN';
+    tr('taksitOde.info', 'Taksit {nomre}/{say} · {mebleg} AZN', { nomre, say: krediBorcu.taksitSayi, mebleg: krediBorcu.aylikMebleg.toFixed(2) });
   if (!sel.options.length) errEl.innerText = tr('taksitOde.hesabYoxdurXeta', 'Əvvəlcə ödəniş üçün ən azı bir hesab əlavə et (➕).');
   modalAc('taksitOdeModal');
 }
@@ -1053,10 +1064,10 @@ function krediBorcuOdeOnayla() {
     errEl.innerText = tr('taksitOde.hamisiOdenibXeta', 'Bütün taksitlər artıq ödənilib.');
     return;
   }
-  if (tutar > hesabMovcudMebleg(menbeTip)) {
+  if (pulYuvarla(tutar) > pulYuvarla(hesabMovcudMebleg(menbeTip))) {
     errEl.innerText = (menbeTip === 'kredit')
-      ? 'Kredi kartında kifayət qədər istifadə edilə bilən limit yoxdur.'
-      : hesabAdi(menbeTip) + ' hesabında kifayət qədər balans yoxdur.';
+      ? tr('transfer.limitYoxdur', 'Kredit kartında kifayət qədər limit yoxdur.')
+      : tr('transfer.balansYoxdur', '{ad} hesabında kifayət qədər vəsait yoxdur.', { ad: hesabAdi(menbeTip) });
     return;
   }
 
@@ -1067,7 +1078,7 @@ function krediBorcuOdeOnayla() {
   const simdi = new Date();
   hesabTransferleri.unshift({
     menbeTip, hedefTip: 'krediXett', tutar, taksit: true,
-    tarix: simdi.toLocaleTimeString(dilKodu === 'en' ? 'en-GB' : 'az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + simdi.toLocaleDateString(dilKodu === 'en' ? 'en-GB' : 'az-AZ')
+    tarix: tarixSaatYaz(simdi)
   });
 
   veriKaydet();
@@ -1126,7 +1137,7 @@ function dairaviCiz(canvasId, mevcudChart, parcalar, legendId, vahid, emptyMesaj
     legendEl.innerHTML = `<div class="pie-empty">${escapeHtml(emptyMesaj || tr('dash.melumatYoxdur', 'Məlumat yoxdur.'))}</div>`;
     return new Chart(canvasEl.getContext('2d'), {
       type: 'doughnut',
-      data: { labels: ['Boş'], datasets: [{ data: [1], backgroundColor: [cssVar('--line') || '#e3e7ee'], borderWidth: 0 }] },
+      data: { labels: [''], datasets: [{ data: [1], backgroundColor: [cssVar('--line') || '#e3e7ee'], borderWidth: 0 }] },
       options: { cutout: '68%', animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
     });
   }
@@ -1177,10 +1188,10 @@ function dashboardDairaviDiaqramlariCiz() {
   const umumiCemi = kkBorcu + depozitBorcu + krediBorcuQalan;
   document.getElementById('dashUmumiBorcMerkez').innerText = umumiCemi > 0 ? umumiCemi.toFixed(2) : '0.00';
   dashUmumiBorcChart = dairaviCiz('dashUmumiBorcCanvas', dashUmumiBorcChart, [
-    { ad: 'Kredit kartı borcu', tutar: kkBorcu, renk: '#56bdc4' },
-    { ad: 'Deposit borcu', tutar: depozitBorcu, renk: '#d9895a' },
-    { ad: 'Kredit borcu (xətt)', tutar: krediBorcuQalan, renk: '#9b6b9e' }
-  ], 'dashUmumiBorcLegend', ' AZN', 'Borc yoxdur.');
+    { ad: tr('dash.kkBorcu', 'Kredit kartı'), tutar: kkBorcu, renk: '#56bdc4' },
+    { ad: tr('dash.depozitBorcu', 'Depozit'), tutar: depozitBorcu, renk: '#d9895a' },
+    { ad: tr('dash.krediXettBorcu', 'Kredit xətti'), tutar: krediBorcuQalan, renk: '#9b6b9e' }
+  ], 'dashUmumiBorcLegend', ' AZN', tr('dash.borcYoxdur', 'Borc yoxdur.'));
 
   // 2. Kredit kartı: istifadə olunan / istifadə edilə bilən qalıq
   const limitDeger = (typeof kreditLimit === 'number') ? kreditLimit : 0;
@@ -1189,16 +1200,16 @@ function dashboardDairaviDiaqramlariCiz() {
   const qalanLimit = Math.max(0, limitDeger + hesapDeger);
   document.getElementById('dashKrediKartMerkez').innerText = (typeof kreditLimit === 'number') ? limitDeger.toFixed(2) : '—';
   dashKrediKartChart = dairaviCiz('dashKrediKartCanvas', dashKrediKartChart, (typeof kreditLimit === 'number') ? [
-    { ad: 'İstifadə olunan', tutar: istifade, renk: cssVar('--danger') || '#d63a3a' },
-    { ad: 'İstifadə edilə bilən', tutar: qalanLimit, renk: cssVar('--brand') || '#2a777d' }
-  ] : [], 'dashKrediKartLegend', ' AZN', 'Kredit kartı hələ əlavə edilməyib.');
+    { ad: tr('dash.istifadeOlunan', 'İstifadə olunub'), tutar: istifade, renk: cssVar('--danger') || '#d63a3a' },
+    { ad: tr('dash.istifadeEdileBilen', 'İstifadə edilə bilər'), tutar: qalanLimit, renk: cssVar('--brand') || '#2a777d' }
+  ] : [], 'dashKrediKartLegend', ' AZN', tr('dash.kkYoxdur', 'Kredit kartı hələ əlavə edilməyib.'));
 
   // 3. Kredit borcu (taksitli kredit xətt): ödənilmiş / qalan taksit sayı
   document.getElementById('dashKrediBorcuMerkez').innerText = krediBorcu ? (krediBorcu.odenmisTaksitSayi + '/' + krediBorcu.taksitSayi) : '—';
   dashKrediBorcuChart = dairaviCiz('dashKrediBorcuCanvas', dashKrediBorcuChart, krediBorcu ? [
-    { ad: 'Ödənilib', tutar: krediBorcu.odenmisTaksitSayi, renk: '#2b7a56' },
-    { ad: 'Qalıb', tutar: krediBorcu.taksitSayi - krediBorcu.odenmisTaksitSayi, renk: cssVar('--input-border') || '#d9c9cd' }
-  ] : [], 'dashKrediBorcuLegend', ' taksit', 'Kredit xətt hələ əlavə edilməyib.');
+    { ad: tr('dash.odenilib', 'Ödənilib'), tutar: krediBorcu.odenmisTaksitSayi, renk: '#2b7a56' },
+    { ad: tr('dash.qalib', 'Qalıb'), tutar: krediBorcu.taksitSayi - krediBorcu.odenmisTaksitSayi, renk: cssVar('--input-border') || '#d9c9cd' }
+  ] : [], 'dashKrediBorcuLegend', ' ' + tr('dash.taksitVahid', 'taksit'), tr('dash.krediXettYoxdur', 'Kredit xətti hələ əlavə edilməyib.'));
 }
 
 // ==== Ayarlar: Günlük limit + Kateqoriyalar + Son əməliyyatlar + İşıq rejimi ====
@@ -1243,7 +1254,7 @@ function gunlukLimitYadSaxla() {
   const val = document.getElementById('gunlukLimitInput').value;
   const limit = parseFloat((val || '').replace(',', '.'));
   if (isNaN(limit) || limit < 0) {
-    document.getElementById('gunlukLimitError').innerText = tr('umumi.duzgunBirMebleg', 'Düzgün bir məbləğ yaz.');
+    document.getElementById('gunlukLimitError').innerText = tr('umumi.duzgunBirMebleg', 'Düzgün məbləğ yaz.');
     return;
   }
   gunlukLimit = limit;
@@ -1308,7 +1319,7 @@ function aylikDonutCiz(cfg) {
     sarici.style.display = 'none';
     if (bosMesaj) { bosMesaj.style.display = 'block'; bosMesaj.innerText = mesaj; }
   };
-  if (typeof Chart === 'undefined') { goster('📶 Qrafik üçün internet lazımdır.'); return null; }
+  if (typeof Chart === 'undefined') { goster(tr('dash.qrafikInternetLazimdir', '📶 Qrafik üçün internet lazımdır.')); return null; }
 
   const dilimler = cfg.dilimler.filter(d => d.tutar > 0);
   const qalan = cfg.qalan > 0 ? cfg.qalan : 0;
@@ -1322,7 +1333,7 @@ function aylikDonutCiz(cfg) {
   const data = dilimler.map(d => Number(d.tutar.toFixed(2)));
   const renkler = dilimler.map(d => d.renk);
   if (qalan) {
-    labels.push('Qalıq');
+    labels.push(tr('aylik.qaliq', 'Qalıq'));
     data.push(Number(qalan.toFixed(2)));
     renkler.push(cssVar('--line') || '#e3e7ee');
   }
@@ -1352,7 +1363,7 @@ function aylikSiyahiDoldur(elId, siraliKat, cemi) {
     const cemYuzde = cemi > 0 ? (k.tutar / cemi) * 100 : 0;
     const row = document.createElement('div');
     row.className = 'hesabat-row';
-    row.innerHTML = `<div class="hesabat-row-top"><span>${escapeHtml(k.ikon)} ${escapeHtml(k.ad)}</span><span>${k.tutar.toFixed(2)} AZN · %${cemYuzde.toFixed(0)}</span></div>
+    row.innerHTML = `<div class="hesabat-row-top"><span>${escapeHtml(k.ikon)} ${escapeHtml(k.ad)}</span><span>${k.tutar.toFixed(2)} AZN · ${cemYuzde.toFixed(0)}%</span></div>
       <div class="hesabat-bar-bg"><div class="hesabat-bar-fill" style="width:${barYuzde}%; background:${escapeHtml(k.renk)};"></div></div>`;
     listEl.appendChild(row);
   });
@@ -1388,7 +1399,7 @@ function aylikTrendChartGoster() {
     data: {
       labels: gunlukToplamlar.map((_, i) => String(i + 1)),
       datasets: [{
-        label: 'Günlük xərc',
+        label: tr('aylik.gunlukXerc', 'Gündəlik xərc'),
         data: gunlukToplamlar.map(v => Number(v.toFixed(2))),
         borderColor: navyRengi,
         backgroundColor: navyRengi + '33',
@@ -1432,10 +1443,10 @@ function aylikHesabatGoster() {
     if (kategoriAylikdirmi(ad)) sabitCemi += buAyToplam[ad]; else gunlukCemi += buAyToplam[ad];
   });
   const digerTutar = Math.round((gunlukCemi - gunlukKat.reduce((acc, k) => acc + k.tutar, 0)) * 100) / 100;
-  if (digerTutar > 0) gunlukKat.push({ ad: 'Digər', ikon: '📦', renk: '#9a8a8f', tutar: digerTutar });
+  if (digerTutar > 0) gunlukKat.push({ ad: tr('ana.diger', 'Digər'), ikon: '📦', renk: '#9a8a8f', tutar: digerTutar });
 
   const altEl = document.getElementById('aylikHesabatAlt');
-  if (altEl) altEl.innerText = tr('aylik.gunlukVeSabitCemi', 'Günlük: {gunluk} AZN · Aylıq sabit: {sabit} AZN', { gunluk: gunlukCemi.toFixed(2), sabit: sabitCemi.toFixed(2) });
+  if (altEl) altEl.innerText = tr('aylik.gunlukVeSabitCemi', 'Gündəlik: {gunluk} AZN · Aylıq sabit: {sabit} AZN', { gunluk: gunlukCemi.toFixed(2), sabit: sabitCemi.toFixed(2) });
 
   // ---- 1-ci dairə: günlük xərclər (ay üzrə ayrılan məbləğə qarşı) ----
   const indi = new Date();
@@ -1448,32 +1459,32 @@ function aylikHesabatGoster() {
     const asib = gunlukCemi > ayButcesi;
     const yaz = qisaRaqem(gunlukCemi) + ' / ' + qisaRaqem(ayButcesi);
     const yazOlcu = yaz.length <= 9 ? 20 : (yaz.length <= 12 ? 17 : 14);
-    gunlukMerkez = `<div class="t">Günlük xərclər · AZN</div><div class="b ${asib ? 'over' : ''}" style="font-size:${yazOlcu}px;">${escapeHtml(yaz)}</div><div class="s ${asib ? 'over' : ''}">%${yuzde.toFixed(0)} istifadə olunub</div>`;
+    gunlukMerkez = `<div class="t">${escapeHtml(tr('aylik.merkezGunluk', 'Gündəlik · AZN'))}</div><div class="b ${asib ? 'over' : ''}" style="font-size:${yazOlcu}px;">${escapeHtml(yaz)}</div><div class="s ${asib ? 'over' : ''}">${escapeHtml(tr('aylik.faizIstifade', '{faiz}% istifadə olunub', { faiz: yuzde.toFixed(0) }))}</div>`;
   } else {
-    gunlukMerkez = `<div class="t">Günlük xərclər · AZN</div><div class="b" style="font-size:20px;">${escapeHtml(qisaRaqem(gunlukCemi))}</div><div class="s">Limit təyin edilməyib</div>`;
+    gunlukMerkez = `<div class="t">${escapeHtml(tr('aylik.merkezGunluk', 'Gündəlik · AZN'))}</div><div class="b" style="font-size:20px;">${escapeHtml(qisaRaqem(gunlukCemi))}</div><div class="s">${escapeHtml(tr('aylik.limitYoxdur', 'Limit təyin edilməyib'))}</div>`;
   }
   aylikGunlukChart = aylikDonutCiz({
     canvasId: 'aylikGunlukCanvas', bosMesajId: 'aylikGunlukBosMesaj', merkezId: 'aylikGunlukMerkez',
     dilimler: gunlukKat, qalan: limitVar ? Math.max(0, ayButcesi - gunlukCemi) : 0,
-    merkezHtml: gunlukMerkez, bosYazi: 'Bu ay hələ günlük xərc yoxdur.', evvelki: aylikGunlukChart
+    merkezHtml: gunlukMerkez, bosYazi: tr('aylik.gunlukXercYoxdur', 'Bu ay hələ gündəlik xərc yoxdur.'), evvelki: aylikGunlukChart
   });
   const gunlukCaptionEl = document.getElementById('aylikGunlukCaption');
   if (gunlukCaptionEl) {
     gunlukCaptionEl.innerText = limitVar
-      ? aydakiGunSayi + ' gün × ' + qisaRaqem(gunlukLimit) + ' AZN = ' + qisaRaqem(ayButcesi) + ' AZN ay üzrə ayrılıb'
-      : 'Ayarlardan günlük limit təyin et — ay üzrə ayrılan məbləğ burada görünəcək.';
+      ? tr('aylik.butceIzah', '{gun} gün × {limit} AZN = {cem} AZN aylıq büdcə', { gun: aydakiGunSayi, limit: qisaRaqem(gunlukLimit), cem: qisaRaqem(ayButcesi) })
+      : tr('aylik.butceYoxIzah', 'Ayarlarda gündəlik limit təyin et — aylıq büdcə burada görünəcək.');
   }
   aylikSiyahiDoldur('aylikGunlukListesi', gunlukKat, gunlukCemi);
 
   // ---- 2-ci dairə: aylıq sabit xərclər ----
-  const sabitMerkez = `<div class="t">Aylıq sabit · AZN</div><div class="b" style="font-size:20px;">${escapeHtml(qisaRaqem(sabitCemi))}</div><div class="s">${sabitKat.length} kateqoriya</div>`;
+  const sabitMerkez = `<div class="t">${escapeHtml(tr('aylik.merkezSabit', 'Aylıq sabit · AZN'))}</div><div class="b" style="font-size:20px;">${escapeHtml(qisaRaqem(sabitCemi))}</div><div class="s">${escapeHtml(tr('aylik.kateqoriyaSayi', '{say} kateqoriya', { say: sabitKat.length }))}</div>`;
   const hecBiriAylikDeyil = !kategoriler.some(k => k.aylik);
   aylikSabitChart = aylikDonutCiz({
     canvasId: 'aylikSabitCanvas', bosMesajId: 'aylikSabitBosMesaj', merkezId: 'aylikSabitMerkez',
     dilimler: sabitKat, qalan: 0, merkezHtml: sabitMerkez,
     bosYazi: hecBiriAylikDeyil
-      ? 'Heç bir kateqoriya aylıq sabit kimi işarələnməyib. Ayarlar → Kateqoriyalar bölməsində 📌 tikini aktiv et.'
-      : 'Bu ay aylıq sabit xərc yoxdur.',
+      ? tr('aylik.sabitKatYoxdur', 'Heç bir kateqoriya aylıq sabit kimi seçilməyib. Ayarlar → Kateqoriyalar bölməsində 📌 işarəsini aktiv et.')
+      : tr('aylik.sabitXercYoxdur', 'Bu ay aylıq sabit xərc yoxdur.'),
     evvelki: aylikSabitChart
   });
   aylikSiyahiDoldur('aylikSabitListesi', sabitKat, sabitCemi);
@@ -1484,7 +1495,7 @@ function aylikHesabatGoster() {
   if (trendEl) {
     trendEl.innerHTML = '';
     if (Object.keys(kecenAyToplam).length === 0) {
-      trendEl.innerHTML = `<div class="breakdown-empty">${tr('aylik.muqayiseUcunMelumatYoxdur', 'Müqayisə üçün keçən ay üzrə məlumat yoxdur.')}</div>`;
+      trendEl.innerHTML = `<div class="breakdown-empty">${tr('aylik.muqayiseUcunMelumatYoxdur', 'Müqayisə üçün keçən aya aid məlumat yoxdur.')}</div>`;
     } else {
       const hamiKatAdlari = new Set([...Object.keys(buAyToplam), ...Object.keys(kecenAyToplam)]);
       const trendSiyahi = [];
@@ -1503,7 +1514,7 @@ function aylikHesabatGoster() {
       trendSiyahi.forEach(t => {
         let etiket, sinif;
         if (t.yeni) { etiket = tr('aylik.trendYeni', 'Yeni'); sinif = 'trend-new'; }
-        else if (t.bitib) { etiket = tr('aylik.trendKesildi', 'Kəsildi'); sinif = 'trend-down'; }
+        else if (t.bitib) { etiket = tr('aylik.trendKesildi', 'Dayandı'); sinif = 'trend-down'; }
         else { etiket = (t.deyisim > 0 ? '↑ ' : '↓ ') + Math.abs(t.deyisim).toFixed(0) + '%'; sinif = t.deyisim > 0 ? 'trend-up' : 'trend-down'; }
         const div = document.createElement('div');
         div.className = 'trend-row';
@@ -1520,11 +1531,11 @@ function sonEmeliyyatlarPaneliniKapat() { modalKapat('sonEmeliyyatlarModal'); ay
 
 // ==== Hesablar: Cash / Kredi kartı / Debit bank + transfer ====
 function hesabAdi(tip) {
-  if (tip === 'nagd') return tr('hesabAd.nagd', 'Cash Hesab');
-  if (tip === 'debit') return tr('hesabAd.debit', 'Debit bank Hesabım');
-  if (tip === 'depozit') return tr('hesabAd.depozit', 'Bank Deposit Hesabım');
-  if (tip === 'kredit') return tr('hesabAd.kredit', 'Kredi kartı Hesabım');
-  if (tip === 'krediXett') return tr('hesabAd.krediXett', 'Kredit xətt');
+  if (tip === 'nagd') return tr('hesabAd.nagd', 'Nağd pul');
+  if (tip === 'debit') return tr('hesabAd.debit', 'Debet kartı');
+  if (tip === 'depozit') return tr('hesabAd.depozit', 'Depozit');
+  if (tip === 'kredit') return tr('hesabAd.kredit', 'Kredit kartı');
+  if (tip === 'krediXett') return tr('hesabAd.krediXett', 'Kredit xətti');
   return tip;
 }
 function hesabIkonu(tip) {
@@ -1539,11 +1550,11 @@ function hesabIkonu(tip) {
 // ---- "+" ilə hesab əlavə etmə: 5 seçim ----
 function hesabSecSiyahi() {
   return [
-    { tip: 'nagd', ikon: '💵', ad: tr('hesabAd.nagd', 'Cash Hesab'), izah: tr('hesabSec.izahYalnizPlus', 'Yalnız məbləğ (yalnız +)') },
-    { tip: 'debit', ikon: '🏦', ad: tr('hesabSec.adDebit', 'Debit Card Hesab'), izah: tr('hesabSec.izahYalnizPlus', 'Yalnız məbləğ (yalnız +)') },
-    { tip: 'depozit', ikon: '🏛️', ad: tr('hesabSec.adDepozit', 'Deposit Hesabım'), izah: tr('hesabSec.izahPlusMinus', 'Yalnız məbləğ (+ və ya -)') },
-    { tip: 'kredit', ikon: '💳', ad: tr('hesabSec.adKredit', 'Kredit Kart Hesab'), izah: tr('hesabSec.izahKredit', 'Limit + istifadə edilə bilən qalıq (- və ya 0)') },
-    { tip: 'krediXett', ikon: '🧾', ad: tr('hesabAd.krediXett', 'Kredit xətt'), izah: tr('hesabSec.izahKrediXett', 'Ay sayı, başlanğıc tarixi, ödənilməli məbləğ (yalnız -)') }
+    { tip: 'nagd', ikon: '💵', ad: tr('hesabAd.nagd', 'Nağd pul'), izah: tr('hesabSec.izahYalnizPlus', 'Yalnız müsbət balans') },
+    { tip: 'debit', ikon: '🏦', ad: tr('hesabSec.adDebit', 'Debet kartı'), izah: tr('hesabSec.izahYalnizPlus', 'Yalnız müsbət balans') },
+    { tip: 'depozit', ikon: '🏛️', ad: tr('hesabSec.adDepozit', 'Depozit'), izah: tr('hesabSec.izahPlusMinus', 'Balans müsbət və ya mənfi ola bilər') },
+    { tip: 'kredit', ikon: '💳', ad: tr('hesabSec.adKredit', 'Kredit kartı'), izah: tr('hesabSec.izahKredit', 'Limit və cari borc') },
+    { tip: 'krediXett', ikon: '🧾', ad: tr('hesabAd.krediXett', 'Kredit xətti'), izah: tr('hesabSec.izahKrediXett', 'Taksit sayı, başlanğıc tarixi və aylıq ödəniş') }
   ];
 }
 
@@ -1559,7 +1570,7 @@ function hesabSecModalAc() {
     btn.type = 'button';
     btn.className = 'hesab-sec-item';
     btn.onclick = () => hesabSecEt(h.tip);
-    btn.innerHTML = `<span class="ic">${escapeHtml(h.ikon)}</span><span style="flex:1;">${escapeHtml(h.ad)}${eklenib ? ' ✓' : ''}<small>${eklenib ? escapeHtml(tr('hesabSec.artiqElave', 'Artıq əlavə edilib — düzəltmək üçün seç')) : escapeHtml(h.izah)}</small></span>`;
+    btn.innerHTML = `<span class="ic">${escapeHtml(h.ikon)}</span><span style="flex:1;">${escapeHtml(h.ad)}${eklenib ? ' ✓' : ''}<small>${eklenib ? escapeHtml(tr('hesabSec.artiqElave', 'Artıq əlavə olunub — dəyişmək üçün toxun')) : escapeHtml(h.izah)}</small></span>`;
     konteyner.appendChild(btn);
   });
   modalAc('hesabSecModal');
@@ -1600,7 +1611,7 @@ function hesablarGoster() {
     <div class="modal-item">
       <div class="field-row between">
         <div class="field-row"><span style="font-size:18px;">💵</span><b>${escapeHtml(hesabAdi('nagd'))}</b></div>
-        <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('nagd')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
+        <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('nagd')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
       </div>
       <div style="font-size:19px; font-weight:700; color:var(--brand-ink);">${nagdBakiye.toFixed(2)} AZN</div>
     </div>`;
@@ -1610,7 +1621,7 @@ function hesablarGoster() {
     <div class="modal-item">
       <div class="field-row between">
         <div class="field-row"><span style="font-size:18px;">🏦</span><b>${escapeHtml(hesabAdi('debit'))}</b></div>
-        <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('debit')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
+        <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('debit')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
       </div>
       <div style="font-size:19px; font-weight:700; color:var(--brand-ink);">${debitBakiye.toFixed(2)} AZN</div>
     </div>`;
@@ -1620,7 +1631,7 @@ function hesablarGoster() {
     <div class="modal-item">
       <div class="field-row between">
         <div class="field-row"><span style="font-size:18px;">🏛️</span><b>${escapeHtml(hesabAdi('depozit'))}</b></div>
-        <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('depozit')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
+        <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('depozit')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
       </div>
       <div style="font-size:19px; font-weight:700; color:${depozitBakiye < 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${depozitBakiye.toFixed(2)} AZN</div>
     </div>`;
@@ -1630,10 +1641,10 @@ function hesablarGoster() {
     <div class="modal-item">
       <div class="field-row between">
         <div class="field-row"><span style="font-size:18px;">💳</span><b>${escapeHtml(hesabAdi('kredit'))}</b></div>
-        <button class="btn btn-ghost" onclick="hesablarPaneliniKapat(); balanceModalAc();" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
+        <button class="btn btn-ghost" onclick="hesablarPaneliniKapat(); balanceModalAc();" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
       </div>
       <div style="font-size:19px; font-weight:700; color:${borc < 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${borc.toFixed(2)} AZN</div>
-      <div style="font-size:12px; color:var(--muted);">${escapeHtml(tr('hesablar.limitVeMuvcud', 'Limit: {limit} AZN · İstifadə edilə bilən: {muvcud} AZN', { limit: limit.toFixed(2), muvcud: muvcud.toFixed(2) }))}</div>
+      <div style="font-size:12px; color:var(--muted);">${escapeHtml(tr('hesablar.limitVeMuvcud', 'Limit: {limit} AZN · İstifadə edilə bilər: {muvcud} AZN', { limit: limit.toFixed(2), muvcud: muvcud.toFixed(2) }))}</div>
     </div>`;
   }
   if (krediBorcu) {
@@ -1641,13 +1652,13 @@ function hesablarGoster() {
     const bitib = krediBorcu.odenmisTaksitSayi >= krediBorcu.taksitSayi;
     let btnText = tr('hesablar.buAyTaksitOde', 'Bu ayın taksitini ödə');
     let btnDisabled = false;
-    if (bitib) { btnText = tr('hesablar.kreditBaglanib', '🎉 Kredit bağlanıb'); btnDisabled = true; }
-    const elaveText = (krediBorcu.elaveOdenis > 0) ? ' · ' + tr('hesablar.elaveOdenis', 'əlavə ödəniş: -{mebleg} AZN', { mebleg: krediBorcu.elaveOdenis.toFixed(2) }) : '';
+    if (bitib) { btnText = tr('hesablar.kreditBaglanib', '🎉 Kredit tam ödənilib'); btnDisabled = true; }
+    const elaveText = (krediBorcu.elaveOdenis > 0) ? ' · ' + tr('hesablar.elaveOdenis', 'əlavə ödəniş: −{mebleg} AZN', { mebleg: krediBorcu.elaveOdenis.toFixed(2) }) : '';
     html += `
     <div class="modal-item">
       <div class="field-row between">
         <div class="field-row"><span style="font-size:18px;">🧾</span><b>${escapeHtml(hesabAdi('krediXett'))}</b></div>
-        <button class="btn btn-ghost" onclick="krediBorcuDuzeltModalAc()" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Düzəlt'))}</button>
+        <button class="btn btn-ghost" onclick="krediBorcuDuzeltModalAc()" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
       </div>
       <div style="font-size:19px; font-weight:700; color:${qalan > 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${qalan > 0 ? '-' : ''}${qalan.toFixed(2)} AZN</div>
       <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">${escapeHtml(tr('hesablar.taksitOdenilib', '{odenmis}/{say} taksit ödənilib · Aylıq: {aylik} AZN', { odenmis: krediBorcu.odenmisTaksitSayi, say: krediBorcu.taksitSayi, aylik: krediBorcu.aylikMebleg.toFixed(2) }))} · ${escapeHtml(tarixFormat(krediBorcu.baslangic))}–${escapeHtml(tarixFormat(krediBorcu.bitis))}${escapeHtml(elaveText)}</div>
@@ -1655,7 +1666,7 @@ function hesablarGoster() {
     </div>`;
   }
   if (!html) {
-    html = '<p class="empty-note" style="padding:8px 0;">' + escapeHtml(tr('hesablar.hecHesabYox', 'Hələ heç bir hesab əlavə edilməyib. Yuxarıdakı ➕ düyməsindən başla.')) + '</p>';
+    html = '<p class="empty-note" style="padding:8px 0;">' + escapeHtml(tr('hesablar.hecHesabYox', 'Hələ heç bir hesab yoxdur. Yuxarıdakı ➕ düyməsi ilə başla.')) + '</p>';
   }
   konteyner.innerHTML = html;
   hesabTransferTarixceGoster();
@@ -1665,7 +1676,7 @@ function hesabTransferTarixceGoster() {
   const konteyner = document.getElementById('hesabTransferTarixce');
   if (!konteyner) return;
   if (hesabTransferleri.length === 0) {
-    konteyner.innerHTML = '<p class="empty-note" style="padding:8px 0;">' + escapeHtml(tr('hesablar.hecTransferYox', 'Hələ transfer edilməyib.')) + '</p>';
+    konteyner.innerHTML = '<p class="empty-note" style="padding:8px 0;">' + escapeHtml(tr('hesablar.hecTransferYox', 'Hələ köçürmə olmayıb.')) + '</p>';
     return;
   }
   konteyner.innerHTML = '';
@@ -1689,7 +1700,7 @@ function hesabTransferTarixceGoster() {
 let hesabDuzeltTipi = null;
 function hesabDuzeltModalAc(tip) {
   hesabDuzeltTipi = tip;
-  document.getElementById('hesabDuzeltBaslik').innerText = tr('hesabDuzelt.baslikTip', '{ad} balansı', { ad: hesabAdi(tip) });
+  document.getElementById('hesabDuzeltBaslik').innerText = tr('hesabDuzelt.baslikTip', '{ad} — balans', { ad: hesabAdi(tip) });
   document.getElementById('hesabDuzeltInput').value = hesabBakiyesiOxu(tip);
   document.getElementById('hesabDuzeltError').innerText = '';
   modalAc('hesabDuzeltModal');
@@ -1703,7 +1714,7 @@ function hesabDuzeltOnayla() {
     return;
   }
   if ((hesabDuzeltTipi === 'nagd' || hesabDuzeltTipi === 'debit') && p < 0) {
-    errEl.innerText = tr('hesabDuzelt.yalnizMusbet', '{ad} üçün məbləğ yalnız müsbət (+) ola bilər.', { ad: hesabAdi(hesabDuzeltTipi) });
+    errEl.innerText = tr('hesabDuzelt.yalnizMusbet', '{ad} üçün məbləğ yalnız müsbət ola bilər.', { ad: hesabAdi(hesabDuzeltTipi) });
     return;
   }
   if (hesabDuzeltTipi === 'nagd') { nagdBakiye = p; hesabEklenib.nagd = true; }
@@ -1723,10 +1734,11 @@ function hesabBakiyesiOxu(tip) {
 }
 function hesabBakiyesiDeyis(tip, deltaMenbe) {
   // deltaMenbe: mənfi işarəli dəyişiklik menbə üçün, müsbət hədəf üçün eyni funksiyada tutar veriləcək
-  if (tip === 'nagd') nagdBakiye += deltaMenbe;
-  else if (tip === 'debit') debitBakiye += deltaMenbe;
-  else if (tip === 'depozit') depozitBakiye += deltaMenbe;
-  else if (tip === 'kredit') anaHesap = ((typeof anaHesap === 'number') ? anaHesap : 0) + deltaMenbe;
+  // Nəticə qəpiyə yuvarlaqlaşdırılır (üzən nöqtə xətası yığılmasın).
+  if (tip === 'nagd') nagdBakiye = pulYuvarla(nagdBakiye + deltaMenbe);
+  else if (tip === 'debit') debitBakiye = pulYuvarla(debitBakiye + deltaMenbe);
+  else if (tip === 'depozit') depozitBakiye = pulYuvarla(depozitBakiye + deltaMenbe);
+  else if (tip === 'kredit') anaHesap = pulYuvarla(((typeof anaHesap === 'number') ? anaHesap : 0) + deltaMenbe);
 }
 
 // Yalnız "+" ilə əlavə edilmiş hesablar seçilə bilər (əks halda pul görünməyən hesaba düşürdü).
@@ -1758,7 +1770,7 @@ function transferModalAc() {
   if (ferqli.length) hedefSel.value = (ferqli.indexOf('kredit') !== -1) ? 'kredit' : ferqli[0];
   document.getElementById('transferMebleg').value = '';
   document.getElementById('transferError').innerText = (menbeler.length && ferqli.length)
-    ? '' : tr('transfer.ikiHesabLazim', 'Transfer üçün ən azı iki hesab əlavə et (Hesablarım → ➕).');
+    ? '' : tr('transfer.ikiHesabLazim', 'Köçürmə üçün ən azı iki hesab əlavə et (Hesablarım → ➕).');
   modalAc('transferModal');
 }
 
@@ -1767,14 +1779,14 @@ function transferOnayla() {
   const hedefTip = document.getElementById('transferHedef').value;
   const errEl = document.getElementById('transferError');
   const tutarVal = document.getElementById('transferMebleg').value;
-  const tutar = parseFloat((tutarVal || '').replace(',', '.'));
+  const tutar = pulYuvarla(parseFloat((tutarVal || '').replace(',', '.'))); // NaN → 0 → aşağıda xəta verir
 
   if (!menbeTip || !hedefTip || !transferHesabVarMi(menbeTip) || !transferHesabVarMi(hedefTip)) {
-    errEl.innerText = tr('transfer.hesabElaveEdilmeyib', 'Seçilən hesab hələ əlavə edilməyib.');
+    errEl.innerText = tr('transfer.hesabElaveEdilmeyib', 'Seçdiyin hesab hələ əlavə edilməyib.');
     return;
   }
   if (menbeTip === hedefTip) {
-    errEl.innerText = tr('transfer.eyniHesab', 'Mənbə və hədəf hesab eyni ola bilməz.');
+    errEl.innerText = tr('transfer.eyniHesab', 'Göndərən və alan hesab eyni ola bilməz.');
     return;
   }
   if (isNaN(tutar) || tutar <= 0) {
@@ -1782,21 +1794,21 @@ function transferOnayla() {
     return;
   }
   if (hedefTip === 'krediXett' && !krediBorcu) {
-    errEl.innerText = tr('transfer.evvelKrediXett', 'Əvvəlcə "Kredit xətt" hesabını ➕ ilə əlavə et.');
+    errEl.innerText = tr('transfer.evvelKrediXett', 'Əvvəlcə ➕ ilə "Kredit xətti" əlavə et.');
     return;
   }
   if (menbeTip !== 'kredit') {
     const mevcud = hesabBakiyesiOxu(menbeTip);
-    if (tutar > mevcud) {
-      errEl.innerText = tr('transfer.balansYoxdur', '{ad} hesabında kifayət qədər balans yoxdur.', { ad: hesabAdi(menbeTip) });
+    if (pulYuvarla(tutar) > pulYuvarla(mevcud)) {
+      errEl.innerText = tr('transfer.balansYoxdur', '{ad} hesabında kifayət qədər vəsait yoxdur.', { ad: hesabAdi(menbeTip) });
       return;
     }
   } else {
     const limit = (typeof kreditLimit === 'number') ? kreditLimit : 0;
     const borc = (typeof anaHesap === 'number') ? anaHesap : 0;
     const muvcudLimit = limit + borc; // kredit kartında istifadə edilə bilən limit
-    if (tutar > muvcudLimit) {
-      errEl.innerText = tr('transfer.limitYoxdur', 'Kredi kartında kifayət qədər istifadə edilə bilən limit yoxdur.');
+    if (pulYuvarla(tutar) > pulYuvarla(muvcudLimit)) {
+      errEl.innerText = tr('transfer.limitYoxdur', 'Kredit kartında kifayət qədər limit yoxdur.');
       return;
     }
   }
@@ -1805,7 +1817,7 @@ function transferOnayla() {
   if (hedefTip === 'krediXett') {
     // Kredit xəttinə birbaşa ödəniş: mənbədən məbləğ çıxılır, xəttin qalıq borcundan
     // eyni məbləğ düşülür (əlavə ödəniş kimi izlənilir — taksit sayı dəyişmir, qalıq stabil görünür).
-    krediBorcu.elaveOdenis = (krediBorcu.elaveOdenis || 0) + tutar;
+    krediBorcu.elaveOdenis = pulYuvarla((krediBorcu.elaveOdenis || 0) + tutar);
   } else {
     hesabBakiyesiDeyis(hedefTip, tutar);
   }
@@ -1813,7 +1825,7 @@ function transferOnayla() {
   const simdi = new Date();
   hesabTransferleri.unshift({
     menbeTip, hedefTip, tutar,
-    tarix: simdi.toLocaleTimeString(dilKodu === 'en' ? 'en-GB' : 'az-AZ', { hour: '2-digit', minute: '2-digit' }) + ' · ' + simdi.toLocaleDateString(dilKodu === 'en' ? 'en-GB' : 'az-AZ')
+    tarix: tarixSaatYaz(simdi)
   });
 
   veriKaydet();
@@ -1824,19 +1836,21 @@ function transferOnayla() {
 }
 
 function transferSilOnayla(index) {
-  const t = hesabTransferleri[index];
+  const t = hesabTransferleri[index]; // sıra nömrəsi yox, qeydin özünü izləyirik (arada sinxron olsa səhv transfer ləğv edilməsin)
   if (!t) return;
-  confirmAc(tr('transfer.legvBaslik', 'Transferi ləğv et'), tr('transfer.legvSual', '{menbe} → {hedef} ({tutar} AZN) geri qaytarılsın?', { menbe: hesabAdi(t.menbeTip), hedef: hesabAdi(t.hedefTip), tutar: t.tutar.toFixed(2) }), () => {
+  confirmAc(tr('transfer.legvBaslik', 'Köçürməni ləğv et'), tr('transfer.legvSual', '{menbe} → {hedef} ({tutar} AZN) köçürməsi geri qaytarılsın?', { menbe: hesabAdi(t.menbeTip), hedef: hesabAdi(t.hedefTip), tutar: t.tutar.toFixed(2) }), () => {
+    const idx = hesabTransferleri.indexOf(t);
+    if (idx === -1) { alertAc(tr('umumi.siyahiYenilendiXeta', 'Siyahı bu arada yeniləndi. Yenidən cəhd et.')); hesablarGoster(); return; }
     hesabBakiyesiDeyis(t.menbeTip, t.tutar);
     if (t.taksit) {
       // Taksit ödənişi geri qaytarılır: ödənilmiş taksit sayı 1 azalır
       if (krediBorcu && krediBorcu.odenmisTaksitSayi > 0) krediBorcu.odenmisTaksitSayi -= 1;
     } else if (t.hedefTip === 'krediXett') {
-      if (krediBorcu) krediBorcu.elaveOdenis = Math.max(0, (krediBorcu.elaveOdenis || 0) - t.tutar);
+      if (krediBorcu) krediBorcu.elaveOdenis = Math.max(0, pulYuvarla((krediBorcu.elaveOdenis || 0) - t.tutar));
     } else {
       hesabBakiyesiDeyis(t.hedefTip, -t.tutar);
     }
-    hesabTransferleri.splice(index, 1);
+    hesabTransferleri.splice(idx, 1);
     veriKaydet();
     hesablarGoster();
     krediBorcuGoster();
