@@ -11,7 +11,7 @@ Tətbiqdə kod dəyişikliyi lazım deyil — yalnız `lang/` qovluğuna bir JSO
    - `flag` — bayraq emojisi (`🇬🇧`, `🇹🇷`).
 3. `strings` içində yalnız **sağ tərəfi** (dəyərləri) tərcümə et. **Açarları (sol tərəf) dəyişmə.**
 4. Faylı GitHub-da `lang/` qovluğuna yüklə (commit et).
-5. `lang/index.json` faylına kodu əlavə et: `["az", "en"]`
+5. `lang/index.json` faylına kodu əlavə et: `["az", "en", "ru"]`
    (GitHub Pages-də fayl özü də avtomatik tapılır, amma tapılma gecikə bilər: siyahı 24 saatdan bir yenilənir.
    `index.json`-a yazmaq dərhal görünməsini təmin edir.)
 6. İstəyə görə ehtiyat siyahı `lang/languages.json`-a da əlavə et:

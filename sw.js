@@ -5,6 +5,8 @@
 
 // VACİB: Hər yeni versiya buraxdıqda bu adı artır (v3 → v4 → v5 ...).
 // Bu, köhnə keşin avtomatik təmizlənməsini təmin edir.
+// (v21: Rus dili (lang/ru.json) əlavə edildi; AZ/EN mətnlər yenidən yazıldı; bütün sabit mətnlər tərcümə açarlarına keçdi.)
+// (v20: Test düzəlişləri — tema ilk basış, günün xərcləri siyahısı, pul yuvarlaqlaşdırma, köhnə kateqoriya datası, xəbərdarlıq pəncərəsi, EN mətnlər.)
 // (v19: Ana ekranda itmiş "Günün xərcləri" (#giderListesi) siyahısı bərpa edildi.)
 // (v18: CSS/JS ayrı fayllara bölündü; css/ və js/ network-first keş.)
 // (v17: GitHub API avtomatik dil sorğusu silindi; Drive GIS yalnız əl ilə bağlananda yüklənir.)
@@ -17,7 +19,7 @@
 // (v10: dil faylları (lang/*.json) üçün network-first əlavə edildi.)
 // (v9: ad "Safe Money" olaraq dəyişdi və yeni logo əlavə edildi — köhnə keşlənmiş
 // ikonların/title-ın istifadəçilərdə qalmaması üçün versiya artırıldı.)
-const CACHE_ADI = 'safe-money-cache-v19';
+const CACHE_ADI = 'safe-money-cache-v21';
 
 const KESLENECEK_FAYLLAR = [
   './index.html',
@@ -36,6 +38,7 @@ const KESLENECEK_FAYLLAR = [
   './js/app.js',
   './lang/az.json',
   './lang/en.json',
+  './lang/ru.json',
   './lang/index.json',
   './lang/languages.json'
 ];

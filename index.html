@@ -31,12 +31,12 @@
   <div class="lock-box">
     <img src="icon-192.png" alt="Safe Money" style="width:64px; height:64px; border-radius:16px; margin-bottom:10px;">
     <h2>Safe Money</h2>
-    <p data-i18n="giris.davamEtmekUcunEmail" class="hint" id="emailGirisHint">Davam etmək üçün email və şifrənlə daxil ol. Məlumatların yalnız sənin hesabına bağlı olacaq.</p>
+    <p data-i18n="giris.davamEtmekUcunEmail" class="hint" id="emailGirisHint">Davam etmək üçün e-poçt və şifrənlə daxil ol. Məlumatların yalnız sənin hesabında saxlanılacaq.</p>
     <input type="email" id="emailGirisEmail" placeholder="E-poçt" data-i18n-placeholder="giris.ePoctPlaceholder" autocomplete="username" style="width:100%; margin-bottom:8px; box-sizing:border-box;">
-    <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən az 6 simvol)" data-i18n-placeholder="giris.sifreEnAz6Placeholder" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
+    <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən azı 6 simvol)" data-i18n-placeholder="giris.sifreEnAz6Placeholder" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
     <button data-i18n="giris.daxilOl" class="btn btn-primary" onclick="emailIleGirisEt()" style="width:100%; margin-bottom:8px;">Daxil ol</button>
     <button data-i18n="giris.hesabYaratIlkDefedirse" class="btn btn-ghost" onclick="qeydiyyatModalAc()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Hesab yarat (ilk dəfədirsə)</button>
-    <button data-i18n="giris.tesdiqEPoctunuYeniden" class="btn btn-ghost" id="tesdiqYenidenBtn" onclick="tesdiqEmailiYenidenGonder()" style="width:100%; margin-bottom:10px; border:1px solid var(--line); display:none;">Təsdiq e-poçtunu yenidən göndər</button>
+    <button data-i18n="giris.tesdiqEPoctunuYeniden" class="btn btn-ghost" id="tesdiqYenidenBtn" onclick="tesdiqEmailiYenidenGonder()" style="width:100%; margin-bottom:10px; border:1px solid var(--line); display:none;">Təsdiq məktubunu yenidən göndər</button>
     <div class="error-text" id="googleGirisXeta"></div>
   </div>
 </div>
@@ -47,7 +47,7 @@
   <div class="lock-box">
     <div class="lock-icon">📝</div>
     <h2 data-i18n="qeyd.hesabYarat">Hesab yarat</h2>
-    <p data-i18n="qeyd.melumatlariniDoldurHesabinYalniz" class="hint">Məlumatlarını doldur — hesabın yalnız sənə aid olacaq.</p>
+    <p data-i18n="qeyd.melumatlariniDoldurHesabinYalniz" class="hint">Məlumatlarını doldur — hesab yalnız sənə məxsus olacaq.</p>
     <div style="margin-bottom:8px;">
       <label data-i18n="qeyd.ad" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Ad</label>
       <input type="text" id="qeydiyyatAd" placeholder="Adın" data-i18n-placeholder="qeyd.adinPlaceholder" autocomplete="given-name" style="width:100%; box-sizing:border-box;">
@@ -62,16 +62,16 @@
     </div>
     <div style="margin-bottom:8px;">
       <label data-i18n="qeyd.sifre" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə</label>
-      <input type="password" id="qeydiyyatSifre1" placeholder="Məs: Aa12345@" data-i18n-placeholder="qeyd.mesAa12345Placeholder" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
+      <input type="password" id="qeydiyyatSifre1" placeholder="Məs.: Aa12345@" data-i18n-placeholder="qeyd.mesAa12345Placeholder" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
     </div>
     <div style="margin-bottom:6px;">
-      <label data-i18n="qeyd.sifreTekrar" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrə (təkrar)</label>
-      <input type="password" id="qeydiyyatSifre2" placeholder="Şifrəni təkrar yaz" data-i18n-placeholder="qeyd.sifreniTekrarYazPlaceholder" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
+      <label data-i18n="qeyd.sifreTekrar" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Şifrəni təkrarla</label>
+      <input type="password" id="qeydiyyatSifre2" placeholder="Şifrəni yenidən yaz" data-i18n-placeholder="qeyd.sifreniTekrarYazPlaceholder" autocomplete="new-password" style="width:100%; box-sizing:border-box;">
     </div>
-    <p data-i18n="qeyd.sifreEnAz6" class="hint" style="margin-top:0; text-align:left;">Şifrə ən az 6 simvol olmalı və ən az 1 böyük hərf, 1 kiçik hərf, 1 simvol (@, #, ! və s.) daxil etməlidir. Məs: Aa12345@</p>
+    <p data-i18n="qeyd.sifreEnAz6" class="hint" style="margin-top:0; text-align:left;">Şifrə ən azı 6 simvoldan ibarət olmalı və ən azı 1 böyük hərf, 1 kiçik hərf və 1 xüsusi simvol (@, #, ! və s.) daxil etməlidir. Məs.: Aa12345@</p>
     <div class="error-text" id="qeydiyyatXeta"></div>
     <button data-i18n="qeyd.hesabYarat" class="btn btn-primary" onclick="qeydiyyatGonder()" style="width:100%; margin-top:8px; margin-bottom:8px;">Hesab yarat</button>
-    <button data-i18n="qeyd.geriQayit" class="btn btn-ghost" onclick="modalKapat('qeydiyyatModal')" style="width:100%; border:1px solid var(--line);">Geri qayıt</button>
+    <button data-i18n="qeyd.geriQayit" class="btn btn-ghost" onclick="modalKapat('qeydiyyatModal')" style="width:100%; border:1px solid var(--line);">Geri</button>
   </div>
 </div>
 
@@ -80,10 +80,10 @@
   <div class="lock-box">
     <div class="lock-icon">🔒</div>
     <h2 data-i18n="kilid.tetbiqKilidlidir">Tətbiq kilidlidir</h2>
-    <p data-i18n="kilid.davamEtmekUcunTesdiqle" class="hint" id="kilidHint">Davam etmək üçün təsdiqlə.</p>
+    <p data-i18n="kilid.davamEtmekUcunTesdiqle" class="hint" id="kilidHint">Davam etmək üçün kimliyini təsdiqlə.</p>
     <button data-i18n="kilid.faceIdTouchId" class="btn btn-primary" id="kilidFaceBtn" onclick="kilidWebAuthnDogrula()" style="width:100%; margin-bottom:10px; display:none;">🔓 Face ID / Touch ID ilə aç</button>
     <div id="kilidPinWrap" style="display:none;">
-      <input type="password" inputmode="numeric" maxlength="4" id="kilidPinInput" placeholder="PIN kodu" data-i18n-placeholder="kilid.pinKoduPlaceholder">
+      <input type="password" inputmode="numeric" maxlength="4" id="kilidPinInput" placeholder="PIN kod" data-i18n-placeholder="kilid.pinKoduPlaceholder">
       <button data-i18n="kilid.ac" class="btn btn-primary" onclick="kilidPinIleAc()" style="width:100%;">Aç</button>
     </div>
     <div class="error-text" id="kilidError"></div>
@@ -93,9 +93,9 @@
 <!-- PIN təyin etmə (Face ID mövcud olmayanda ehtiyat) -->
 <div id="pinAyarlaModal" class="modal">
   <div class="modal-content">
-    <h2 data-i18n="pin.ehtiyatPinTeyinEt">Ehtiyat PIN təyin et</h2>
-    <p data-i18n="pin.buCihazFaceId" class="hint">Bu cihaz Face ID/Touch ID dəstəkləmir (və ya rədd edildi). 4 rəqəmli bir PIN qoy.</p>
-    <input type="password" inputmode="numeric" maxlength="4" id="pinAyarlaInput" placeholder="Məs: 1234" data-i18n-placeholder="pin.mes1234Placeholder" style="text-align:center; letter-spacing:8px; font-size:18px;">
+    <h2 data-i18n="pin.ehtiyatPinTeyinEt">Ehtiyat PIN kod təyin et</h2>
+    <p data-i18n="pin.buCihazFaceId" class="hint">Bu cihaz Face ID / Touch ID dəstəkləmir və ya icazə verilmədi. 4 rəqəmli PIN kod təyin et.</p>
+    <input type="password" inputmode="numeric" maxlength="4" id="pinAyarlaInput" placeholder="Məs.: 1234" data-i18n-placeholder="pin.mes1234Placeholder" style="text-align:center; letter-spacing:8px; font-size:18px;">
     <div class="error-text" id="pinAyarlaError"></div>
     <div class="modal-footer">
       <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('pinAyarlaModal')">Ləğv et</button>
@@ -112,7 +112,7 @@
 <div id="dashboardModal" class="page-screen">
   <div class="page-inner">
     <div style="padding-bottom:12px; margin-bottom:4px;">
-      <h2 data-i18n="nav.dashboard" style="margin:0;">Dashboard</h2>
+      <h2 data-i18n="nav.dashboard" style="margin:0;">İcmal</h2>
     </div>
 
     <!-- 1. Ümumi Borc — dairəvi diaqram -->
@@ -120,7 +120,7 @@
       <div data-i18n="dash.umumiBorc" class="pie-title">📊 Ümumi borc</div>
       <div class="pie-card-row">
         <div class="pie-canvas-wrap"><canvas id="dashUmumiBorcCanvas"></canvas>
-          <div class="pie-center-label"><span class="n" id="dashUmumiBorcMerkez">—</span><span data-i18n="dash.cem" class="l">cəm</span></div>
+          <div class="pie-center-label"><span class="n" id="dashUmumiBorcMerkez">—</span><span data-i18n="dash.cem" class="l">cəmi</span></div>
         </div>
         <div class="pie-legend" id="dashUmumiBorcLegend"></div>
       </div>
@@ -128,7 +128,7 @@
 
     <!-- 2. Kredit kartı — istifadə olunan / istifadə edilə bilən — dairəvi diaqram -->
     <div class="pie-card">
-      <div data-i18n="dash.kreditKartiLimiti" class="pie-title">💳 Kredit kartı limiti</div>
+      <div data-i18n="dash.kreditKartiLimiti" class="pie-title">💳 Kredit kartının limiti</div>
       <div class="pie-card-row">
         <div class="pie-canvas-wrap"><canvas id="dashKrediKartCanvas"></canvas>
           <div class="pie-center-label"><span class="n" id="dashKrediKartMerkez">—</span><span data-i18n="dash.limit" class="l">limit</span></div>
@@ -139,7 +139,7 @@
 
     <!-- 3. Kredit borcu (taksit) — ödənilib / qalıb — dairəvi diaqram -->
     <div class="pie-card">
-      <div data-i18n="dash.kreditBorcuTaksitOdenilib" class="pie-title">🧾 Kredit borcu — taksit ödənilib</div>
+      <div data-i18n="dash.kreditBorcuTaksitOdenilib" class="pie-title">🧾 Kredit xətti — ödənilən taksitlər</div>
       <div class="pie-card-row">
         <div class="pie-canvas-wrap"><canvas id="dashKrediBorcuCanvas"></canvas>
           <div class="pie-center-label"><span class="n" id="dashKrediBorcuMerkez">—</span><span data-i18n="dash.taksit" class="l">taksit</span></div>
@@ -155,7 +155,7 @@
 <nav class="bottom-nav" id="bottomNav">
   <div class="bottom-nav-inner">
     <button class="nav-item" id="navDashboard" onclick="sekmeSec('dashboard')">
-      <span class="nav-icon">📊</span><span data-i18n="nav.dashboard">Dashboard</span>
+      <span class="nav-icon">📊</span><span data-i18n="nav.dashboard">İcmal</span>
     </button>
     <button class="nav-item" id="navAylikHesabat" onclick="sekmeSec('aylikHesabat')">
       <span class="nav-icon">📈</span><span data-i18n="nav.aylik">Aylıq</span>
@@ -175,12 +175,12 @@
 <!-- Amount entry modal -->
 <div id="amountModal" class="modal">
   <div class="modal-content">
-    <h2 data-i18n="mebleg.tutariDaxilEt" id="amountModalTitle">Tutarı daxil et</h2>
-    <p data-i18n="mebleg.buXercUcunMeblegi" class="hint">Bu xərc üçün məbləği AZN olaraq yaz.</p>
+    <h2 data-i18n="mebleg.tutariDaxilEt" id="amountModalTitle">Məbləği daxil et</h2>
+    <p data-i18n="mebleg.buXercUcunMeblegi" class="hint">Bu xərcin məbləğini AZN ilə yaz.</p>
     <input type="number" step="0.01" min="0" id="amountInput" placeholder="0.00" style="margin-bottom:10px;">
     <div id="amountReasonWrap" style="display:none;">
-      <label data-i18n="mebleg.sebeb" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Səbəb</label>
-      <input type="text" id="amountReasonInput" placeholder="Məs: Taksi, hədiyyə, təmir..." data-i18n-placeholder="mebleg.mesTaksiHediyyeTemirPlaceholder">
+      <label data-i18n="mebleg.sebeb" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Qeyd</label>
+      <input type="text" id="amountReasonInput" placeholder="Məs.: taksi, hədiyyə, təmir..." data-i18n-placeholder="mebleg.mesTaksiHediyyeTemirPlaceholder">
     </div>
     <div class="error-text" id="amountError"></div>
     <div class="modal-footer">
@@ -194,14 +194,14 @@
 <div id="balanceModal" class="modal">
   <div class="modal-content">
     <h2 data-i18n="kreditKart.kreditKarti">Kredit kartı</h2>
-    <p data-i18n="kreditKart.kartininLimitiniVeHazirki" class="hint">Kartının limitini və hazırkı borcunu yaz. Hər xərc avtomatik olaraq borcu artıracaq (mənfi tərəfə).</p>
+    <p data-i18n="kreditKart.kartininLimitiniVeHazirki" class="hint">Kartın limitini və cari borcunu yaz. Hər yeni xərc borcu avtomatik artıracaq.</p>
     <div style="margin-bottom:12px;">
       <label data-i18n="kreditKart.kreditLimitiAzn" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Kredit limiti (AZN)</label>
-      <input type="number" step="0.01" min="0" id="cardLimitInput" placeholder="Məs: 2000" data-i18n-placeholder="kreditKart.mes2000Placeholder">
+      <input type="number" step="0.01" min="0" id="cardLimitInput" placeholder="Məs.: 2000" data-i18n-placeholder="kreditKart.mes2000Placeholder">
     </div>
     <div style="margin-bottom:6px;">
       <label data-i18n="kreditKart.borcAzn" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Borc (AZN)</label>
-      <input type="number" step="0.01" max="0" id="cardBalanceInput" placeholder="Məs: -800" data-i18n-placeholder="kreditKart.mes800Placeholder">
+      <input type="number" step="0.01" max="0" id="cardBalanceInput" placeholder="Məs.: -800" data-i18n-placeholder="kreditKart.mes800Placeholder">
     </div>
     <div class="error-text" id="balanceError"></div>
     <div class="modal-footer">
@@ -215,16 +215,16 @@
 <div id="newCatModal" class="modal">
   <div class="modal-content">
     <h2 data-i18n="yeniKat.yeniKateqoriya">Yeni kateqoriya</h2>
-    <p data-i18n="yeniKat.adVerVeIstesen" class="hint">Ad ver və istəsən sabit bir məbləğ təyin et.</p>
+    <p data-i18n="yeniKat.adVerVeIstesen" class="hint">Ad ver və istəsən sabit məbləğ təyin et.</p>
     <div class="field-row" style="margin-bottom:10px;">
-      <input type="text" id="newCatName" placeholder="Məs: Metro, Kofe, Fatura" data-i18n-placeholder="yeniKat.mesMetroKofeFaturaPlaceholder">
+      <input type="text" id="newCatName" placeholder="Məs.: metro, qəhvə, kommunal" data-i18n-placeholder="yeniKat.mesMetroKofeFaturaPlaceholder">
     </div>
     <div class="field-row" style="margin-bottom:6px;">
-      <input type="number" step="0.01" min="0" id="newCatFixed" placeholder="Sabit tutar (boş = hər dəfə soruş)" data-i18n-placeholder="yeniKat.sabitTutarBosHerPlaceholder">
+      <input type="number" step="0.01" min="0" id="newCatFixed" placeholder="Sabit məbləğ (boş — hər dəfə soruşulsun)" data-i18n-placeholder="yeniKat.sabitTutarBosHerPlaceholder">
     </div>
     <label class="field-row" style="gap:8px; font-size:13px; color:var(--ink); margin:4px 0 10px; cursor:pointer;">
       <input type="checkbox" id="newCatAylik" style="width:auto;">
-      <span><span data-i18n="yeniKat.aylikSabitXercdir">📌 Aylıq sabit xərcdir</span> <span data-i18n="yeniKat.tikYoxdursaGunlukXerc" style="color:var(--muted);">(tik yoxdursa – günlük xərc)</span></span>
+      <span><span data-i18n="yeniKat.aylikSabitXercdir">📌 Aylıq sabit xərcdir</span> <span data-i18n="yeniKat.tikYoxdursaGunlukXerc" style="color:var(--muted);">(seçilməyibsə — gündəlik xərc)</span></span>
     </label>
     <div class="error-text" id="newCatError"></div>
     <div class="modal-footer">
@@ -238,25 +238,25 @@
      yaxud "➕ Yeni kateqoriya" ilə yenisini əlavə etmək üçün eyni panel istifadə olunur. -->
 <div id="catPanelModal" class="modal">
   <div class="modal-content">
-    <h2 data-i18n="katDuzenle.kateqoriyaniDuzenle" id="catPanelBaslik">Kateqoriyanı düzənlə</h2>
+    <h2 data-i18n="katDuzenle.kateqoriyaniDuzenle" id="catPanelBaslik">Kateqoriyanı dəyiş</h2>
     <div class="modal-item" style="border:none; background:transparent; padding:0;">
       <div class="field-row">
         <input type="text" id="catPanelIkon" style="width:52px; text-align:center;">
-        <input type="text" id="catPanelAd" placeholder="Kateqoriya adı" data-i18n-placeholder="katDuzenle.kateqoriyaAdiPlaceholder" style="flex:1;">
+        <input type="text" id="catPanelAd" placeholder="Kateqoriyanın adı" data-i18n-placeholder="katDuzenle.kateqoriyaAdiPlaceholder" style="flex:1;">
         <button id="catPanelSilBtn" onclick="catPanelSil()" style="background:none; border:none; cursor:pointer; font-size:14px;">🗑</button>
       </div>
       <label class="field-row" style="gap:8px; font-size:13px; font-weight:600; color:var(--ink); border-top:1px solid var(--line); padding-top:8px; cursor:pointer;">
         <input type="checkbox" id="catPanelAylik" style="width:auto;">
-        <span><span data-i18n="katDuzenle.aylikSabitXerc">📌 Aylıq sabit xərc</span> <span data-i18n="katDuzenle.tiksizGunluk" style="font-weight:400; color:var(--muted);">(tiksiz = günlük)</span></span>
+        <span><span data-i18n="katDuzenle.aylikSabitXerc">📌 Aylıq sabit xərc</span> <span data-i18n="katDuzenle.tiksizGunluk" style="font-weight:400; color:var(--muted);">(seçilməyibsə — gündəlik)</span></span>
       </label>
       <div class="field-row" style="font-size:12px; color:var(--muted); gap:6px;">
-        <span data-i18n="katDuzenle.sabitTutar">Sabit tutar:</span>
+        <span data-i18n="katDuzenle.sabitTutar">Sabit məbləğ:</span>
         <input type="number" step="0.01" min="0" id="catPanelSabit" placeholder="Soruş" data-i18n-placeholder="katDuzenle.sorusPlaceholder" style="width:78px;">
       </div>
       <div class="renk-grid" id="catPanelRenkGrid"></div>
       <label class="field-row" style="gap:6px; font-size:12px; color:var(--muted); padding-top:2px; cursor:pointer;">
         <input type="checkbox" id="catPanelSebeb" style="width:auto;">
-        <span data-i18n="katDuzenle.elaveEderkenSebebDe">Əlavə edərkən səbəb də soruşulsun</span>
+        <span data-i18n="katDuzenle.elaveEderkenSebebDe">Əlavə edəndə qeyd də soruşulsun</span>
       </label>
     </div>
     <div class="error-text" id="catPanelError"></div>
@@ -270,8 +270,8 @@
 <!-- Xərci düzəlt / köhnə tarixli xərc əlavə et -->
 <div id="islemFormModal" class="modal">
   <div class="modal-content">
-    <h2 data-i18n="islemForm.xerciDuzelt" id="islemFormBaslik">Xərci düzəlt</h2>
-    <p data-i18n="islemForm.kateqoriyaMeblegSebebVe" class="hint">Kateqoriya, məbləğ, səbəb və tarixi dəyiş.</p>
+    <h2 data-i18n="islemForm.xerciDuzelt" id="islemFormBaslik">Xərci dəyiş</h2>
+    <p data-i18n="islemForm.kateqoriyaMeblegSebebVe" class="hint">Kateqoriyanı, məbləği, qeydi və tarixi dəyiş.</p>
     <div style="margin-bottom:10px;">
       <label data-i18n="islemForm.kateqoriya" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Kateqoriya</label>
       <select id="islemFormKategori" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);"></select>
@@ -281,8 +281,8 @@
       <input type="number" step="0.01" min="0" id="islemFormTutar" placeholder="0.00">
     </div>
     <div style="margin-bottom:10px;">
-      <label data-i18n="islemForm.sebebIsteyeBagli" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Səbəb (istəyə bağlı)</label>
-      <input type="text" id="islemFormSebeb" placeholder="Məs: Taksi, hədiyyə..." data-i18n-placeholder="islemForm.mesTaksiHediyyePlaceholder">
+      <label data-i18n="islemForm.sebebIsteyeBagli" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Qeyd (istəyə bağlı)</label>
+      <input type="text" id="islemFormSebeb" placeholder="Məs.: taksi, hədiyyə..." data-i18n-placeholder="islemForm.mesTaksiHediyyePlaceholder">
     </div>
     <div style="margin-bottom:6px;">
       <label data-i18n="islemForm.tarix" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Tarix</label>
@@ -314,8 +314,8 @@
 <!-- Drive: available backups list to pick from -->
 <div id="driveBackupSecModal" class="modal">
   <div class="modal-content">
-    <h2 data-i18n="backupSec.hansiBackup">Hansı backup?</h2>
-    <p data-i18n="backupSec.driveAGonderilmisBackuplardan" class="hint">Drive-a göndərilmiş backuplardan birini seç.</p>
+    <h2 data-i18n="backupSec.hansiBackup">Hansı ehtiyat nüsxə?</h2>
+    <p data-i18n="backupSec.driveAGonderilmisBackuplardan" class="hint">Drive-a göndərdiyin ehtiyat nüsxələrdən birini seç.</p>
     <div id="driveBackupSecListesi" class="modal-list" style="max-height:320px;"></div>
     <div class="modal-footer" style="justify-content:flex-end;">
       <button data-i18n="umumi.bagla" class="btn btn-ghost" onclick="modalKapat('driveBackupSecModal')">Bağla</button>
@@ -338,8 +338,8 @@
 
     <div class="ayarlar-kutu" style="margin-bottom:14px;">
       <div class="ayarlar-setir-ic" style="gap:8px;">
-        <span class="ayarlar-metin" style="white-space:nowrap;" data-i18n="ayarlar.gunlukLimit">Günlük xərc limiti</span>
-        <div style="display:flex; gap:6px; align-items:center;">
+        <span class="ayarlar-metin" style="min-width:0; line-height:1.25;" data-i18n="ayarlar.gunlukLimit">Gündəlik xərc limiti</span>
+        <div style="display:flex; gap:6px; align-items:center; flex:none;">
           <input type="number" step="0.01" min="0" id="gunlukLimitInput" placeholder="20" style="width:64px; padding:8px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
           <button class="btn btn-primary" onclick="gunlukLimitYadSaxla()" style="white-space:nowrap; padding:8px 12px; font-size:13px;" data-i18n="umumi.yaddaSaxla">Yadda saxla</button>
         </div>
@@ -355,37 +355,37 @@
 
     <div class="ayarlar-kutu ayarlar-setir-ic" style="margin-bottom:8px;">
       <span id="temaLabel" style="display:flex; align-items:center;"></span>
-      <button class="theme-switch" id="temaSwitch" onclick="temaDeyis()" aria-label="Tema dəyiş" data-i18n-aria="ayarlar.temaDeyisAria"></button>
+      <button class="theme-switch" id="temaSwitch" onclick="temaDeyis()" aria-label="Temanı dəyiş" data-i18n-aria="ayarlar.temaDeyisAria"></button>
     </div>
 
     <div class="ayarlar-kutu" style="margin-bottom:14px;">
       <div class="ayarlar-setir-ic">
         <span id="kilidAyarLabel" style="display:flex; align-items:center;"></span>
-        <button class="toggle-switch" id="kilidAyarSwitch" onclick="kilidToggle()" aria-label="Tətbiq kilidini aç/bağla" data-i18n-aria="ayarlar.kilidToggleAria"></button>
+        <button class="toggle-switch" id="kilidAyarSwitch" onclick="kilidToggle()" aria-label="Tətbiq kilidini aç/söndür" data-i18n-aria="ayarlar.kilidToggleAria"></button>
       </div>
       <div class="error-text" id="kilidAyarError"></div>
     </div>
 
     <button class="ayarlar-kutu ayarlar-setir-ic" id="sistemBaslikBtn" style="margin-bottom:8px;" onclick="sistemBolmesiToggle()">
-      <span style="display:flex; align-items:center;"><span class="ayarlar-ikon">⚙️</span><span class="ayarlar-metin" data-i18n="ayarlar.sistem">System</span></span>
+      <span style="display:flex; align-items:center;"><span class="ayarlar-ikon">⚙️</span><span class="ayarlar-metin" data-i18n="ayarlar.sistem">Sistem</span></span>
       <span id="sistemBaslikOx" style="transition:transform .15s;">▾</span>
     </button>
     <div id="sistemBolmesi" style="display:none;">
 
-    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);" data-i18n="ayarlar.googleDriveBaslik">☁️ Google Drive (əl ilə yedəkləmə)</h3>
+    <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);" data-i18n="ayarlar.googleDriveBaslik">☁️ Google Drive (əl ilə ehtiyat nüsxə)</h3>
     <div class="drive-box" id="driveBox">
-      <div data-i18n="ayarlar.googleDriveABagli" class="drive-status" id="driveStatus">☁️ Google Drive-a bağlı deyil</div>
-      <div data-i18n="ayarlar.baglansanGonderVeCek" class="drive-sub" id="driveSub">Bağlansan, "Göndər" və "Çək" düymələri ilə özün idarə edəcəksən.</div>
+      <div data-i18n="ayarlar.googleDriveABagli" class="drive-status" id="driveStatus">☁️ Google Drive-a qoşulmayıb</div>
+      <div data-i18n="ayarlar.baglansanGonderVeCek" class="drive-sub" id="driveSub">Qoşulandan sonra məlumatlarını "Göndər" və "Yüklə" düymələri ilə özün idarə edəcəksən.</div>
       <div class="drive-sub" id="driveDebug" style="display:none;"></div>
       <div class="drive-btns" id="driveBtns">
-        <button data-i18n="ayarlar.baglan" onclick="driveBaglan()">Bağlan</button>
+        <button data-i18n="ayarlar.baglan" onclick="driveBaglan()">Qoşul</button>
       </div>
     </div>
 
     <h3 style="font-size:14px; margin:18px 0 10px; color:var(--ink);" data-i18n="ayarlar.hesabBaslik">⚡ Hesab</h3>
     <div class="drive-box" id="firebaseBox">
-      <div data-i18n="ayarlar.baglanmayib" class="drive-status" id="firebaseStatus">⚡ Bağlanmayıb</div>
-      <div data-i18n="ayarlar.daxilOlmamisan" class="drive-sub" id="firebaseSub">Daxil olmamısan.</div>
+      <div data-i18n="ayarlar.baglanmayib" class="drive-status" id="firebaseStatus">⚡ Qoşulmayıb</div>
+      <div data-i18n="ayarlar.daxilOlmamisan" class="drive-sub" id="firebaseSub">Hesaba daxil olmamısan.</div>
       <div class="drive-btns" id="firebaseBtns"></div>
     </div>
 
@@ -397,7 +397,7 @@
       <button class="btn btn-ghost" onclick="ayarlarPaneliniKapat()" data-i18n="umumi.bagla">Bağla</button>
     </div>
     <p style="text-align:center; font-size:11px; color:var(--muted); margin:18px 0 0;">Powered by Kanan Ibrahimov</p>
-    <p style="text-align:center; font-size:10px; color:var(--muted); margin:2px 0 0;"><span data-i18n="ayarlar.versiya">Version</span> <span id="tetbiqVersiyaGoster"></span></p>
+    <p style="text-align:center; font-size:10px; color:var(--muted); margin:2px 0 0;"><span data-i18n="ayarlar.versiya">Versiya</span> <span id="tetbiqVersiyaGoster"></span></p>
   </div>
 </div>
 
@@ -408,7 +408,7 @@
       <button onclick="dilPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
       <h2 style="margin:0; flex:1;" data-i18n="dil.basliq">🌐 Dil</h2>
     </div>
-    <p class="hint" data-i18n="dil.hint">Dil seçəndə tətbiq yenidən yüklənəcək.</p>
+    <p class="hint" data-i18n="dil.hint">Dili dəyişəndə tətbiq yenidən yüklənəcək.</p>
     <div id="dilSiyahisi" class="modal-list" style="flex:none; overflow:visible; gap:8px;"></div>
     <div class="error-text" id="dilXeta"></div>
     <div class="modal-footer" style="justify-content:flex-end; margin-top:16px;">
@@ -424,7 +424,7 @@
       <button onclick="yonetimPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
       <h2 data-i18n="ayarlar.kateqoriyalar" style="margin:0; flex:1;">Kateqoriyalar</h2>
     </div>
-    <p data-i18n="kateqoriyalar.adiniIkonunuRenginiSabit" class="hint">Adını, ikonunu, rəngini, sabit qiymətini və günlük/aylıq növünü dəyiş.</p>
+    <p data-i18n="kateqoriyalar.adiniIkonunuRenginiSabit" class="hint">Adı, ikonu, rəngi, sabit məbləği və növü (gündəlik/aylıq) dəyiş.</p>
     <div id="kategoriDuzenlemeListesi" class="modal-list"></div>
     <div class="modal-footer" style="justify-content:space-between;">
       <button data-i18n="kateqoriyalar.yeniKateqoriya" class="btn btn-ghost" onclick="yeniKategoriModalAc()">➕ Yeni kateqoriya</button>
@@ -438,7 +438,7 @@
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="aylikHesabatPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
-      <h2 data-i18n="aylik.buAyHaraPul" style="margin:0; flex:1;">Bu ay hara pul gedir?</h2>
+      <h2 data-i18n="aylik.buAyHaraPul" style="margin:0; flex:1;">Bu ay pulun hara gedir?</h2>
     </div>
     <div class="hesabat-cemi-card">
       <div data-i18n="aylik.buAyXerclediyin" class="k">Bu ay xərclədiyin</div>
@@ -446,7 +446,7 @@
       <div class="k" id="aylikHesabatAlt" style="margin-top:4px; font-weight:500;"></div>
     </div>
 
-    <h3 data-i18n="aylik.gunlukXercler" class="hesabat-bolme-basliq">🛒 Günlük xərclər</h3>
+    <h3 data-i18n="aylik.gunlukXercler" class="hesabat-bolme-basliq">🛒 Gündəlik xərclər</h3>
     <div class="hesabat-kart">
       <div class="donut-sarici" id="aylikGunlukSarici">
         <canvas id="aylikGunlukCanvas"></canvas>
@@ -467,11 +467,11 @@
       <div id="aylikSabitListesi"></div>
     </div>
 
-    <h3 data-i18n="aylik.gunlukXercTrendiBu" style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Günlük xərc trendi (bu ay)</h3>
+    <h3 data-i18n="aylik.gunlukXercTrendiBu" style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Gündəlik xərc dinamikası (bu ay)</h3>
     <div style="background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); padding:14px; margin-bottom:16px;">
       <canvas id="aylikTrendCanvas" height="160"></canvas>
     </div>
-    <h3 data-i18n="aylik.kecenAyaGore" style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Keçən aya görə</h3>
+    <h3 data-i18n="aylik.kecenAyaGore" style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Keçən ayla müqayisə</h3>
     <div id="aylikHesabatTrend"></div>
     <div class="modal-footer">
       <button data-i18n="umumi.bagla" class="btn btn-primary" onclick="aylikHesabatPaneliniKapat()">Bağla</button>
@@ -496,15 +496,15 @@
 <!-- Kredit borcu (taksitli kredit) düzəliş modalı -->
 <div id="krediBorcuDuzeltModal" class="modal">
   <div class="modal-content">
-    <h2 data-i18n="krediBorc.kreditBorcunuDuzelt">Kredit borcunu düzəlt</h2>
-    <p data-i18n="krediBorc.ayliqTaksitMebleginiTaksit" class="hint">Aylıq taksit məbləğini, taksit sayını və başlanğıc tarixini özün təyin et.</p>
+    <h2 data-i18n="krediBorc.kreditBorcunuDuzelt">Kredit xəttini dəyiş</h2>
+    <p data-i18n="krediBorc.ayliqTaksitMebleginiTaksit" class="hint">Aylıq taksitin məbləğini, taksit sayını və başlanğıc tarixini yaz.</p>
     <div style="margin-bottom:12px;">
       <label data-i18n="krediBorc.ayliqTaksitAzn" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Aylıq taksit (AZN)</label>
-      <input type="number" step="0.01" min="0" id="krediBorcuDuzeltMebleg" placeholder="Məs: 550" data-i18n-placeholder="krediBorc.mes550Placeholder">
+      <input type="number" step="0.01" min="0" id="krediBorcuDuzeltMebleg" placeholder="Məs.: 550" data-i18n-placeholder="krediBorc.mes550Placeholder">
     </div>
     <div style="margin-bottom:12px;">
-      <label data-i18n="krediBorc.taksitSayisi" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Taksit sayısı</label>
-      <input type="number" step="1" min="1" id="krediBorcuDuzeltSayi" placeholder="Məs: 8" data-i18n-placeholder="krediBorc.mes8Placeholder">
+      <label data-i18n="krediBorc.taksitSayisi" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Taksit sayı</label>
+      <input type="number" step="1" min="1" id="krediBorcuDuzeltSayi" placeholder="Məs.: 8" data-i18n-placeholder="krediBorc.mes8Placeholder">
     </div>
     <div style="margin-bottom:6px;">
       <label data-i18n="krediBorc.baslangicTarixi" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Başlanğıc tarixi</label>
@@ -540,18 +540,18 @@
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="hesablarPaneliniKapat()" style="background:none; border:none; font-size:18px; color:var(--brand-ink); cursor:pointer; padding:0 8px 0 0;">←</button>
-      <h2 style="margin:0; flex:1;" data-i18n="hesablar.basliq">Hesablar və Borclar</h2>
+      <h2 style="margin:0; flex:1;" data-i18n="hesablar.basliq">Hesablar və borclar</h2>
     </div>
 
     <div class="hesab-add-head" style="margin-top:6px;">
       <h3 data-i18n="hesablar.hesablarim">Hesablarım</h3>
       <button class="hesab-add-btn" onclick="hesabSecModalAc()" title="Hesab əlavə et" data-i18n-title="hesablar.hesabElaveEtTitle">+</button>
     </div>
-    <p class="hint" data-i18n="hesablar.hint">Hesablarının balansına bax, düzəlt və aralarında transfer et.</p>
+    <p class="hint" data-i18n="hesablar.hint">Balanslarına bax, onları dəyiş və hesablar arasında pul köçür.</p>
     <div id="hesablarKartlari" class="modal-list" style="gap:10px; flex:none; overflow:visible; max-height:none;"></div>
-    <button class="btn btn-primary" onclick="transferModalAc()" style="width:100%; margin-bottom:14px;" data-i18n="hesablar.hesablarArasiTransfer">🔁 Hesablar arası transfer</button>
+    <button class="btn btn-primary" onclick="transferModalAc()" style="width:100%; margin-bottom:14px;" data-i18n="hesablar.hesablarArasiTransfer">🔁 Hesablar arasında köçürmə</button>
 
-    <div class="history-head" style="margin-top:4px;"><span data-i18n="hesablar.sonTransferler">Son transferlər</span></div>
+    <div class="history-head" style="margin-top:4px;"><span data-i18n="hesablar.sonTransferler">Son köçürmələr</span></div>
     <div id="hesabTransferTarixce" class="modal-list" style="max-height:160px; flex:none; margin-bottom:14px;"></div>
 
     <div class="modal-footer" style="justify-content:flex-end;">
@@ -564,7 +564,7 @@
 <div id="hesabSecModal" class="modal">
   <div class="modal-content">
     <h2 data-i18n="hesabSec.basliq">Hansı hesabı əlavə edirsən?</h2>
-    <p class="hint" data-i18n="hesabSec.hint">Bir hesab növü seç, sonra ondan istəniləni doldur.</p>
+    <p class="hint" data-i18n="hesabSec.hint">Hesab növünü seç və məlumatlarını doldur.</p>
     <div id="hesabSecListesi"></div>
     <div class="modal-footer" style="justify-content:flex-end;">
       <button class="btn btn-ghost" onclick="modalKapat('hesabSecModal')" data-i18n="umumi.legvEt">Ləğv et</button>
@@ -575,8 +575,8 @@
 <!-- Cash / Debit balance quick-edit modal -->
 <div id="hesabDuzeltModal" class="modal">
   <div class="modal-content">
-    <h2 id="hesabDuzeltBaslik" data-i18n="hesabDuzelt.basliq">Balansı düzəlt</h2>
-    <p class="hint" data-i18n="hesabDuzelt.hint">Bu hesabın hazırkı balansını yaz.</p>
+    <h2 id="hesabDuzeltBaslik" data-i18n="hesabDuzelt.basliq">Balansı dəyiş</h2>
+    <p class="hint" data-i18n="hesabDuzelt.hint">Bu hesabın cari balansını yaz.</p>
     <input type="number" step="0.01" id="hesabDuzeltInput" placeholder="0.00">
     <div class="error-text" id="hesabDuzeltError"></div>
     <div class="modal-footer">
@@ -589,35 +589,35 @@
 <!-- Transfer modal -->
 <div id="transferModal" class="modal">
   <div class="modal-content">
-    <h2 data-i18n="transfer.basliq">Transfer et</h2>
-    <p class="hint" data-i18n="transfer.hint">Bir hesabdan digərinə məbləğ köçür.</p>
+    <h2 data-i18n="transfer.basliq">Köçürmə</h2>
+    <p class="hint" data-i18n="transfer.hint">Bir hesabdan digərinə pul köçür.</p>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.menbeHesab">Mənbə hesab</label>
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.menbeHesab">Hansı hesabdan</label>
       <select id="transferMenbe" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
-        <option value="nagd" data-i18n="hesabNovu.nagd">💵 Cash Hesab</option>
-        <option value="debit" data-i18n="hesabNovu.debit">🏦 Debit bank Hesabım</option>
-        <option value="depozit" data-i18n="hesabNovu.depozit">🏛️ Bank Deposit Hesabım</option>
-        <option value="kredit" data-i18n="hesabNovu.kredit">💳 Kredi kartı Hesabım</option>
+        <option value="nagd" data-i18n="hesabNovu.nagd">💵 Nağd pul</option>
+        <option value="debit" data-i18n="hesabNovu.debit">🏦 Debet kartı</option>
+        <option value="depozit" data-i18n="hesabNovu.depozit">🏛️ Depozit</option>
+        <option value="kredit" data-i18n="hesabNovu.kredit">💳 Kredit kartı</option>
       </select>
     </div>
     <div style="margin-bottom:12px;">
-      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.hedefHesab">Hədəf hesab</label>
+      <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.hedefHesab">Hansı hesaba</label>
       <select id="transferHedef" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
-        <option value="debit" data-i18n="hesabNovu.debit">🏦 Debit bank Hesabım</option>
-        <option value="depozit" data-i18n="hesabNovu.depozit">🏛️ Bank Deposit Hesabım</option>
-        <option value="kredit" data-i18n="hesabNovu.kredit">💳 Kredi kartı Hesabım</option>
-        <option value="nagd" data-i18n="hesabNovu.nagd">💵 Cash Hesab</option>
-        <option value="krediXett" data-i18n="hesabNovu.krediXett">🧾 Kredit xətt (ödəniş)</option>
+        <option value="debit" data-i18n="hesabNovu.debit">🏦 Debet kartı</option>
+        <option value="depozit" data-i18n="hesabNovu.depozit">🏛️ Depozit</option>
+        <option value="kredit" data-i18n="hesabNovu.kredit">💳 Kredit kartı</option>
+        <option value="nagd" data-i18n="hesabNovu.nagd">💵 Nağd pul</option>
+        <option value="krediXett" data-i18n="hesabNovu.krediXett">🧾 Kredit xətti (ödəniş)</option>
       </select>
     </div>
     <div style="margin-bottom:6px;">
       <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.meblegLbl">Məbləğ (AZN)</label>
-      <input type="number" step="0.01" min="0" id="transferMebleg" placeholder="Məs: 100" data-i18n-placeholder="transfer.meblegPlaceholder">
+      <input type="number" step="0.01" min="0" id="transferMebleg" placeholder="Məs.: 100" data-i18n-placeholder="transfer.meblegPlaceholder">
     </div>
     <div class="error-text" id="transferError"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="modalKapat('transferModal')" data-i18n="umumi.legvEt">Ləğv et</button>
-      <button class="btn btn-primary" onclick="transferOnayla()" data-i18n="transfer.transferEt">Transfer et</button>
+      <button class="btn btn-primary" onclick="transferOnayla()" data-i18n="transfer.transferEt">Köçür</button>
     </div>
   </div>
 </div>
