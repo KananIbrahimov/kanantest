@@ -5,6 +5,7 @@
 
 // VACİB: Hər yeni versiya buraxdıqda bu adı artır (v3 → v4 → v5 ...).
 // Bu, köhnə keşin avtomatik təmizlənməsini təmin edir.
+// (v27: Çox hesablı sistem (js/hesablar.js): ⭐ əsas hesab, bank/kart, mənfi balans icazəsi, hesabat tiki, kredit ödənişi, aylıq əməliyyatlar.)
 // (v26: Loqo SM monoqramına dəyişdi (hərfli), brend şrifti fonts/brand.woff.)
 // (v25: Yeni premium loqo (qrafit + gümüşü seyf çarxı) və 'SAFE MONEY' yazısı; ikonlar yeniləndi.)
 // (v24: Başlıqlar 3 dildə aydınlaşdırıldı (Borclar, Hesabat); 'Bu ay gündə orta' düzgün hesablanır.)
@@ -24,7 +25,7 @@
 // (v10: dil faylları (lang/*.json) üçün network-first əlavə edildi.)
 // (v9: ad "Safe Money" olaraq dəyişdi və yeni logo əlavə edildi — köhnə keşlənmiş
 // ikonların/title-ın istifadəçilərdə qalmaması üçün versiya artırıldı.)
-const CACHE_ADI = 'safe-money-cache-v26';
+const CACHE_ADI = 'safe-money-cache-v27';
 
 const KESLENECEK_FAYLLAR = [
   './index.html',
@@ -41,6 +42,7 @@ const KESLENECEK_FAYLLAR = [
   './js/auth.js',
   './js/sync.js',
   './js/storage.js',
+  './js/hesablar.js',
   './js/app.js',
   './lang/az.json',
   './lang/en.json',

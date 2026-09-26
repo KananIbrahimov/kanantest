@@ -1,5 +1,5 @@
 /* Safe Money — vəziyyət, yükləmə, yadda saxlama */
-const APP_VERSION = '3.13'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
+const APP_VERSION = '3.14'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
 let aktifDonem = 'gunluk';
 let goruntulenenTarix = new Date(); goruntulenenTarix.setHours(0, 0, 0, 0);
 let kategoriler = [];
@@ -16,6 +16,8 @@ let hesabTransferleri = []; // hesablar arası transfer tarixçəsi
 let gunlukLimit = null; // gündəlik xərc limiti — istifadəçi "Ayarlar" bölməsindən özü təyin edir, invented default yoxdur
 let hesabEklenib = { nagd: false, debit: false, depozit: false }; // hansı hesablar "+" ilə əlavə edilib
 let veriYuklendi = false;
+// Qonaq (nümunə) rejimi: data yalnız yaddaşdadır, buluda heç nə yazılmır.
+let demoRejim = false;
 // TƏHLÜKƏSİZLİK QIFILI: true YALNIZ bulud vəziyyəti QƏTİ şəkildə təsdiqlənəndə olur —
 // ya həqiqi data uğurla oxunub, ya da sənədin HƏQİQƏTƏN boş (yeni key) olduğu təsdiqlənib,
 // ya da ümumiyyətlə heç bir Sync Key yoxdur (təklikdə iş rejimi). Bağlantı xətası/vaxt
@@ -93,6 +95,7 @@ function yerliVeriniYukle() {
   debitBakiye = 0;
   depozitBakiye = 0;
   hesabTransferleri = [];
+  hesablar = [];
   gunlukLimit = null;
   hesabEklenib = { nagd: false, debit: false, depozit: false };
   sonDeyisiklikVaxti = null;
@@ -172,6 +175,7 @@ async function veriYukle() {
 async function veriKaydet() {
   try {
     sonDeyisiklikVaxti = new Date().toISOString();
+    if (demoRejim) return; // nümunə rejimi: heç nə saxlanılmır
     // TƏHLÜKƏSİZLİK QIFILI: bulud vəziyyəti hələ təsdiqlənməyibsə (bağlantı
     // gözlənilir/uğursuzdur), Firestore-a HEÇ NƏ yazma — əks halda ekranda
     // görünən müvəqqəti boş vəziyyət əsl buludda olan datanın üzərinə yazılıb

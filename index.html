@@ -35,7 +35,9 @@
     <input type="email" id="emailGirisEmail" placeholder="E-poçt" data-i18n-placeholder="giris.ePoctPlaceholder" autocomplete="username" style="width:100%; margin-bottom:8px; box-sizing:border-box;">
     <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən azı 6 simvol)" data-i18n-placeholder="giris.sifreEnAz6Placeholder" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
     <button data-i18n="giris.daxilOl" class="btn btn-primary" onclick="emailIleGirisEt()" style="width:100%; margin-bottom:8px;">Daxil ol</button>
+    <button type="button" class="link-btn" onclick="sifreSifirla()" data-i18n="giris.sifreniUnutdum">Şifrəni unutdum</button>
     <button data-i18n="giris.hesabYaratIlkDefedirse" class="btn btn-ghost" onclick="qeydiyyatModalAc()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Hesab yarat (ilk dəfədirsə)</button>
+    <button type="button" class="btn btn-ghost qonaq-btn" onclick="qonaqKimiDaxilOl()" data-i18n="giris.qonaq">Qonaq kimi bax</button>
     <button data-i18n="giris.tesdiqEPoctunuYeniden" class="btn btn-ghost" id="tesdiqYenidenBtn" onclick="tesdiqEmailiYenidenGonder()" style="width:100%; margin-bottom:10px; border:1px solid var(--line); display:none;">Təsdiq məktubunu yenidən göndər</button>
     <div class="error-text" id="googleGirisXeta"></div>
   </div>
@@ -190,27 +192,6 @@
   </div>
 </div>
 
-<!-- Credit card modal: limit + actual balance -->
-<div id="balanceModal" class="modal">
-  <div class="modal-content">
-    <h2 data-i18n="kreditKart.kreditKarti">Kredit kartı</h2>
-    <p data-i18n="kreditKart.kartininLimitiniVeHazirki" class="hint">Kartın limitini və cari borcunu yaz. Hər yeni xərc borcu avtomatik artıracaq.</p>
-    <div style="margin-bottom:12px;">
-      <label data-i18n="kreditKart.kreditLimitiAzn" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Kredit limiti (AZN)</label>
-      <input type="number" step="0.01" min="0" id="cardLimitInput" placeholder="Məs.: 2000" data-i18n-placeholder="kreditKart.mes2000Placeholder">
-    </div>
-    <div style="margin-bottom:6px;">
-      <label data-i18n="kreditKart.borcAzn" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Borc (AZN)</label>
-      <input type="number" step="0.01" max="0" id="cardBalanceInput" placeholder="Məs.: -800" data-i18n-placeholder="kreditKart.mes800Placeholder">
-    </div>
-    <div class="error-text" id="balanceError"></div>
-    <div class="modal-footer">
-      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('balanceModal')">Ləğv et</button>
-      <button data-i18n="umumi.yaddaSaxla" class="btn btn-primary" onclick="balanceModalOnayla()">Yadda saxla</button>
-    </div>
-  </div>
-</div>
-
 <!-- New category modal -->
 <div id="newCatModal" class="modal">
   <div class="modal-content">
@@ -349,8 +330,9 @@
 
     <div style="display:flex; gap:8px; margin-bottom:8px;">
       <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; flex:1; min-width:0;" onclick="ayarlarKateqoriyalarAc()"><span class="ayarlar-ikon"><i data-ikon="kateqoriya"></i></span><span class="ayarlar-metin" data-i18n="ayarlar.kateqoriyalar">Kateqoriyalar</span></button>
-      <button class="ayarlar-kutu ayarlar-setir-ic" id="dilAyarBtn" style="justify-content:flex-start; flex:1; min-width:0;" onclick="dilPaneliniAc()"><span class="ayarlar-ikon"><i data-ikon="dil"></i></span><span class="ayarlar-metin" data-i18n="ayarlar.dil">Dil</span></button>
+      <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; flex:1; min-width:0;" onclick="hesabIdareAc()"><span class="ayarlar-ikon"><i data-ikon="hesablar"></i></span><span class="ayarlar-metin" data-i18n="hesablar.basliq">Hesablar</span></button>
     </div>
+    <button class="ayarlar-kutu ayarlar-setir-ic" id="dilAyarBtn" style="justify-content:flex-start; margin-bottom:8px;" onclick="dilPaneliniAc()"><span class="ayarlar-ikon"><i data-ikon="dil"></i></span><span class="ayarlar-metin" data-i18n="ayarlar.dil">Dil</span></button>
     <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:8px;" onclick="ayarlarSonEmeliyyatlarAc()"><span class="ayarlar-ikon"><i data-ikon="tarixce"></i></span><span class="ayarlar-metin" data-i18n="ayarlar.sonEmeliyyatlar">Son əməliyyatlar</span></button>
 
     <!-- İstək 2: sıra — Yenilə → Sistem (tema, kilid, Google Drive) → Hesab (həmişə görünür, ən altda) -->
@@ -476,6 +458,8 @@
     <div style="background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); padding:14px; margin-bottom:16px;">
       <canvas id="aylikTrendCanvas" height="160"></canvas>
     </div>
+    <h3 class="hesabat-bolme-basliq" id="aylikHesablarBaslik" data-i18n="hesablar.basliq">Hesablar</h3>
+    <div id="aylikHesablar"></div>
     <h3 data-i18n="aylik.kecenAyaGore" style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Keçən ayla müqayisə</h3>
     <div id="aylikHesabatTrend"></div>
     <div class="modal-footer">
@@ -516,95 +500,110 @@
   </div>
 </div>
 
-<!-- Kredit borcu (taksitli kredit) düzəliş modalı -->
-<div id="krediBorcuDuzeltModal" class="modal">
-  <div class="modal-content">
-    <h2 data-i18n="krediBorc.kreditBorcunuDuzelt">Kredit xəttini dəyiş</h2>
-    <p data-i18n="krediBorc.ayliqTaksitMebleginiTaksit" class="hint">Aylıq taksitin məbləğini, taksit sayını və başlanğıc tarixini yaz.</p>
-    <div style="margin-bottom:12px;">
-      <label data-i18n="krediBorc.ayliqTaksitAzn" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Aylıq taksit (AZN)</label>
-      <input type="number" step="0.01" min="0" id="krediBorcuDuzeltMebleg" placeholder="Məs.: 550" data-i18n-placeholder="krediBorc.mes550Placeholder">
-    </div>
-    <div style="margin-bottom:12px;">
-      <label data-i18n="krediBorc.taksitSayisi" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Taksit sayı</label>
-      <input type="number" step="1" min="1" id="krediBorcuDuzeltSayi" placeholder="Məs.: 8" data-i18n-placeholder="krediBorc.mes8Placeholder">
-    </div>
-    <div style="margin-bottom:6px;">
-      <label data-i18n="krediBorc.baslangicTarixi" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Başlanğıc tarixi</label>
-      <input type="date" id="krediBorcuDuzeltBaslangic">
-    </div>
-    <div class="error-text" id="krediBorcuDuzeltError"></div>
-    <div class="modal-footer">
-      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('krediBorcuDuzeltModal')">Ləğv et</button>
-      <button data-i18n="umumi.yaddaSaxla" class="btn btn-primary" onclick="krediBorcuDuzeltOnayla()">Yadda saxla</button>
-    </div>
-  </div>
-</div>
-
-<!-- Kredit taksiti: hansı hesabdan ödənəcək -->
-<div id="taksitOdeModal" class="modal">
-  <div class="modal-content">
-    <h2 data-i18n="taksitOde.taksitiOde">Taksiti ödə</h2>
-    <p class="hint" id="taksitOdeInfo"></p>
-    <div style="margin-bottom:6px;">
-      <label data-i18n="taksitOde.hansiHesabdanOdenilsin" style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;">Hansı hesabdan ödənilsin?</label>
-      <select id="taksitOdeMenbe" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);"></select>
-    </div>
-    <div class="error-text" id="taksitOdeError"></div>
-    <div class="modal-footer">
-      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('taksitOdeModal')">Ləğv et</button>
-      <button data-i18n="taksitOde.ode" class="btn btn-primary" onclick="krediBorcuOdeOnayla()">Ödə</button>
-    </div>
-  </div>
-</div>
-
 <!-- Hesablar və Borclar page: Cash / Kredi kartı / Debit bank / Deposit + transfer + Güncel Borclar (birləşdirilib) -->
 <div id="hesablarModal" class="page-screen">
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="hesablarPaneliniKapat()" class="geri-btn" aria-label="Geri"><i data-ikon="geri" data-olcu="22"></i></button>
       <h2 style="margin:0; flex:1;" data-i18n="hesablar.basliq">Hesablar</h2>
+      <button class="hesab-add-btn" onclick="hesabFormAc(null, 'hesablar')" title="Hesab əlavə et" data-i18n-title="hesablar.hesabElaveEtTitle" aria-label="Hesab əlavə et"><i data-ikon="artir" data-olcu="18"></i></button>
+    </div>
+    <p class="hint" data-i18n="hesab.sekmeHint" style="margin:10px 0 12px;">Ulduzlu hesab əsas hesabdır — bütün xərclər ondan çıxılır.</p>
+    <div id="hesablarKartlari" class="hesab-kartlar"></div>
+    <div class="hesab-emeliyyat-btnlar">
+      <button class="btn btn-primary btn-ikonlu" id="transferBtn" onclick="transferModalAc()"><i data-ikon="kocurme" data-olcu="18"></i><span data-i18n="transfer.basliq">Köçürmə</span></button>
+      <button class="btn btn-primary btn-ikonlu" id="krediOdeBtn" onclick="krediOdeModalAc()"><i data-ikon="krediXett" data-olcu="18"></i><span data-i18n="hesab.krediOdenisi">Kredit ödənişi</span></button>
     </div>
 
-    <div class="hesab-add-head" style="margin-top:6px;">
-      <h3 data-i18n="hesablar.hesablarim">Hesablarım</h3>
-      <button class="hesab-add-btn" onclick="hesabSecModalAc()" title="Hesab əlavə et" data-i18n-title="hesablar.hesabElaveEtTitle" aria-label="Hesab əlavə et"><i data-ikon="artir" data-olcu="18"></i></button>
+    <div class="history-head" style="margin-top:6px;"><span data-i18n="hesab.emeliyyatlar">Əməliyyatlar</span></div>
+    <div class="filtr-kart">
+      <div class="ay-nav">
+        <button class="date-nav-arrow" onclick="hesabAyDeyis(-1)" aria-label="‹"><i data-ikon="sol" data-olcu="18"></i></button>
+        <div class="ay-nav-etiket" id="hesabAyEtiket"></div>
+        <button class="date-nav-arrow" id="hesabAyIreli" onclick="hesabAyDeyis(1)" aria-label="›"><i data-ikon="sag" data-olcu="18"></i></button>
+      </div>
+      <select id="hesabFiltr" class="filtr-inp" onchange="hesabFiltrDeyisdi()" style="margin:10px 0 0;"></select>
     </div>
-    <p class="hint" data-i18n="hesablar.hint">Balanslarına bax, onları dəyiş və hesablar arasında pul köçür.</p>
-    <div id="hesablarKartlari" class="modal-list" style="gap:10px; flex:none; overflow:visible; max-height:none;"></div>
-    <button class="btn btn-primary btn-ikonlu" onclick="transferModalAc()" style="width:100%; margin-bottom:14px;"><i data-ikon="kocurme" data-olcu="18"></i><span data-i18n="hesablar.hesablarArasiTransfer">Hesablar arasında köçürmə</span></button>
-
-    <div class="history-head" style="margin-top:4px;"><span data-i18n="hesablar.sonTransferler">Son köçürmələr</span></div>
-    <div id="hesabTransferTarixce" class="modal-list" style="max-height:160px; flex:none; margin-bottom:14px;"></div>
-
-    <div class="modal-footer" style="justify-content:flex-end;">
-      <button class="btn btn-ghost" onclick="hesablarPaneliniKapat()" data-i18n="umumi.bagla">Bağla</button>
-    </div>
+    <div class="filtr-netice" id="hesabAyNetice"></div>
+    <div id="hesabTransferTarixce"></div>
   </div>
 </div>
 
-<!-- Hesab əlavə et: 5 seçim -->
-<div id="hesabSecModal" class="modal">
-  <div class="modal-content">
-    <h2 data-i18n="hesabSec.basliq">Hansı hesabı əlavə edirsən?</h2>
-    <p class="hint" data-i18n="hesabSec.hint">Hesab növünü seç və məlumatlarını doldur.</p>
-    <div id="hesabSecListesi"></div>
-    <div class="modal-footer" style="justify-content:flex-end;">
-      <button class="btn btn-ghost" onclick="modalKapat('hesabSecModal')" data-i18n="umumi.legvEt">Ləğv et</button>
+<!-- Ayarlar → Hesablar: hesabların idarəsi -->
+<div id="hesabIdareModal" class="page-screen">
+  <div class="page-inner">
+    <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
+      <button onclick="hesabIdareKapat()" class="geri-btn" aria-label="Geri"><i data-ikon="geri" data-olcu="22"></i></button>
+      <h2 style="margin:0; flex:1;" data-i18n="hesablar.basliq">Hesablar</h2>
     </div>
+    <p class="hint" data-i18n="hesab.idareHint" style="margin:10px 0 12px;">Hesab əlavə et, məlumatlarını və balansını dəyiş.</p>
+    <button class="btn btn-primary btn-ikonlu" onclick="hesabFormAc(null, 'idare')" style="width:100%; margin-bottom:12px;"><i data-ikon="artir" data-olcu="18"></i><span data-i18n="hesab.yeni">Yeni hesab</span></button>
+    <div id="hesabIdareListe" class="hesab-kartlar"></div>
   </div>
 </div>
 
-<!-- Cash / Debit balance quick-edit modal -->
-<div id="hesabDuzeltModal" class="modal">
+<!-- Hesab formu: əlavə et / dəyiş (tam ekran) -->
+<div id="hesabFormModal" class="page-screen">
+  <div class="page-inner">
+    <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:12px;">
+      <button onclick="hesabFormKapat()" class="geri-btn" aria-label="Geri"><i data-ikon="geri" data-olcu="22"></i></button>
+      <h2 style="margin:0; flex:1;" id="hesabFormBaslik">Yeni hesab</h2>
+    </div>
+    <div id="hfNovSecim" class="hf-blok">
+      <label class="filtr-lbl" data-i18n="hesab.nov">Hesab növü</label>
+      <div class="nov-secim">
+        <button type="button" data-tip="nagd" onclick="hesabFormNovSec('nagd')"><i data-ikon="nagd"></i><span data-i18n="hesabAd.nagd">Nağd pul</span></button>
+        <button type="button" data-tip="debit" onclick="hesabFormNovSec('debit')"><i data-ikon="debit"></i><span data-i18n="hesabAd.debit">Debet kartı</span></button>
+        <button type="button" data-tip="kredit" onclick="hesabFormNovSec('kredit')"><i data-ikon="kredit"></i><span data-i18n="hesabAd.kredit">Kredit kartı</span></button>
+        <button type="button" data-tip="depozit" onclick="hesabFormNovSec('depozit')"><i data-ikon="depozit"></i><span data-i18n="hesabAd.depozit">Depozit</span></button>
+        <button type="button" data-tip="krediXett" onclick="hesabFormNovSec('krediXett')"><i data-ikon="krediXett"></i><span data-i18n="hesabAd.krediXett">Kredit xətti</span></button>
+      </div>
+    </div>
+    <div class="filtr-kart">
+      <label class="filtr-lbl" for="hfAd" data-i18n="hesab.ad">Hesabın adı</label>
+      <input type="text" id="hfAd" class="filtr-inp" maxlength="40">
+      <div id="hfBankSatir" class="hf-satir"><label class="filtr-lbl" for="hfBank" data-i18n="hesab.bank">Bankın adı</label><input type="text" id="hfBank" class="filtr-inp" maxlength="40" placeholder="Məs.: Kapital Bank" data-i18n-placeholder="hesab.bankPlaceholder"></div>
+      <div id="hfKartSatir" class="hf-satir"><label class="filtr-lbl" for="hfKart" data-i18n="hesab.kart">Kartın son 4 rəqəmi</label><input type="text" id="hfKart" class="filtr-inp" inputmode="numeric" maxlength="4" placeholder="0000"></div>
+      <div id="hfBalansSatir" class="hf-satir"><label class="filtr-lbl" for="hfBalans" id="hfBalansLbl" data-i18n="hesab.balans">Balans (AZN)</label><input type="number" step="0.01" id="hfBalans" class="filtr-inp" placeholder="0.00"></div>
+      <div id="hfLimitSatir" class="hf-satir"><label class="filtr-lbl" for="hfLimit" data-i18n="kreditKart.kreditLimitiAzn">Kredit limiti (AZN)</label><input type="number" step="0.01" min="0" id="hfLimit" class="filtr-inp" placeholder="Məs.: 2000" data-i18n-placeholder="kreditKart.mes2000Placeholder"></div>
+      <div id="hfXettBlok" class="hf-satir">
+        <label class="filtr-lbl" for="hfBaslangic" data-i18n="krediBorc.baslangicTarixi">Başlanğıc tarixi</label><input type="date" id="hfBaslangic" class="filtr-inp" oninput="hesabFormXettHesabla()">
+        <div class="hf-iki">
+          <div><label class="filtr-lbl" for="hfSay" data-i18n="krediBorc.taksitSayisi">Taksit sayı</label><input type="number" step="1" min="1" id="hfSay" class="filtr-inp" oninput="hesabFormXettHesabla()" placeholder="Məs.: 8" data-i18n-placeholder="krediBorc.mes8Placeholder"></div>
+          <div><label class="filtr-lbl" for="hfOdenmis" data-i18n="hesab.odenmis">Ödənilmiş taksit</label><input type="number" step="1" min="0" id="hfOdenmis" class="filtr-inp" oninput="hesabFormXettHesabla()" placeholder="0"></div>
+        </div>
+        <label class="filtr-lbl" for="hfAylik" data-i18n="krediBorc.ayliqTaksitAzn">Aylıq taksit (AZN)</label><input type="number" step="0.01" min="0" id="hfAylik" class="filtr-inp" oninput="hesabFormXettHesabla()" placeholder="Məs.: 550" data-i18n-placeholder="krediBorc.mes550Placeholder">
+        <div class="hf-netice" id="hfXettNetice"></div>
+      </div>
+    </div>
+    <div class="filtr-kart hf-tikler">
+      <label id="hfAnaSatir" class="hf-tik"><input type="checkbox" id="hfAna"><span><b data-i18n="hesab.anaBaslik">Əsas hesab</b><small data-i18n="hesab.anaIzah">Bütün xərclər yalnız bu hesabdan çıxılır. Yalnız bir hesab əsas ola bilər.</small></span></label>
+      <label id="hfMenfiSatir" class="hf-tik"><input type="checkbox" id="hfMenfi"><span><b data-i18n="hesab.menfiBaslik">Mənfi balansa icazə ver</b><small data-i18n="hesab.menfiIzah">Söndürülübsə, balansdan artıq xərc və köçürmə etmək olmur.</small></span></label>
+      <label class="hf-tik"><input type="checkbox" id="hfHesabat"><span><b data-i18n="hesab.hesabatBaslik">Hesabatda göstər</b><small data-i18n="hesab.hesabatIzah">Hesabat səhifəsində bu hesabın aylıq xülasəsi görünür.</small></span></label>
+    </div>
+    <div class="error-text" id="hesabFormError"></div>
+    <button class="btn btn-primary" onclick="hesabFormSaxla()" style="width:100%; margin:6px 0 10px;" data-i18n="umumi.yaddaSaxla">Yadda saxla</button>
+    <button class="btn btn-ghost" id="hfSilBtn" onclick="hesabFormSil()" style="width:100%; color:var(--danger);" data-i18n="hesab.silBaslik">Hesabı sil</button>
+  </div>
+</div>
+
+<!-- Kredit xətti ödənişi: hansı hesabdan -->
+<div id="krediOdeModal" class="modal">
   <div class="modal-content">
-    <h2 id="hesabDuzeltBaslik" data-i18n="hesabDuzelt.basliq">Balansı dəyiş</h2>
-    <p class="hint" data-i18n="hesabDuzelt.hint">Bu hesabın cari balansını yaz.</p>
-    <input type="number" step="0.01" id="hesabDuzeltInput" placeholder="0.00">
-    <div class="error-text" id="hesabDuzeltError"></div>
+    <h2 data-i18n="hesab.krediOdenisi">Kredit ödənişi</h2>
+    <p class="hint" id="krediOdeInfo"></p>
+    <div id="krediOdeXettSatir" style="margin-bottom:12px;">
+      <label class="filtr-lbl" for="krediOdeXett" data-i18n="hesabAd.krediXett">Kredit xətti</label>
+      <select id="krediOdeXett" class="filtr-inp" onchange="krediOdeInfoYaz()"></select>
+    </div>
+    <div style="margin-bottom:6px;">
+      <label class="filtr-lbl" for="krediOdeMenbe" data-i18n="taksitOde.hansiHesabdanOdenilsin">Hansı hesabdan ödənilsin?</label>
+      <select id="krediOdeMenbe" class="filtr-inp"></select>
+    </div>
+    <div class="error-text" id="krediOdeError"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="modalKapat('hesabDuzeltModal')" data-i18n="umumi.legvEt">Ləğv et</button>
-      <button class="btn btn-primary" onclick="hesabDuzeltOnayla()" data-i18n="umumi.yaddaSaxla">Yadda saxla</button>
+      <button data-i18n="umumi.legvEt" class="btn btn-ghost" onclick="modalKapat('krediOdeModal')">Ləğv et</button>
+      <button data-i18n="taksitOde.ode" class="btn btn-primary" onclick="krediOdeOnayla()">Ödə</button>
     </div>
   </div>
 </div>
@@ -616,22 +615,11 @@
     <p class="hint" data-i18n="transfer.hint">Bir hesabdan digərinə pul köçür.</p>
     <div style="margin-bottom:12px;">
       <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.menbeHesab">Hansı hesabdan</label>
-      <select id="transferMenbe" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
-        <option value="nagd" data-i18n="hesabNovu.nagd">Nağd pul</option>
-        <option value="debit" data-i18n="hesabNovu.debit">Debet kartı</option>
-        <option value="depozit" data-i18n="hesabNovu.depozit">Depozit</option>
-        <option value="kredit" data-i18n="hesabNovu.kredit">Kredit kartı</option>
-      </select>
+      <select id="transferMenbe" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);"></select>
     </div>
     <div style="margin-bottom:12px;">
       <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.hedefHesab">Hansı hesaba</label>
-      <select id="transferHedef" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);">
-        <option value="debit" data-i18n="hesabNovu.debit">Debet kartı</option>
-        <option value="depozit" data-i18n="hesabNovu.depozit">Depozit</option>
-        <option value="kredit" data-i18n="hesabNovu.kredit">Kredit kartı</option>
-        <option value="nagd" data-i18n="hesabNovu.nagd">Nağd pul</option>
-        <option value="krediXett" data-i18n="hesabNovu.krediXett">Kredit xətti (ödəniş)</option>
-      </select>
+      <select id="transferHedef" style="width:100%; padding:9px 10px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; background:var(--panel); color:var(--ink);"></select>
     </div>
     <div style="margin-bottom:6px;">
       <label style="font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:4px;" data-i18n="transfer.meblegLbl">Məbləğ (AZN)</label>
@@ -651,6 +639,7 @@
 <script src="js/auth.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/hesablar.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

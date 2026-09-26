@@ -68,6 +68,7 @@ function driveTokenGerekliyse(sessiz, sonra) {
 }
 
 function driveBaglan() {
+  if (demoRejim) { alertAc(tr('demo.driveYox', 'Nümunə rejimində Google Drive istifadə olunmur.')); return; }
   if (GOOGLE_DRIVE_CLIENT_ID.indexOf('BURAYA_OZ_CLIENT_ID') === 0) {
     alertAc(tr('ayarlar.clientIdTeyinEdilmeyibXeta', 'Əvvəlcə kodda GOOGLE_DRIVE_CLIENT_ID sətrinə öz Google Client ID-ni yaz.'));
     return;
@@ -111,7 +112,9 @@ function driveMenyuGuncelle(mesaj, xetaMi) {
 }
 
 function driveBackupVerisi() {
-  return { kategoriler, giderler, anaHesap, kreditLimit, krediBorcu, nagdBakiye, debitBakiye, depozitBakiye, hesabTransferleri, gunlukLimit, hesabEklenib, profil: istifadeciProfili, backupTarixi: sonDeyisiklikVaxti || new Date().toISOString() };
+  // schema 2: hesablar massivi. Köhnə sahələr (anaHesap, nagdBakiye, krediBorcu ...) güzgü kimi də yazılır —
+  // hələ yenilənməmiş cihaz datanı boş görüb onu silməsin.
+  return Object.assign({ schema: 2, kategoriler, giderler, hesablar, hesabTransferleri, gunlukLimit, profil: istifadeciProfili, backupTarixi: sonDeyisiklikVaxti || new Date().toISOString() }, hesablarGuzgusu());
 }
 
 function driveYeniBackupAdi() {
@@ -145,14 +148,17 @@ function driveVerisiniTetbiqEt(parsed) {
   }));
   if (!kategoriler.length) kategoriler = varsayilanKategoriler.map(k => ({ ...k }));
   // Pozulmuş qeydlər (məbləği rəqəm olmayan) cəmləri NaN etməsin deyə süzülür.
-  giderler = (Array.isArray(parsed.giderler) ? parsed.giderler : []).filter(g => g && typeof g.tutar === 'number' && isFinite(g.tutar));
+  // Hesablar: yeni model (hesablar massivi) və ya köhnə sahələrdən köçürmə (hesablar.js)
+  const hd = hesabDatasiniHazirla(parsed);
+  hesablar = hd.hesablar;
+  giderler = hd.giderler.filter(g => g && typeof g.tutar === 'number' && isFinite(g.tutar));
   anaHesap = (typeof parsed.anaHesap === 'number') ? parsed.anaHesap : null;
   kreditLimit = (typeof parsed.kreditLimit === 'number') ? parsed.kreditLimit : null;
   krediBorcu = parsed.krediBorcu || krediBorcuKohnaBackupdanCixar(parsed.aylikXerclar);
   nagdBakiye = (typeof parsed.nagdBakiye === 'number') ? parsed.nagdBakiye : 0;
   debitBakiye = (typeof parsed.debitBakiye === 'number') ? parsed.debitBakiye : 0;
   depozitBakiye = (typeof parsed.depozitBakiye === 'number') ? parsed.depozitBakiye : 0;
-  hesabTransferleri = parsed.hesabTransferleri || [];
+  hesabTransferleri = hd.transferler;
   gunlukLimit = (typeof parsed.gunlukLimit === 'number') ? parsed.gunlukLimit : null;
   hesabEklenib = parsed.hesabEklenib || { nagd: false, debit: false, depozit: false };
   istifadeciProfili = parsed.profil || { ad: '', soyad: '' };
@@ -360,6 +366,7 @@ let tesdiqGozleyenIstifadeci = null;
 
 function emailIleGirisEt() {
   const xetaEl = document.getElementById('googleGirisXeta');
+  xetaEl.classList.remove('ugur');
   const { email, sifre } = emailSifreOxu();
   xetaEl.innerText = '';
   document.getElementById('tesdiqYenidenBtn').style.display = 'none';
@@ -456,6 +463,98 @@ function qeydiyyatGonder() {
   });
 }
 
+// Şifrəni unutdum: giriş ekranındakı e-poçta Firebase sıfırlama linki göndərir.
+// Təhlükəsizlik: hesabın olub-olmadığını açıqlamamaq üçün "hesab tapılmadı" halında da eyni uğur mətni göstərilir.
+function sifreSifirla() {
+  const xetaEl = document.getElementById('googleGirisXeta');
+  xetaEl.classList.remove('ugur');
+  const email = document.getElementById('emailGirisEmail').value.trim();
+  xetaEl.innerText = '';
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { xetaEl.innerText = tr('giris.sifirlamaEpoctYaz', 'Əvvəlcə e-poçt ünvanını yaz, sonra "Şifrəni unutdum" düyməsinə bas.'); return; }
+  firebaseBaslat().then((hazir) => {
+    if (!hazir) { xetaEl.innerText = tr('giris.baglantiAlinmadi', 'Bağlantı alınmadı. İnterneti yoxla və yenidən cəhd et.'); return; }
+    try { firebase.auth().languageCode = dilKodu; } catch (e) { /* sakit keç */ }
+    firebase.auth().sendPasswordResetEmail(email).then(() => {
+      xetaEl.classList.add('ugur');
+      xetaEl.innerText = tr('giris.sifirlamaGonderildi', 'Şifrəni yeniləmək üçün link {email} ünvanına göndərildi. Poçtunu ("Spam" qovluğunu da) yoxla.', { email });
+    }).catch((e) => {
+      if (e && (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential')) {
+        xetaEl.classList.add('ugur');
+      xetaEl.innerText = tr('giris.sifirlamaGonderildi', 'Şifrəni yeniləmək üçün link {email} ünvanına göndərildi. Poçtunu ("Spam" qovluğunu da) yoxla.', { email });
+      } else if (e && e.code === 'auth/invalid-email') {
+        xetaEl.innerText = tr('qeyd.epoctDuzgunDeyil', 'E-poçt ünvanı düzgün deyil.');
+      } else {
+        xetaEl.innerText = tr('giris.gonderilmedi', 'Göndərmək alınmadı: {xeta}. Bir az sonra yenidən cəhd et.', { xeta: firebaseXetaMetni(e) });
+      }
+    });
+  });
+}
+
+// ==================== Qonaq (nümunə) rejimi ====================
+// Qeydiyyatsız baxış: hazır nümunə data yalnız yaddaşda yaradılır; Firebase-ə heç nə yazılmır/oxunmur.
+function qonaqKimiDaxilOl() {
+  demoRejim = true;
+  demoDatasiniQur();
+  veriMenbeGuvenli = true;
+  veriYuklendi = true;
+  document.getElementById('googleGirisEkrani').classList.remove('active');
+  appIskeletiOlustur();
+  ekraniGuncelle();
+  demoBannerGoster();
+}
+function qonaqdanCix() {
+  // Səhifəni yenidən yüklə → nümunə data silinir, giriş ekranı açılır
+  location.replace(location.origin + location.pathname);
+}
+function demoBannerGoster() {
+  if (document.getElementById('demoBanner')) return;
+  const el = document.createElement('div');
+  el.id = 'demoBanner';
+  el.className = 'demo-banner';
+  el.innerHTML = `<span>${escapeHtml(tr('demo.banner', 'Nümunə rejimi — dəyişikliklər saxlanılmır'))}</span><button onclick="qonaqdanCix()">${escapeHtml(tr('demo.qeydiyyat', 'Hesab yarat'))}</button>`;
+  document.body.appendChild(el);
+  document.body.classList.add('demo-aktiv');
+}
+function demoDatasiniQur() {
+  yerliVeriniYukle();
+  istifadeciProfili = { ad: tr('demo.qonaqAd', 'Qonaq'), soyad: '' };
+  gunlukLimit = 20;
+  const bugun = new Date();
+  const gunEvvel = (g, saat, deq) => { const d = new Date(bugun); d.setDate(d.getDate() - g); d.setHours(saat, deq, 0, 0); return d; };
+  const bas = new Date(bugun.getFullYear(), bugun.getMonth() - 4, 5);
+  hesablar = [
+    hesabNormallasdir({ tip: 'debit', ad: tr('demo.maas', 'Maaş kartı'), bank: 'Kapital Bank', kartSon4: '4821', balans: 1860.5, ana: true }),
+    hesabNormallasdir({ tip: 'kredit', ad: tr('hesabAd.kredit', 'Kredit kartı'), bank: 'ABB', kartSon4: '1034', balans: -412.35, limit: 2000 }),
+    hesabNormallasdir({ tip: 'nagd', ad: tr('hesabAd.nagd', 'Nağd pul'), balans: 240 }),
+    hesabNormallasdir({ tip: 'depozit', ad: tr('hesabAd.depozit', 'Depozit'), bank: 'Kapital Bank', balans: 5000, menfiOlar: true }),
+    hesabNormallasdir({ tip: 'krediXett', ad: tr('demo.avtokredit', 'Avtokredit'), bank: 'ABB', aylikMebleg: 180, taksitSayi: 12, odenmisTaksitSayi: 4, baslangic: yerliTarixStr(bas) })
+  ];
+  const [debet, kart, nagd, , xett] = hesablar;
+  // Son 40 gün üçün nümunə xərclər (sabit "təsadüfi" ardıcıllıq — hər dəfə eyni görünür)
+  let toxum = 7; const rnd = () => { toxum = (toxum * 9301 + 49297) % 233280; return toxum / 233280; };
+  const kat = kategoriler;
+  const nov = [[0, 0.6], [1, 0.6], [2, 3.5], [4, 12], [5, 4.5], [7, 9], [6, 15], [3, 4.6]];
+  giderler = [];
+  for (let g = 40; g >= 0; g--) {
+    const say = 1 + Math.floor(rnd() * 3);
+    for (let i = 0; i < say; i++) {
+      const [ki, taban] = nov[Math.floor(rnd() * nov.length)];
+      if (!kat[ki]) continue;
+      const tutar = pulYuvarla(taban * (0.8 + rnd() * 0.6));
+      const dt = gunEvvel(g, 8 + Math.floor(rnd() * 12), Math.floor(rnd() * 60));
+      if (dt > bugun) continue;
+      giderler.push({ kategori: kat[ki].ad, tutar, tamTarix: dt.toISOString(), tarix: tarixSaatYaz(dt), hesabId: (i === 2 ? kart.id : debet.id) });
+    }
+  }
+  giderler.sort((a, b) => new Date(b.tamTarix) - new Date(a.tamTarix));
+  const t1 = gunEvvel(3, 10, 15), t2 = gunEvvel(12, 9, 0), t3 = gunEvvel(20, 18, 30);
+  hesabTransferleri = [
+    { menbeId: debet.id, hedefId: kart.id, menbeTip: 'debit', hedefTip: 'kredit', tutar: 200, tamTarix: t1.toISOString(), tarix: tarixSaatYaz(t1) },
+    { menbeId: debet.id, hedefId: xett.id, menbeTip: 'debit', hedefTip: 'krediXett', tutar: 180, taksit: true, tamTarix: t2.toISOString(), tarix: tarixSaatYaz(t2) },
+    { menbeId: debet.id, hedefId: nagd.id, menbeTip: 'debit', hedefTip: 'nagd', tutar: 100, tamTarix: t3.toISOString(), tarix: tarixSaatYaz(t3) }
+  ];
+}
+
 function tesdiqEmailiYenidenGonder() {
   const xetaEl = document.getElementById('googleGirisXeta');
   if (!tesdiqGozleyenIstifadeci) { xetaEl.innerText = tr('giris.evvelceDaxilOlVeyaHesabYarat', 'Əvvəlcə "Daxil ol" və ya "Hesab yarat" düyməsini sına.'); return; }
@@ -467,6 +566,7 @@ function tesdiqEmailiYenidenGonder() {
 }
 
 function cixisEt() {
+  if (demoRejim) { qonaqdanCix(); return; }
   confirmAc(tr('ayarlar.cixisEt', 'Çıxış et'), tr('ayarlar.cixisSual', 'Hesabdan çıxmaq istəyirsən? Bu cihazda yenidən giriş ekranı açılacaq.'), () => {
     if (firebaseUnsubscribe) { firebaseUnsubscribe(); firebaseUnsubscribe = null; }
     firebase.auth().signOut().then(() => location.reload());
@@ -485,6 +585,7 @@ async function uygulamaGirisBaslat() {
     return;
   }
   firebase.auth().onAuthStateChanged((istifadeci) => {
+    if (demoRejim) return; // qonaq nümunəyə baxır — giriş vəziyyəti ekranı dəyişməsin
     if (istifadeci && !istifadeci.emailVerified) {
       // Köhnə sessiyadan qalan, hələ təsdiqlənməmiş istifadəçi — buraxma.
       tesdiqGozleyenIstifadeci = istifadeci;
@@ -517,6 +618,13 @@ function firebasePanelGuncelle(mesaj, xetaMi) {
   const btnsEl = document.getElementById('firebaseBtns');
   if (!statusEl) return;
 
+  if (demoRejim) {
+    statusEl.innerText = tr('demo.banner', 'Nümunə rejimi — dəyişikliklər saxlanılmır');
+    subEl.innerText = tr('demo.hesabIzah', 'Öz məlumatlarını saxlamaq üçün hesab yarat.');
+    btnsEl.innerHTML = `<button onclick="qonaqdanCix()">${escapeHtml(tr('demo.qeydiyyat', 'Hesab yarat'))}</button>`;
+    const xk = document.getElementById('ayarlarXosGeldinKutu'); if (xk) xk.style.display = 'none';
+    return;
+  }
   if (xetaMi) {
     statusEl.innerText = (mesaj || tr('umumi.xetaBasVerdi', 'Xəta baş verdi.'));
   } else if (cariGoogleIstifadeci) {

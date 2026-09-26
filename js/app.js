@@ -489,7 +489,8 @@ function kategoriyeTikla(index) {
   const kat = kategoriler[index];
   if (!kat) return;
   if (sabitTutarVar(kat) && !kategoriSebebSorulsun(kat)) {
-    giderEkle(kat.ad, kat.sabitTutar);
+    const xeta = giderEkle(kat.ad, kat.sabitTutar);
+    if (xeta) alertAc(xeta);
   } else {
     amountModalAc(index);
   }
@@ -503,10 +504,13 @@ function giderEkle(kategori, tutar, sebeb) {
     tarix: tarixSaatYaz(simdi)
   };
   if (sebeb) kayit.sebeb = sebeb;
+  // Xərc ⭐ əsas hesabdan çıxılır; vəsait/limit çatmırsa xərc yazılmır və xəta mətni qaytarılır.
+  const xeta = xercHesabdanCix(kayit);
+  if (xeta) return xeta;
   giderler.unshift(kayit);
-  if (typeof anaHesap === 'number') anaHesap = pulYuvarla(anaHesap - tutar);
   veriKaydet();
   ekraniGuncelle();
+  return '';
 }
 
 // ---- Xərci düzəlt / köhnə tarixli xərc əlavə et ----
@@ -576,14 +580,21 @@ function islemFormOnayla() {
   if (islemFormIndex !== null) {
     const g = giderler[islemFormIndex];
     if (!g) { modalKapat('islemFormModal'); return; }
-    if (typeof anaHesap === 'number') anaHesap = pulYuvarla(anaHesap + g.tutar); // köhnə məbləği geri qaytar
+    // Köhnə məbləği öz hesabına qaytar, yeni məbləği eyni hesabdan çıx (hesab silinibsə — əsas hesabdan).
+    const kohneTutar = g.tutar, kohneHesab = g.hesabId;
+    xercHesabaQaytar(g);
+    g.tutar = tutar;
+    // Heç bir hesaba bağlı olmayan köhnə xərc dəyişəndə birdən ⭐ hesabdan çıxılmasın
+    const xeta = kohneHesab ? xercHesabdanCix(g, kohneHesab) : '';
+    if (xeta) {
+      g.tutar = kohneTutar; if (kohneHesab) { g.hesabId = kohneHesab; const kh = hesabTap(kohneHesab); if (kh && kh.tip !== 'krediXett') kh.balans = pulYuvarla(kh.balans - kohneTutar); }
+      if (errEl) errEl.innerText = xeta; return;
+    }
     const dt = tamTarixQur(tarixVal, g.tamTarix);
     g.kategori = kategori;
-    g.tutar = tutar;
     if (sebeb) g.sebeb = sebeb; else delete g.sebeb;
     g.tamTarix = dt.toISOString();
     g.tarix = tarixSaatYaz(dt);
-    if (typeof anaHesap === 'number') anaHesap = pulYuvarla(anaHesap - tutar);
   } else {
     const dt = tamTarixQur(tarixVal, null);
     const kayit = {
@@ -591,8 +602,9 @@ function islemFormOnayla() {
       tarix: tarixSaatYaz(dt)
     };
     if (sebeb) kayit.sebeb = sebeb;
+    const xeta = xercHesabdanCix(kayit);
+    if (xeta) { if (errEl) errEl.innerText = xeta; return; }
     giderler.unshift(kayit);
-    if (typeof anaHesap === 'number') anaHesap = pulYuvarla(anaHesap - tutar);
   }
   modalKapat('islemFormModal');
   veriKaydet();
@@ -654,40 +666,10 @@ function amountModalOnayla() {
       return;
     }
   }
-  giderEkle(kat.ad, tutar, sebeb);
+  const xeta = giderEkle(kat.ad, tutar, sebeb);
+  if (xeta) { if (errEl) errEl.innerText = xeta; return; }
   modalKapat('amountModal');
   amountModalKategoriAdi = null;
-}
-
-// ---- Credit card modal (limit + faktiki qalıq) ----
-function balanceModalAc() {
-  document.getElementById('cardLimitInput').value = typeof kreditLimit === 'number' ? kreditLimit : '';
-  document.getElementById('cardBalanceInput').value = typeof anaHesap === 'number' ? anaHesap : '';
-  document.getElementById('balanceError').innerText = '';
-  modalAc('balanceModal');
-  setTimeout(() => document.getElementById('cardLimitInput').focus(), 50);
-}
-function balanceModalOnayla() {
-  const limitVal = document.getElementById('cardLimitInput').value;
-  const balansVal = document.getElementById('cardBalanceInput').value;
-  const limit = parseFloat((limitVal || '').replace(',', '.'));
-  const balans = parseFloat((balansVal || '').replace(',', '.'));
-  if (limitVal.trim() !== '' && (isNaN(limit) || limit < 0)) {
-    document.getElementById('balanceError').innerText = tr('hesabDuzelt.limitReqemXeta', 'Limit düzgün rəqəm olmalıdır.');
-    return;
-  }
-  if (isNaN(balans)) {
-    document.getElementById('balanceError').innerText = tr('hesabDuzelt.qaliqReqemXeta', 'Cari borc düzgün rəqəm olmalıdır.');
-    return;
-  }
-  kreditLimit = limitVal.trim() !== '' ? limit : null;
-  anaHesap = balans;
-  modalKapat('balanceModal');
-  veriKaydet();
-  ekraniGuncelle();
-  const hesablarAcik = document.getElementById('hesablarModal');
-  if (hesablarAcik && hesablarAcik.classList.contains('active')) hesablarGoster(); // "+" ilə əlavə edilən kart dərhal görünsün
-  if (document.getElementById('dashboardModal').classList.contains('active')) dashboardPaneliniAc();
 }
 
 // ---- New category modal ----
@@ -851,7 +833,7 @@ function giderSilOnayla(index) {
   confirmAc(tr('islemForm.xerciSil', 'Xərci sil'), tr('islemForm.buQeydiSilmekEminsen', 'Bu xərci silmək istədiyinə əminsən?'), () => {
     const idx = giderler.indexOf(hedef);
     if (!hedef || idx === -1) { alertAc(tr('umumi.siyahiYenilendiXeta', 'Siyahı bu arada yeniləndi. Yenidən cəhd et.')); ekraniGuncelle(); return; }
-    if (typeof anaHesap === 'number' && typeof hedef.tutar === 'number') anaHesap = pulYuvarla(anaHesap + hedef.tutar);
+    xercHesabaQaytar(hedef); // məbləğ çıxıldığı hesaba qayıdır
     giderler.splice(idx, 1);
     veriKaydet();
     ekraniGuncelle();
@@ -859,10 +841,7 @@ function giderSilOnayla(index) {
 }
 function listeyiTemizleOnayla() {
   confirmAc(tr('sonEmeliyyat.hamisiniSil', 'Bütün tarixçəni sil'), tr('sonEmeliyyat.hamisiniSilSual', 'Bütün xərc tarixçəsi silinsin? Bu əməliyyatı geri qaytarmaq olmur.'), () => {
-    if (typeof anaHesap === 'number') {
-      const geriQaytar = giderler.filter(g => !g.aylikRef).reduce((acc, g) => acc + (typeof g.tutar === 'number' ? g.tutar : 0), 0);
-      anaHesap = pulYuvarla(anaHesap + geriQaytar);
-    }
+    giderler.filter(g => !g.aylikRef).forEach(xercHesabaQaytar); // hər xərc öz hesabına qaytarılır
     giderler = giderler.filter(g => !!g.aylikRef);
     veriKaydet();
     ekraniGuncelle();
@@ -944,166 +923,6 @@ window.kategoriAylikToggle = (i, checked) => { if (kategoriler[i]) { kategoriler
 
 // QEYD: Sıralamayı dəyişmək (drag-to-reorder) Ayarlar → Kateqoriyalar siyahısından
 // qaldırılıb — indi Xərclər ekranındakı "✏️ Ekranı düzənlə" düyməsi ilə edilir.
-
-// ---- Dedicated installment loan (Kredit Borcu) ----
-function tarixFormat(iso) {
-  if (!iso) return '—';
-  const [y, m, d] = iso.split('-');
-  return d + '.' + m + '.' + y;
-}
-
-// Bir tarixə (iso) ay əlavə edib yeni iso tarix qaytarır
-function tarixAyEkle(iso, ayFarki) {
-  const [y, m, d] = iso.split('-').map(Number);
-  const dt = new Date(Date.UTC(y, (m - 1) + ayFarki, d));
-  const yyyy = dt.getUTCFullYear();
-  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(dt.getUTCDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-// Kredit borcunu (aylıq məbləğ / taksit sayı / başlanğıc tarixi) istifadəçinin özünün düzəltməsi
-function krediBorcuDuzeltModalAc() {
-  const k = krediBorcu || {};
-  document.getElementById('krediBorcuDuzeltMebleg').value = (typeof k.aylikMebleg === 'number') ? k.aylikMebleg : '';
-  document.getElementById('krediBorcuDuzeltSayi').value = (typeof k.taksitSayi === 'number' && k.taksitSayi > 0) ? k.taksitSayi : '';
-  document.getElementById('krediBorcuDuzeltBaslangic').value = k.baslangic || '';
-  document.getElementById('krediBorcuDuzeltError').innerText = '';
-  modalAc('krediBorcuDuzeltModal');
-}
-
-function krediBorcuDuzeltOnayla() {
-  const meblegVal = document.getElementById('krediBorcuDuzeltMebleg').value;
-  const sayiVal = document.getElementById('krediBorcuDuzeltSayi').value;
-  const baslangicVal = document.getElementById('krediBorcuDuzeltBaslangic').value;
-  const errEl = document.getElementById('krediBorcuDuzeltError');
-
-  const mebleg = parseFloat((meblegVal || '').replace(',', '.'));
-  const sayi = parseInt(sayiVal, 10);
-
-  if (isNaN(mebleg) || mebleg <= 0) {
-    errEl.innerText = tr('krediBorc.ayliqTaksitXeta', 'Aylıq taksitin məbləğini düzgün yaz.');
-    return;
-  }
-  if (isNaN(sayi) || sayi <= 0) {
-    errEl.innerText = tr('krediBorc.taksitSayiXeta', 'Taksit sayını düzgün yaz.');
-    return;
-  }
-  if (!baslangicVal) {
-    errEl.innerText = tr('krediBorc.baslangicTarixiXeta', 'Başlanğıc tarixini seç.');
-    return;
-  }
-
-  if (!krediBorcu) {
-    krediBorcu = {
-      id: 'kredi_borcu_' + idUret(), ad: 'Kredi Borcu',
-      odenmisTaksitSayi: 0, elaveOdenis: 0
-    };
-  }
-  krediBorcu.aylikMebleg = mebleg;
-  krediBorcu.taksitSayi = sayi;
-  krediBorcu.baslangic = baslangicVal;
-  krediBorcu.bitis = tarixAyEkle(baslangicVal, sayi - 1);
-  if (krediBorcu.odenmisTaksitSayi > sayi) krediBorcu.odenmisTaksitSayi = sayi;
-
-  veriKaydet();
-  modalKapat('krediBorcuDuzeltModal');
-  krediBorcuGoster();
-  ekraniGuncelle();
-}
-
-// Kredit xəttinin (taksitli kredit) hazırkı qalıq borcu — hesablar arası birbaşa
-// ödənişlər (elaveOdenis) buradan düşülür, amma mənfi olmur.
-function krediBorcuQalanHesabla() {
-  if (!krediBorcu) return 0;
-  const xam = (krediBorcu.taksitSayi - krediBorcu.odenmisTaksitSayi) * krediBorcu.aylikMebleg;
-  return Math.max(0, xam - (krediBorcu.elaveOdenis || 0));
-}
-
-// Kredit xətt kartı indi "Hesablarım" siyahısında (hesablarGoster() içində) göstərilir —
-// krediBorcuGoster() sadəcə o siyahını yenidən çəkir.
-function krediBorcuGoster() {
-  hesablarGoster();
-}
-
-// ---- Bu ayın taksitini ödə: hansı hesabdan ödənəcəyini istifadəçi seçir ----
-const TAKSIT_MENBE_SIRA = ['nagd', 'debit', 'depozit', 'kredit'];
-
-// Bir hesab tipinin ödəniş üçün istifadə edilə bilən məbləği
-function hesabMovcudMebleg(tip) {
-  if (tip === 'kredit') {
-    const limit = (typeof kreditLimit === 'number') ? kreditLimit : 0;
-    const borc = (typeof anaHesap === 'number') ? anaHesap : 0;
-    return limit + borc; // kredit kartında istifadə edilə bilən limit
-  }
-  return hesabBakiyesiOxu(tip);
-}
-
-function taksitMenbeVarMi(tip) {
-  if (tip === 'kredit') return typeof kreditLimit === 'number';
-  return !!hesabEklenib[tip];
-}
-
-function krediBorcuOdeModalAc() {
-  if (!krediBorcu) return;
-  if (krediBorcu.odenmisTaksitSayi >= krediBorcu.taksitSayi) return;
-  const sel = document.getElementById('taksitOdeMenbe');
-  const errEl = document.getElementById('taksitOdeError');
-  errEl.innerText = '';
-  sel.innerHTML = '';
-  TAKSIT_MENBE_SIRA.filter(taksitMenbeVarMi).forEach((tip) => {
-    const opt = document.createElement('option');
-    opt.value = tip;
-    const bilgi = (tip === 'kredit')
-      ? tr('taksitOde.istifadeEdileBilen', 'istifadə edilə bilər: {mebleg} AZN', { mebleg: hesabMovcudMebleg(tip).toFixed(2) })
-      : hesabMovcudMebleg(tip).toFixed(2) + ' AZN';
-    opt.textContent = hesabAdi(tip) + ' — ' + bilgi;
-    sel.appendChild(opt);
-  });
-  const nomre = krediBorcu.odenmisTaksitSayi + 1;
-  document.getElementById('taksitOdeInfo').innerText =
-    tr('taksitOde.info', 'Taksit {nomre}/{say} · {mebleg} AZN', { nomre, say: krediBorcu.taksitSayi, mebleg: krediBorcu.aylikMebleg.toFixed(2) });
-  if (!sel.options.length) errEl.innerText = tr('taksitOde.hesabYoxdurXeta', 'Əvvəlcə ödəniş üçün ən azı bir hesab əlavə et (+).');
-  modalAc('taksitOdeModal');
-}
-
-function krediBorcuOdeOnayla() {
-  if (!krediBorcu) return;
-  const errEl = document.getElementById('taksitOdeError');
-  const menbeTip = document.getElementById('taksitOdeMenbe').value;
-  const tutar = krediBorcu.aylikMebleg;
-
-  if (!menbeTip) {
-    errEl.innerText = tr('taksitOde.hesabSecXeta', 'Ödəniş üçün hesab seç.');
-    return;
-  }
-  if (krediBorcu.odenmisTaksitSayi >= krediBorcu.taksitSayi) {
-    errEl.innerText = tr('taksitOde.hamisiOdenibXeta', 'Bütün taksitlər artıq ödənilib.');
-    return;
-  }
-  if (pulYuvarla(tutar) > pulYuvarla(hesabMovcudMebleg(menbeTip))) {
-    errEl.innerText = (menbeTip === 'kredit')
-      ? tr('transfer.limitYoxdur', 'Kredit kartında kifayət qədər limit yoxdur.')
-      : tr('transfer.balansYoxdur', '{ad} hesabında kifayət qədər vəsait yoxdur.', { ad: hesabAdi(menbeTip) });
-    return;
-  }
-
-  hesabBakiyesiDeyis(menbeTip, -tutar);
-  krediBorcu.odenmisTaksitSayi += 1;
-
-  // Ödəniş "Son transferlər" tarixçəsinə yazılır; oradakı ✕ ilə geri qaytarıla bilər.
-  const simdi = new Date();
-  hesabTransferleri.unshift({
-    menbeTip, hedefTip: 'krediXett', tutar, taksit: true,
-    tamTarix: simdi.toISOString(),
-    tarix: tarixSaatYaz(simdi)
-  });
-
-  veriKaydet();
-  modalKapat('taksitOdeModal');
-  hesablarGoster();
-  ekraniGuncelle();
-}
 
 function modalAc(id) { const el = document.getElementById(id); if (el) el.classList.add('active'); }
 function modalKapat(id) { const el = document.getElementById(id); if (el) el.classList.remove('active'); }
@@ -1199,34 +1018,26 @@ function dashboardDairaviDiaqramlariCiz() {
     return;
   }
 
-  // 1. Ümumi borc: Kredit kartı borcu + Deposit borcu + Kredit borcu (xətt)
-  const kkBorcu = (typeof anaHesap === 'number' && anaHesap < 0) ? Math.abs(anaHesap) : 0;
-  const depozitBorcu = (hesabEklenib.depozit && typeof depozitBakiye === 'number' && depozitBakiye < 0) ? Math.abs(depozitBakiye) : 0;
-  const krediBorcuQalan = krediBorcuQalanHesabla();
-  const umumiCemi = kkBorcu + depozitBorcu + krediBorcuQalan;
-  document.getElementById('dashUmumiBorcMerkez').innerText = umumiCemi > 0 ? umumiCemi.toFixed(2) : '0.00';
+  // Bütün hesablar üzrə cəmlər (hesablar.js → borcCemleri)
+  const c = borcCemleri();
+  const umumiCemi = pulYuvarla(c.kk + c.diger + c.kx);
+  document.getElementById('dashUmumiBorcMerkez').innerText = umumiCemi.toFixed(2);
   dashUmumiBorcChart = dairaviCiz('dashUmumiBorcCanvas', dashUmumiBorcChart, [
-    { ad: tr('dash.kkBorcu', 'Kredit kartı'), tutar: kkBorcu, renk: cssVar('--chart-1') || '#c9ced6' },
-    { ad: tr('dash.depozitBorcu', 'Depozit'), tutar: depozitBorcu, renk: cssVar('--chart-2') || '#8b929b' },
-    { ad: tr('dash.krediXettBorcu', 'Kredit xətti'), tutar: krediBorcuQalan, renk: cssVar('--chart-3') || '#5b6168' }
+    { ad: tr('dash.kkBorcu', 'Kredit kartı'), tutar: c.kk, renk: cssVar('--chart-1') || '#c9ced6' },
+    { ad: tr('dash.depozitBorcu', 'Digər hesablar'), tutar: c.diger, renk: cssVar('--chart-2') || '#8b929b' },
+    { ad: tr('dash.krediXettBorcu', 'Kredit xətti'), tutar: c.kx, renk: cssVar('--chart-3') || '#5b6168' }
   ], 'dashUmumiBorcLegend', ' AZN', tr('dash.borcYoxdur', 'Borc yoxdur.'));
 
-  // 2. Kredit kartı: istifadə olunan / istifadə edilə bilən qalıq
-  const limitDeger = (typeof kreditLimit === 'number') ? kreditLimit : 0;
-  const hesapDeger = typeof anaHesap === 'number' ? anaHesap : 0;
-  const istifade = hesapDeger < 0 ? Math.abs(hesapDeger) : 0;
-  const qalanLimit = Math.max(0, limitDeger + hesapDeger);
-  document.getElementById('dashKrediKartMerkez').innerText = (typeof kreditLimit === 'number') ? limitDeger.toFixed(2) : '—';
-  dashKrediKartChart = dairaviCiz('dashKrediKartCanvas', dashKrediKartChart, (typeof kreditLimit === 'number') ? [
-    { ad: tr('dash.istifadeOlunan', 'İstifadə olunub'), tutar: istifade, renk: cssVar('--danger') || '#d63a3a' },
-    { ad: tr('dash.istifadeEdileBilen', 'İstifadə edilə bilər'), tutar: qalanLimit, renk: cssVar('--chart-1') || '#d4d8de' }
+  document.getElementById('dashKrediKartMerkez').innerText = c.kartVar ? c.limit.toFixed(2) : '—';
+  dashKrediKartChart = dairaviCiz('dashKrediKartCanvas', dashKrediKartChart, c.kartVar ? [
+    { ad: tr('dash.istifadeOlunan', 'İstifadə olunub'), tutar: c.istifade, renk: cssVar('--danger') || '#d63a3a' },
+    { ad: tr('dash.istifadeEdileBilen', 'İstifadə edilə bilər'), tutar: Math.max(0, pulYuvarla(c.limit - c.istifade)), renk: cssVar('--chart-1') || '#d4d8de' }
   ] : [], 'dashKrediKartLegend', ' AZN', tr('dash.kkYoxdur', 'Kredit kartı hələ əlavə edilməyib.'));
 
-  // 3. Kredit borcu (taksitli kredit xətt): ödənilmiş / qalan taksit sayı
-  document.getElementById('dashKrediBorcuMerkez').innerText = krediBorcu ? (krediBorcu.odenmisTaksitSayi + '/' + krediBorcu.taksitSayi) : '—';
-  dashKrediBorcuChart = dairaviCiz('dashKrediBorcuCanvas', dashKrediBorcuChart, krediBorcu ? [
-    { ad: tr('dash.odenilib', 'Ödənilib'), tutar: krediBorcu.odenmisTaksitSayi, renk: cssVar('--chart-1') || '#c9ced6' },
-    { ad: tr('dash.qalib', 'Qalıb'), tutar: krediBorcu.taksitSayi - krediBorcu.odenmisTaksitSayi, renk: cssVar('--input-border') || '#d9c9cd' }
+  document.getElementById('dashKrediBorcuMerkez').innerText = c.xettVar ? (c.odenmis + '/' + c.cemTaksit) : '—';
+  dashKrediBorcuChart = dairaviCiz('dashKrediBorcuCanvas', dashKrediBorcuChart, c.xettVar ? [
+    { ad: tr('dash.odenilib', 'Ödənilib'), tutar: c.odenmis, renk: cssVar('--chart-1') || '#c9ced6' },
+    { ad: tr('dash.qalib', 'Qalıb'), tutar: c.cemTaksit - c.odenmis, renk: cssVar('--input-border') || '#d9c9cd' }
   ] : [], 'dashKrediBorcuLegend', ' ' + tr('dash.taksitVahid', 'taksit'), tr('dash.krediXettYoxdur', 'Kredit xətti hələ əlavə edilməyib.'));
 }
 
@@ -1512,6 +1323,7 @@ function aylikHesabatGoster() {
   aylikSiyahiDoldur('aylikSabitListesi', sabitKat, sabitCemi);
 
   aylikTrendChartGoster();
+  hesabatHesablarCiz();
 
   const trendEl = document.getElementById('aylikHesabatTrend');
   if (trendEl) {
@@ -1625,332 +1437,6 @@ function sonEmeliyyatlarCiz() {
   document.querySelectorAll('#sonFiltrCips [data-nov]').forEach(b => b.classList.toggle('aktiv', b.dataset.nov === aktiv));
 }
 function sonEmeliyyatlarPaneliniKapat() { modalKapat('sonEmeliyyatlarModal'); ayarlarPaneliniAc(); }
-
-// ==== Hesablar: Cash / Kredi kartı / Debit bank + transfer ====
-function hesabAdi(tip) {
-  if (tip === 'nagd') return tr('hesabAd.nagd', 'Nağd pul');
-  if (tip === 'debit') return tr('hesabAd.debit', 'Debet kartı');
-  if (tip === 'depozit') return tr('hesabAd.depozit', 'Depozit');
-  if (tip === 'kredit') return tr('hesabAd.kredit', 'Kredit kartı');
-  if (tip === 'krediXett') return tr('hesabAd.krediXett', 'Kredit xətti');
-  return tip;
-}
-function hesabIkonu(tip) {
-  // Emoji əvəzinə xətti SVG (HTML qaytarır — escapeHtml ilə İŞLƏDİLMƏMƏLİDİR). <option> mətnlərində istifadə olunmur.
-  return ikon(['nagd', 'debit', 'depozit', 'kredit', 'krediXett'].indexOf(tip) !== -1 ? tip : 'hesablar');
-}
-
-// ---- "+" ilə hesab əlavə etmə: 5 seçim ----
-function hesabSecSiyahi() {
-  return [
-    { tip: 'nagd', ad: tr('hesabAd.nagd', 'Nağd pul'), izah: tr('hesabSec.izahYalnizPlus', 'Yalnız müsbət balans') },
-    { tip: 'debit', ad: tr('hesabSec.adDebit', 'Debet kartı'), izah: tr('hesabSec.izahYalnizPlus', 'Yalnız müsbət balans') },
-    { tip: 'depozit', ad: tr('hesabSec.adDepozit', 'Depozit'), izah: tr('hesabSec.izahPlusMinus', 'Balans müsbət və ya mənfi ola bilər') },
-    { tip: 'kredit', ad: tr('hesabSec.adKredit', 'Kredit kartı'), izah: tr('hesabSec.izahKredit', 'Limit və cari borc') },
-    { tip: 'krediXett', ad: tr('hesabAd.krediXett', 'Kredit xətti'), izah: tr('hesabSec.izahKrediXett', 'Taksit sayı, başlanğıc tarixi və aylıq ödəniş') }
-  ];
-}
-
-function hesabSecModalAc() {
-  const konteyner = document.getElementById('hesabSecListesi');
-  if (!konteyner) return;
-  konteyner.innerHTML = '';
-  hesabSecSiyahi().forEach(h => {
-    const eklenib = (h.tip === 'kredit') ? (typeof kreditLimit === 'number')
-      : (h.tip === 'krediXett') ? !!krediBorcu
-      : !!hesabEklenib[h.tip];
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'hesab-sec-item';
-    btn.onclick = () => hesabSecEt(h.tip);
-    btn.innerHTML = `<span class="ic">${ikon(h.tip, 22)}</span><span style="flex:1;">${escapeHtml(h.ad)}<small>${eklenib ? escapeHtml(tr('hesabSec.artiqElave', 'Artıq əlavə olunub — dəyişmək üçün toxun')) : escapeHtml(h.izah)}</small></span>`;
-    konteyner.appendChild(btn);
-  });
-  modalAc('hesabSecModal');
-}
-
-function hesabSecEt(tip) {
-  modalKapat('hesabSecModal');
-  if (tip === 'nagd' || tip === 'debit' || tip === 'depozit') {
-    hesabDuzeltModalAc(tip);
-  } else if (tip === 'kredit') {
-    balanceModalAc();
-  } else if (tip === 'krediXett') {
-    krediBorcuDuzeltModalAc();
-  }
-}
-
-function hesablarPaneliniAc() {
-  hesablarGoster();
-  krediBorcuGoster();
-  modalAc('hesablarModal');
-}
-function hesablarPaneliniKapat() {
-  modalKapat('hesablarModal');
-  navAktifGuncelle('ana');
-  ekraniGuncelle();
-}
-
-function hesablarGoster() {
-  const konteyner = document.getElementById('hesablarKartlari');
-  if (!konteyner) return;
-  const limit = (typeof kreditLimit === 'number') ? kreditLimit : 0;
-  const borc = (typeof anaHesap === 'number') ? anaHesap : 0;
-  const muvcud = limit + borc; // istifadə edilə bilən limit
-
-  let html = '';
-  if (hesabEklenib.nagd) {
-    html += `
-    <div class="modal-item">
-      <div class="field-row between">
-        <div class="field-row"><span class="hesab-ikon">${ikon('nagd')}</span><b>${escapeHtml(hesabAdi('nagd'))}</b></div>
-        <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('nagd')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
-      </div>
-      <div style="font-size:19px; font-weight:700; color:var(--brand-ink);">${nagdBakiye.toFixed(2)} AZN</div>
-    </div>`;
-  }
-  if (hesabEklenib.debit) {
-    html += `
-    <div class="modal-item">
-      <div class="field-row between">
-        <div class="field-row"><span class="hesab-ikon">${ikon('debit')}</span><b>${escapeHtml(hesabAdi('debit'))}</b></div>
-        <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('debit')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
-      </div>
-      <div style="font-size:19px; font-weight:700; color:var(--brand-ink);">${debitBakiye.toFixed(2)} AZN</div>
-    </div>`;
-  }
-  if (hesabEklenib.depozit) {
-    html += `
-    <div class="modal-item">
-      <div class="field-row between">
-        <div class="field-row"><span class="hesab-ikon">${ikon('depozit')}</span><b>${escapeHtml(hesabAdi('depozit'))}</b></div>
-        <button class="btn btn-ghost" onclick="hesabDuzeltModalAc('depozit')" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
-      </div>
-      <div style="font-size:19px; font-weight:700; color:${depozitBakiye < 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${depozitBakiye.toFixed(2)} AZN</div>
-    </div>`;
-  }
-  if (typeof kreditLimit === 'number') {
-    html += `
-    <div class="modal-item">
-      <div class="field-row between">
-        <div class="field-row"><span class="hesab-ikon">${ikon('kredit')}</span><b>${escapeHtml(hesabAdi('kredit'))}</b></div>
-        <button class="btn btn-ghost" onclick="hesablarPaneliniKapat(); balanceModalAc();" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
-      </div>
-      <div style="font-size:19px; font-weight:700; color:${borc < 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${borc.toFixed(2)} AZN</div>
-      <div style="font-size:12px; color:var(--muted);">${escapeHtml(tr('hesablar.limitVeMuvcud', 'Limit: {limit} AZN · İstifadə edilə bilər: {muvcud} AZN', { limit: limit.toFixed(2), muvcud: muvcud.toFixed(2) }))}</div>
-    </div>`;
-  }
-  if (krediBorcu) {
-    const qalan = krediBorcuQalanHesabla();
-    const bitib = krediBorcu.odenmisTaksitSayi >= krediBorcu.taksitSayi;
-    let btnText = tr('hesablar.buAyTaksitOde', 'Bu ayın taksitini ödə');
-    let btnDisabled = false;
-    if (bitib) { btnText = tr('hesablar.kreditBaglanib', 'Kredit tam ödənilib'); btnDisabled = true; }
-    const elaveText = (krediBorcu.elaveOdenis > 0) ? ' · ' + tr('hesablar.elaveOdenis', 'əlavə ödəniş: −{mebleg} AZN', { mebleg: krediBorcu.elaveOdenis.toFixed(2) }) : '';
-    html += `
-    <div class="modal-item">
-      <div class="field-row between">
-        <div class="field-row"><span class="hesab-ikon">${ikon('krediXett')}</span><b>${escapeHtml(hesabAdi('krediXett'))}</b></div>
-        <button class="btn btn-ghost" onclick="krediBorcuDuzeltModalAc()" style="padding:5px 10px;">${escapeHtml(tr('umumi.duzelt', 'Dəyiş'))}</button>
-      </div>
-      <div style="font-size:19px; font-weight:700; color:${qalan > 0 ? 'var(--danger)' : 'var(--brand-ink)'};">${qalan > 0 ? '-' : ''}${qalan.toFixed(2)} AZN</div>
-      <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">${escapeHtml(tr('hesablar.taksitOdenilib', '{odenmis}/{say} taksit ödənilib · Aylıq: {aylik} AZN', { odenmis: krediBorcu.odenmisTaksitSayi, say: krediBorcu.taksitSayi, aylik: krediBorcu.aylikMebleg.toFixed(2) }))} · ${escapeHtml(tarixFormat(krediBorcu.baslangic))}–${escapeHtml(tarixFormat(krediBorcu.bitis))}${escapeHtml(elaveText)}</div>
-      <button class="btn btn-primary" ${btnDisabled ? 'disabled' : ''} onclick="krediBorcuOdeModalAc()" style="width:100%;">${escapeHtml(btnText)}</button>
-    </div>`;
-  }
-  if (!html) {
-    html = '<p class="empty-note" style="padding:8px 0;">' + escapeHtml(tr('hesablar.hecHesabYox', 'Hələ heç bir hesab yoxdur. Yuxarıdakı + düyməsi ilə başla.')) + '</p>';
-  }
-  konteyner.innerHTML = html;
-  hesabTransferTarixceGoster();
-}
-
-function hesabTransferTarixceGoster() {
-  const konteyner = document.getElementById('hesabTransferTarixce');
-  if (!konteyner) return;
-  if (hesabTransferleri.length === 0) {
-    konteyner.innerHTML = '<p class="empty-note" style="padding:8px 0;">' + escapeHtml(tr('hesablar.hecTransferYox', 'Hələ köçürmə olmayıb.')) + '</p>';
-    return;
-  }
-  konteyner.innerHTML = '';
-  hesabTransferleri.forEach((t, index) => {
-    const row = document.createElement('div');
-    row.className = 'list-item';
-    row.innerHTML = `
-      <div>
-        <span class="cat">${escapeHtml(hesabAdi(t.menbeTip))} → ${escapeHtml(hesabAdi(t.hedefTip))}${t.taksit ? ' ' + escapeHtml(tr('hesablar.taksitSuffix', '(taksit)')) : ''}</span>
-        <span class="time">${escapeHtml(t.tamTarix ? tarixSaatYaz(new Date(t.tamTarix)) : t.tarix)}</span>
-      </div>
-      <div class="right">
-        <span class="amt">${t.tutar.toFixed(2)} AZN</span>
-        <button class="sira-btn sil" onclick="transferSilOnayla(${index})" aria-label="${escapeHtml(tr('transfer.legvBaslik', 'Köçürməni ləğv et'))}">${ikon('sil', 17)}</button>
-      </div>
-    `;
-    konteyner.appendChild(row);
-  });
-}
-
-let hesabDuzeltTipi = null;
-function hesabDuzeltModalAc(tip) {
-  hesabDuzeltTipi = tip;
-  document.getElementById('hesabDuzeltBaslik').innerText = tr('hesabDuzelt.baslikTip', '{ad} — balans', { ad: hesabAdi(tip) });
-  document.getElementById('hesabDuzeltInput').value = hesabBakiyesiOxu(tip);
-  document.getElementById('hesabDuzeltError').innerText = '';
-  modalAc('hesabDuzeltModal');
-}
-function hesabDuzeltOnayla() {
-  const val = document.getElementById('hesabDuzeltInput').value;
-  const p = parseFloat((val || '').replace(',', '.'));
-  const errEl = document.getElementById('hesabDuzeltError');
-  if (isNaN(p)) {
-    errEl.innerText = tr('umumi.duzgunReqem', 'Düzgün rəqəm yaz.');
-    return;
-  }
-  if ((hesabDuzeltTipi === 'nagd' || hesabDuzeltTipi === 'debit') && p < 0) {
-    errEl.innerText = tr('hesabDuzelt.yalnizMusbet', '{ad} üçün məbləğ yalnız müsbət ola bilər.', { ad: hesabAdi(hesabDuzeltTipi) });
-    return;
-  }
-  if (hesabDuzeltTipi === 'nagd') { nagdBakiye = p; hesabEklenib.nagd = true; }
-  else if (hesabDuzeltTipi === 'debit') { debitBakiye = p; hesabEklenib.debit = true; }
-  else if (hesabDuzeltTipi === 'depozit') { depozitBakiye = p; hesabEklenib.depozit = true; }
-  veriKaydet();
-  modalKapat('hesabDuzeltModal');
-  hesablarGoster();
-}
-
-function hesabBakiyesiOxu(tip) {
-  if (tip === 'nagd') return nagdBakiye;
-  if (tip === 'debit') return debitBakiye;
-  if (tip === 'depozit') return depozitBakiye;
-  if (tip === 'kredit') return (typeof anaHesap === 'number') ? anaHesap : 0;
-  return 0;
-}
-function hesabBakiyesiDeyis(tip, deltaMenbe) {
-  // deltaMenbe: mənfi işarəli dəyişiklik menbə üçün, müsbət hədəf üçün eyni funksiyada tutar veriləcək
-  // Nəticə qəpiyə yuvarlaqlaşdırılır (üzən nöqtə xətası yığılmasın).
-  if (tip === 'nagd') nagdBakiye = pulYuvarla(nagdBakiye + deltaMenbe);
-  else if (tip === 'debit') debitBakiye = pulYuvarla(debitBakiye + deltaMenbe);
-  else if (tip === 'depozit') depozitBakiye = pulYuvarla(depozitBakiye + deltaMenbe);
-  else if (tip === 'kredit') anaHesap = pulYuvarla(((typeof anaHesap === 'number') ? anaHesap : 0) + deltaMenbe);
-}
-
-// Yalnız "+" ilə əlavə edilmiş hesablar seçilə bilər (əks halda pul görünməyən hesaba düşürdü).
-function transferHesabVarMi(tip) {
-  if (tip === 'kredit') return typeof kreditLimit === 'number';
-  if (tip === 'krediXett') return !!krediBorcu;
-  return !!hesabEklenib[tip];
-}
-
-function transferModalAc() {
-  const menbeler = ['nagd', 'debit', 'depozit', 'kredit'].filter(transferHesabVarMi);
-  const hedefler = ['nagd', 'debit', 'depozit', 'kredit', 'krediXett'].filter(transferHesabVarMi);
-  const doldur = (id, siyahi) => {
-    const sel = document.getElementById(id);
-    sel.innerHTML = '';
-    siyahi.forEach((tip) => {
-      const opt = document.createElement('option');
-      opt.value = tip;
-      opt.textContent = hesabAdi(tip) + (tip === 'krediXett' ? ' ' + tr('transfer.odenisSuffix', '(ödəniş)') : '');
-      sel.appendChild(opt);
-    });
-  };
-  doldur('transferMenbe', menbeler);
-  doldur('transferHedef', hedefler);
-  const menbeSel = document.getElementById('transferMenbe');
-  const hedefSel = document.getElementById('transferHedef');
-  if (menbeler.indexOf('nagd') !== -1) menbeSel.value = 'nagd';
-  const ferqli = hedefler.filter((t) => t !== menbeSel.value);
-  if (ferqli.length) hedefSel.value = (ferqli.indexOf('kredit') !== -1) ? 'kredit' : ferqli[0];
-  document.getElementById('transferMebleg').value = '';
-  document.getElementById('transferError').innerText = (menbeler.length && ferqli.length)
-    ? '' : tr('transfer.ikiHesabLazim', 'Köçürmə üçün ən azı iki hesab əlavə et (Hesablarım → +).');
-  modalAc('transferModal');
-}
-
-function transferOnayla() {
-  const menbeTip = document.getElementById('transferMenbe').value;
-  const hedefTip = document.getElementById('transferHedef').value;
-  const errEl = document.getElementById('transferError');
-  const tutarVal = document.getElementById('transferMebleg').value;
-  const tutar = pulYuvarla(parseFloat((tutarVal || '').replace(',', '.'))); // NaN → 0 → aşağıda xəta verir
-
-  if (!menbeTip || !hedefTip || !transferHesabVarMi(menbeTip) || !transferHesabVarMi(hedefTip)) {
-    errEl.innerText = tr('transfer.hesabElaveEdilmeyib', 'Seçdiyin hesab hələ əlavə edilməyib.');
-    return;
-  }
-  if (menbeTip === hedefTip) {
-    errEl.innerText = tr('transfer.eyniHesab', 'Göndərən və alan hesab eyni ola bilməz.');
-    return;
-  }
-  if (isNaN(tutar) || tutar <= 0) {
-    errEl.innerText = tr('umumi.duzgunMebleg', 'Düzgün məbləğ yaz.');
-    return;
-  }
-  if (hedefTip === 'krediXett' && !krediBorcu) {
-    errEl.innerText = tr('transfer.evvelKrediXett', 'Əvvəlcə + ilə "Kredit xətti" əlavə et.');
-    return;
-  }
-  if (menbeTip !== 'kredit') {
-    const mevcud = hesabBakiyesiOxu(menbeTip);
-    if (pulYuvarla(tutar) > pulYuvarla(mevcud)) {
-      errEl.innerText = tr('transfer.balansYoxdur', '{ad} hesabında kifayət qədər vəsait yoxdur.', { ad: hesabAdi(menbeTip) });
-      return;
-    }
-  } else {
-    const limit = (typeof kreditLimit === 'number') ? kreditLimit : 0;
-    const borc = (typeof anaHesap === 'number') ? anaHesap : 0;
-    const muvcudLimit = limit + borc; // kredit kartında istifadə edilə bilən limit
-    if (pulYuvarla(tutar) > pulYuvarla(muvcudLimit)) {
-      errEl.innerText = tr('transfer.limitYoxdur', 'Kredit kartında kifayət qədər limit yoxdur.');
-      return;
-    }
-  }
-
-  hesabBakiyesiDeyis(menbeTip, -tutar);
-  if (hedefTip === 'krediXett') {
-    // Kredit xəttinə birbaşa ödəniş: mənbədən məbləğ çıxılır, xəttin qalıq borcundan
-    // eyni məbləğ düşülür (əlavə ödəniş kimi izlənilir — taksit sayı dəyişmir, qalıq stabil görünür).
-    krediBorcu.elaveOdenis = pulYuvarla((krediBorcu.elaveOdenis || 0) + tutar);
-  } else {
-    hesabBakiyesiDeyis(hedefTip, tutar);
-  }
-
-  const simdi = new Date();
-  hesabTransferleri.unshift({
-    menbeTip, hedefTip, tutar,
-    tamTarix: simdi.toISOString(),
-    tarix: tarixSaatYaz(simdi)
-  });
-
-  veriKaydet();
-  modalKapat('transferModal');
-  hesablarGoster();
-  krediBorcuGoster();
-  ekraniGuncelle();
-}
-
-function transferSilOnayla(index) {
-  const t = hesabTransferleri[index]; // sıra nömrəsi yox, qeydin özünü izləyirik (arada sinxron olsa səhv transfer ləğv edilməsin)
-  if (!t) return;
-  confirmAc(tr('transfer.legvBaslik', 'Köçürməni ləğv et'), tr('transfer.legvSual', '{menbe} → {hedef} ({tutar} AZN) köçürməsi geri qaytarılsın?', { menbe: hesabAdi(t.menbeTip), hedef: hesabAdi(t.hedefTip), tutar: t.tutar.toFixed(2) }), () => {
-    const idx = hesabTransferleri.indexOf(t);
-    if (idx === -1) { alertAc(tr('umumi.siyahiYenilendiXeta', 'Siyahı bu arada yeniləndi. Yenidən cəhd et.')); hesablarGoster(); return; }
-    hesabBakiyesiDeyis(t.menbeTip, t.tutar);
-    if (t.taksit) {
-      // Taksit ödənişi geri qaytarılır: ödənilmiş taksit sayı 1 azalır
-      if (krediBorcu && krediBorcu.odenmisTaksitSayi > 0) krediBorcu.odenmisTaksitSayi -= 1;
-    } else if (t.hedefTip === 'krediXett') {
-      if (krediBorcu) krediBorcu.elaveOdenis = Math.max(0, pulYuvarla((krediBorcu.elaveOdenis || 0) - t.tutar));
-    } else {
-      hesabBakiyesiDeyis(t.hedefTip, -t.tutar);
-    }
-    hesabTransferleri.splice(idx, 1);
-    veriKaydet();
-    hesablarGoster();
-    krediBorcuGoster();
-    ekraniGuncelle();
-  });
-}
 
 // Tətbiq email/şifrə girişi ilə açılır: uygulamaGirisBaslat() auth vəziyyətini
 // izləyir və yalnız giriş edildikdə veriYukle()-i özü çağırır.
