@@ -379,6 +379,3 @@ body.demo-aktiv .page-inner { padding-top: calc(56px + env(safe-area-inset-top, 
 .drive-xatirlatma .dx-btn:disabled { opacity: .6; }
 .drive-xatirlatma .dx-bagla { flex-shrink: 0; display: flex; border: none; background: transparent; color: var(--muted); padding: 4px; cursor: pointer; }
 .en-son-etiket { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; letter-spacing: .02em; border: 1px solid var(--brand-ink); color: var(--brand-ink); vertical-align: 1px; }
-.berpa-secimler { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
-.berpa-secimler .btn { width: 100%; justify-content: center; }
-.berpa-secimler .berpa-cerceve { border: 1px solid var(--line); }

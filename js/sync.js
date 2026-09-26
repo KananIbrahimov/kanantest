@@ -387,36 +387,13 @@ let driveAcilisYoxlanib = false;
 function driveAcilisYoxla() {
   if (driveAcilisYoxlanib || demoRejim || !veriMenbeGuvenli) return;
   driveAcilisYoxlanib = true;
-  let yeniGiris = false;
-  try { yeniGiris = sessionStorage.getItem('berpa_teklif') === '1'; sessionStorage.removeItem('berpa_teklif'); } catch (e) {}
   // Google skriptini əvvəlcədən yüklə: düyməyə basanda pəncərə dərhal açılsın (iPhone Safari toxunuşdan
   // sonra gecikən pəncərəni bloklayır).
-  if (yeniGiris || driveBagli) driveGisSkriptiniYukle().then(driveTokenClientHazirla).catch(() => {});
-  if (yeniGiris) { setTimeout(() => modalAc('berpaModal'), 300); return; }
+  if (driveBagli) driveGisSkriptiniYukle().then(driveTokenClientHazirla).catch(() => {});
   if (!driveBagli || !driveBackupVaxtiGelib()) return;
   if (driveAccessToken && Date.now() < driveTokenBitisZamani) driveArxaPlanGonder(true);
   else setTimeout(driveXatirlatmaGoster, 800);
 }
-
-// ---- Girişdən sonra bərpa seçimi ----
-function berpaDriveSec() {
-  modalKapat('berpaModal');
-  if (GOOGLE_DRIVE_CLIENT_ID.indexOf('BURAYA_OZ_CLIENT_ID') === 0) return;
-  driveSyncGedirmi = true;
-  driveTokenGerekliyse(true, async () => {
-    try {
-      const fayllar = await driveBackupFayllariniListele();
-      driveSyncGedirmi = false;
-      driveMenyuGuncelle();
-      if (!fayllar.length) { alertAc(tr('drive.backupYoxdur', 'Drive-da hələ ehtiyat nüsxə yoxdur.')); return; }
-      driveBackupSecimGoster(fayllar);
-    } catch (e) {
-      driveSyncGedirmi = false;
-      alertAc(tr('drive.siyahiAlinmadi', 'Siyahını yükləmək alınmadı: {xeta}', { xeta: (e && e.message ? e.message : e) }));
-    }
-  });
-}
-function berpaFaylSec() { modalKapat('berpaModal'); fayldanBerpaAc(); }
 
 // ---- Fayl ehtiyatı (Google pəncərəsindən asılı deyil — iPhone-da ana ekran tətbiqi üçün etibarlı yol) ----
 function faylaYukle() {
@@ -558,18 +535,15 @@ function emailIleGirisEt() {
   if (!email || !sifre) { xetaEl.innerText = tr('giris.epoctVeSifreYaz', 'E-poçtu və şifrəni daxil et.'); return; }
   firebaseBaslat().then((hazir) => {
     if (!hazir) { xetaEl.innerText = tr('giris.baglantiAlinmadi', 'Bağlantı alınmadı. İnterneti yoxla və yenidən cəhd et.'); return; }
-    try { sessionStorage.setItem('berpa_teklif', '1'); } catch (e) {}
     firebase.auth().signInWithEmailAndPassword(email, sifre).then((deyisim) => {
       const istifadeci = deyisim.user;
       if (istifadeci && !istifadeci.emailVerified) {
         tesdiqGozleyenIstifadeci = istifadeci;
         xetaEl.innerText = tr('giris.epoctTesdiqlenmeyibUzun', 'E-poçtun hələ təsdiqlənməyib. Poçt qutunu ("Spam" qovluğunu da) yoxla, linkə keçid et və yenidən daxil ol.');
         document.getElementById('tesdiqYenidenBtn').style.display = 'block';
-        try { sessionStorage.removeItem('berpa_teklif'); } catch (e) {}
         firebase.auth().signOut();
       }
     }).catch((e) => {
-      try { sessionStorage.removeItem('berpa_teklif'); } catch (e2) {}
       console.warn('Email giriş xətası:', e);
       if (e && e.code === 'auth/user-not-found') xetaEl.innerText = tr('giris.hesabTapilmadi', 'Bu e-poçtla hesab tapılmadı. Əvvəlcə "Hesab yarat" ilə qeydiyyatdan keç.');
       else if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) xetaEl.innerText = tr('giris.sifreSehvdir', 'Şifrə yanlışdır.');
