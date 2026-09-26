@@ -91,23 +91,23 @@ function driveMenyuGuncelle(mesaj, xetaMi) {
   if (!statusEl) return;
   if (!driveBagli) {
     statusEl.className = 'drive-status' + (xetaMi ? ' err' : '');
-    statusEl.innerText = xetaMi ? ('⚠️ ' + mesaj) : tr('drive.bagliDeyil', '☁️ Google Drive-a qoşulmayıb');
+    statusEl.innerText = xetaMi ? mesaj : tr('drive.bagliDeyil', 'Google Drive-a qoşulmayıb');
     subEl.innerText = tr('ayarlar.driveBaglanaBilersen', 'Qoşulandan sonra məlumatlarını "Göndər" və "Yüklə" düymələri ilə özün idarə edəcəksən.');
     btnsEl.innerHTML = `<button onclick="driveBaglan()">${tr('ayarlar.baglan', 'Qoşul')}</button>`;
     return;
   }
   if (driveSyncGedirmi) {
     statusEl.className = 'drive-status';
-    statusEl.innerText = tr('ayarlar.driveEmeliyyatGedir', '☁️ İcra olunur…');
+    statusEl.innerText = tr('ayarlar.driveEmeliyyatGedir', 'İcra olunur…');
   } else if (xetaMi) {
     statusEl.className = 'drive-status err';
-    statusEl.innerText = '⚠️ ' + mesaj;
+    statusEl.innerText = mesaj;
   } else {
     statusEl.className = 'drive-status ok';
-    statusEl.innerText = tr('ayarlar.driveBagli', '✅ Drive-a qoşulub');
+    statusEl.innerText = tr('ayarlar.driveBagli', 'Drive-a qoşulub');
   }
   subEl.innerText = driveSonSync ? tr('drive.sonEmeliyyat', 'Son əməliyyat: {vaxt}', { vaxt: driveSonSync }) : tr('drive.helelik', 'Hələ heç nə göndərilməyib və ya yüklənməyib.');
-  btnsEl.innerHTML = `<button onclick="driveManualGonder()">📤 ${tr('ayarlar.driveGonder', 'Drive-a göndər')}</button><button onclick="driveManualCek()">📥 ${tr('ayarlar.driveCek', 'Drive-dan yüklə')}</button><button onclick="driveBaglantiKes()">${tr('ayarlar.baglantiniKes', 'Bağlantını kəs')}</button>`;
+  btnsEl.innerHTML = `<button onclick="driveManualGonder()">${tr('ayarlar.driveGonder', 'Drive-a göndər')}</button><button onclick="driveManualCek()">${tr('ayarlar.driveCek', 'Drive-dan yüklə')}</button><button onclick="driveBaglantiKes()">${tr('ayarlar.baglantiniKes', 'Bağlantını kəs')}</button>`;
 }
 
 function driveBackupVerisi() {
@@ -248,7 +248,7 @@ function driveBackupSecimGoster(fayllar) {
     const item = document.createElement('div');
     item.className = 'modal-item';
     item.style.cursor = 'pointer';
-    item.innerHTML = `<div class="field-row between"><span>🗓️ ${escapeHtml(driveTarixSaatFormat(f.createdTime))}</span><span style="color:var(--brand-ink); font-size:12px; font-weight:600;">${escapeHtml(tr('drive.sec', 'Seç →'))}</span></div>`;
+    item.innerHTML = `<div class="field-row between"><span>${escapeHtml(driveTarixSaatFormat(f.createdTime))}</span><span style="color:var(--brand-ink); font-size:12px; font-weight:600;">${escapeHtml(tr('drive.sec', 'Seç →'))}</span></div>`;
     item.onclick = () => driveBackupSecildi(f.id, f.createdTime);
     konteyner.appendChild(item);
   });
@@ -518,11 +518,11 @@ function firebasePanelGuncelle(mesaj, xetaMi) {
   if (!statusEl) return;
 
   if (xetaMi) {
-    statusEl.innerText = '⚠️ ' + (mesaj || tr('umumi.xetaBasVerdi', 'Xəta baş verdi.'));
+    statusEl.innerText = (mesaj || tr('umumi.xetaBasVerdi', 'Xəta baş verdi.'));
   } else if (cariGoogleIstifadeci) {
-    statusEl.innerText = tr('ayarlar.anlikSinxronizasiyaAktiv', '⚡ Canlı sinxronizasiya aktivdir');
+    statusEl.innerText = tr('ayarlar.anlikSinxronizasiyaAktiv', 'Canlı sinxronizasiya aktivdir');
   } else {
-    statusEl.innerText = tr('ayarlar.baglanmayib', '⚡ Qoşulmayıb');
+    statusEl.innerText = tr('ayarlar.baglanmayib', 'Qoşulmayıb');
   }
 
   if (cariGoogleIstifadeci) {
@@ -657,7 +657,7 @@ async function firebaseYazEt() {
       veriMenbeGuvenli = true;
       buludVerisiTetbiqSonrasi();
       firebasePanelGuncelle(tr('sinx.konflikt', 'Başqa cihazda daha yeni dəyişiklik var və o yükləndi. Son əməliyyatını yoxla, lazım olsa təkrarla.'), true);
-      toastGoster('⚠️ ' + tr('sinx.konflikt', 'Başqa cihazda daha yeni dəyişiklik var və o yükləndi. Son əməliyyatını yoxla, lazım olsa təkrarla.'));
+      toastGoster(tr('sinx.konflikt', 'Başqa cihazda daha yeni dəyişiklik var və o yükləndi. Son əməliyyatını yoxla, lazım olsa təkrarla.'));
     } else {
       bazaRev = yeniRev;
       yazilmisSurum = yazilanSurum;
@@ -665,7 +665,7 @@ async function firebaseYazEt() {
   } catch (e) {
     console.warn('Firestore yazma xətası:', e);
     firebasePanelGuncelle(tr('sinx.gonderilmediPanel', 'Göndərmək alınmadı — yenidən cəhd edilir.'), true);
-    toastGoster('⚠️ ' + tr('sinx.gonderilmediToast', 'Dəyişiklik buluda saxlanmadı. İnterneti yoxla — avtomatik yenidən cəhd edilir.'), 'yazma-xeta');
+    toastGoster(tr('sinx.gonderilmediToast', 'Dəyişiklik buluda saxlanmadı. İnterneti yoxla — avtomatik yenidən cəhd edilir.'), 'yazma-xeta');
     yazmaGedir = false;
     clearTimeout(yazmaTekrarTimer);
     yazmaTekrarTimer = setTimeout(firebaseYazPlanla, 5000);

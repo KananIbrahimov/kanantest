@@ -63,8 +63,8 @@ function kilidAyarGoster() {
   if (!sw || !lbl) return;
   sw.classList.toggle('on', kilidVar);
   lbl.innerHTML = kilidVar
-    ? '<span class="ayarlar-ikon">🔒</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.kilidAktiv', 'Tətbiq kilidi (aktiv)')) + '</span>'
-    : '<span class="ayarlar-ikon">🔒</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.kilidFaceIdPin', 'Tətbiq kilidi (Face ID / PIN)')) + '</span>';
+    ? '<span class="ayarlar-ikon">' + ikon('kilid') + '</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.kilidAktiv', 'Tətbiq kilidi (aktiv)')) + '</span>'
+    : '<span class="ayarlar-ikon">' + ikon('kilid') + '</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.kilidFaceIdPin', 'Tətbiq kilidi (Face ID / PIN)')) + '</span>';
   const errEl = document.getElementById('kilidAyarError');
   if (errEl) errEl.innerText = '';
 }

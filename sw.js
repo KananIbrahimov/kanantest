@@ -5,6 +5,8 @@
 
 // VACİB: Hər yeni versiya buraxdıqda bu adı artır (v3 → v4 → v5 ...).
 // Bu, köhnə keşin avtomatik təmizlənməsini təmin edir.
+// (v23: Son əməliyyatlar — kateqoriya və tarix aralığı filtri; keçmiş tarixə xərc düyməsi bura köçdü.)
+// (v22: Premium Graphite & Silver tema, SVG ikonlar; keçmiş günün xərcləri yalnız baxış; Ayarlar yenidən quruldu.)
 // (v21: Rus dili (lang/ru.json) əlavə edildi; AZ/EN mətnlər yenidən yazıldı; bütün sabit mətnlər tərcümə açarlarına keçdi.)
 // (v20: Test düzəlişləri — tema ilk basış, günün xərcləri siyahısı, pul yuvarlaqlaşdırma, köhnə kateqoriya datası, xəbərdarlıq pəncərəsi, EN mətnlər.)
 // (v19: Ana ekranda itmiş "Günün xərcləri" (#giderListesi) siyahısı bərpa edildi.)
@@ -19,7 +21,7 @@
 // (v10: dil faylları (lang/*.json) üçün network-first əlavə edildi.)
 // (v9: ad "Safe Money" olaraq dəyişdi və yeni logo əlavə edildi — köhnə keşlənmiş
 // ikonların/title-ın istifadəçilərdə qalmaması üçün versiya artırıldı.)
-const CACHE_ADI = 'safe-money-cache-v21';
+const CACHE_ADI = 'safe-money-cache-v23';
 
 const KESLENECEK_FAYLLAR = [
   './index.html',

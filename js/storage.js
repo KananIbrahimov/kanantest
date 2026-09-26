@@ -1,5 +1,5 @@
 /* Safe Money — vəziyyət, yükləmə, yadda saxlama */
-const APP_VERSION = '3.8'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
+const APP_VERSION = '3.10'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
 let aktifDonem = 'gunluk';
 let goruntulenenTarix = new Date(); goruntulenenTarix.setHours(0, 0, 0, 0);
 let kategoriler = [];
@@ -33,10 +33,12 @@ function cssVar(ad) {
   return getComputedStyle(document.documentElement).getPropertyValue(ad).trim();
 }
 // 20 rəng: ilk 8-i köhnə palitradır (mövcud kateqoriyaların rəngi seçili qalsın deyə eyni saxlanılıb).
+// Premium tema palitrası: doyğunluğu azaldılmış, bir-biri ilə uyğun 20 ton (qrafit + gümüşü fonda sakit görünür).
+// Mövcud kateqoriyaların rəngi dəyişmir — bu siyahı yalnız yeni kateqoriya və rəng seçimi üçündür.
 const renkPaleti = [
-  '#7d2a3d','#c99a3a','#3d7068','#8b5f8f','#b5533f','#4a6fa5','#7a8450','#a35c7a',
-  '#2b7a56','#d97b3a','#c0435a','#5aa5b5','#6b5bb5','#8a6d4b','#e0a3b8','#9fbf5a',
-  '#e6c84f','#7d3c5e','#b8a9d9','#86c5a3'
+  '#8fa3b8','#b89a7a','#7fa08f','#a58aa8','#b88482','#7d93b0','#a3a77f','#b08d9b',
+  '#6f9a9a','#c2a36b','#9c8fbf','#8aa6c9','#a9b4bf','#7c8a99','#c4a9a0','#94b0a0',
+  '#b5b09a','#9aa0ad','#d0c3a4','#8c9c86'
 ];
 
 // Kateqoriya "aylıq sabit xərc"dirsə true (tik aktivdir); tiksiz / tapılmayan kateqoriya = günlük xərc.
@@ -46,14 +48,14 @@ function kategoriAylikdirmi(ad) {
 }
 
 const varsayilanKategoriler = [
-  { ad: 'Bus', sabitTutar: null, renk: '#7d2a3d', ikon: '🚌' },
-  { ad: 'Metro', sabitTutar: null, renk: '#c99a3a', ikon: '🚇' },
-  { ad: 'Coffee', sabitTutar: null, renk: '#3d7068', ikon: '☕️' },
-  { ad: 'Sigaret', sabitTutar: null, renk: '#8b5f8f', ikon: '🚬' },
-  { ad: 'Market', sabitTutar: null, renk: '#b5533f', ikon: '🛒' },
-  { ad: 'Breakfast', sabitTutar: null, renk: '#4a6fa5', ikon: '🥐' },
-  { ad: 'Dinner', sabitTutar: null, renk: '#7a8450', ikon: '🍔' },
-  { ad: 'Lunch', sabitTutar: null, renk: '#a35c7a', ikon: '🍽️' }
+  { ad: 'Bus', sabitTutar: null, renk: '#8fa3b8', ikon: '🚌' },
+  { ad: 'Metro', sabitTutar: null, renk: '#7d93b0', ikon: '🚇' },
+  { ad: 'Coffee', sabitTutar: null, renk: '#b89a7a', ikon: '☕️' },
+  { ad: 'Sigaret', sabitTutar: null, renk: '#9aa0ad', ikon: '🚬' },
+  { ad: 'Market', sabitTutar: null, renk: '#7fa08f', ikon: '🛒' },
+  { ad: 'Breakfast', sabitTutar: null, renk: '#c2a36b', ikon: '🥐' },
+  { ad: 'Dinner', sabitTutar: null, renk: '#b88482', ikon: '🍔' },
+  { ad: 'Lunch', sabitTutar: null, renk: '#a58aa8', ikon: '🍽️' }
 ];
 
 const varsayilanGiderler = [];
@@ -177,7 +179,7 @@ async function veriKaydet() {
     if (senkronKey && !veriMenbeGuvenli) {
       console.warn('Yadda saxlama bloklandı: bulud mənbəyi hələ təsdiqlənməyib (bağlantı gözlənilir).');
       firebasePanelGuncelle(tr('sinx.tesdiqlenmeyibPanel', 'Bulud hələ hazır deyil — dəyişiklik göndərilmədi. Bağlantını yoxla.'), true);
-      toastGoster('⚠️ ' + tr('sinx.tesdiqlenmeyibToast', 'Bulud hələ hazır deyil — dəyişiklik göndərilmədi. İnterneti yoxla və səhifəni yenilə.'), 'blok');
+      toastGoster(tr('sinx.tesdiqlenmeyibToast', 'Bulud hələ hazır deyil — dəyişiklik göndərilmədi. İnterneti yoxla və səhifəni yenilə.'), 'blok');
       return;
     }
     // QƏSDƏN localStorage-a YAZILMIR — məlumatın YEGANƏ mənbəyi Firestore-dur.

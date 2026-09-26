@@ -4,11 +4,11 @@ function temaTetbiqEt(tema) {
   document.documentElement.setAttribute('data-theme', tema === 'dark' ? 'dark' : 'light');
   // Brauzer / status bar rəngi tema ilə uyğun olsun
   const metaTema = document.querySelector('meta[name="theme-color"]');
-  if (metaTema) metaTema.setAttribute('content', tema === 'dark' ? '#0b0809' : '#f6f0f1');
+  if (metaTema) metaTema.setAttribute('content', tema === 'dark' ? '#0b0c0e' : '#f3f4f6');
   const lbl = document.getElementById('temaLabel');
   // Açar (switch) "qaranlıq rejim aktivdir" vəziyyətini göstərir — yazı da həmişə eyni: "🌙 Qaranlıq rejim".
   // (Əvvəl açar aktiv olanda yanında "İşıqlı rejim" yazılırdı və bu, çaşdırırdı.)
-  if (lbl) lbl.innerHTML = '<span class="ayarlar-ikon">🌙</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.qaranliqRejim', 'Qaranlıq rejim')) + '</span>';
+  if (lbl) lbl.innerHTML = '<span class="ayarlar-ikon">' + (typeof ikon === 'function' ? ikon('ay') : '') + '</span><span class="ayarlar-metin">' + escapeHtml(tr('ayarlar.qaranliqRejim', 'Qaranlıq rejim')) + '</span>';
 }
 function temaDeyis() {
   // DÜZƏLİŞ: seçim saxlanmayıbsa defolt 'dark'-dır (temaIlkYukleme ilə eyni) — əvvəl null 'light' sayılırdı
@@ -150,7 +150,7 @@ const dilHazirPromise = dilYukle(dilKodu).then(() => {
   try { temaTetbiqEt(localStorage.getItem('tema') || 'dark'); kilidAyarGoster(); } catch (e) { console.warn('[i18n]', e); }
   try {
     const dzBtn = document.getElementById('duzenlemeBtn');
-    if (dzBtn) dzBtn.innerText = duzenlemeRejimi ? tr('ana.hazirdir', '✅ Hazırdır') : tr('ana.ekraniDuzenle', '✏️ Ekranı tənzimlə');
+    if (dzBtn) dzBtn.innerText = duzenlemeRejimi ? tr('ana.hazirdir', 'Hazırdır') : tr('ana.ekraniDuzenle', 'Ekranı tənzimlə');
   } catch (e) {}
   // Təhlükəsizlik şəbəkəsi: lüğət ekran çəkildikdən SONRA gəlibsə, dinamik ekranları yenidən çək.
   // (ekraniGuncelle özü veriYuklendi=false olanda heç nə etmir — erkən çağırmaq təhlükəsizdir.)
@@ -252,7 +252,7 @@ async function dilPaneliniAc() {
       (aktiv ? ' style="border-color:var(--brand-ink);"' : '') + '>' +
       '<span style="display:flex; align-items:center;"><span class="ayarlar-ikon" style="font-size:20px;">' + escapeHtml(d.bayraq) +
       '</span><span class="ayarlar-metin">' + escapeHtml(d.ad) + '</span></span>' +
-      '<span style="color:var(--brand-ink);">' + (aktiv ? '✓' : '') + '</span></button>';
+      '<span style="color:var(--brand-ink); display:flex;">' + (aktiv ? ikon('tesdiq', 18) : '') + '</span></button>';
   }).join('');
   kutu.querySelectorAll('button[data-kod]').forEach(b => b.addEventListener('click', () => dilSec(b.dataset.kod)));
 }
