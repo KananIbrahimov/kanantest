@@ -112,7 +112,7 @@
 <div id="dashboardModal" class="page-screen">
   <div class="page-inner">
     <div style="padding-bottom:12px; margin-bottom:4px;">
-      <h2 data-i18n="nav.dashboard" style="margin:0;">İcmal</h2>
+      <h2 data-i18n="nav.dashboard" style="margin:0;">Borclar</h2>
     </div>
 
     <!-- 1. Ümumi Borc — dairəvi diaqram -->
@@ -139,7 +139,7 @@
 
     <!-- 3. Kredit borcu (taksit) — ödənilib / qalıb — dairəvi diaqram -->
     <div class="pie-card">
-      <div data-i18n="dash.kreditBorcuTaksitOdenilib" class="pie-title">Kredit xətti — ödənilən taksitlər</div>
+      <div data-i18n="dash.kreditBorcuTaksitOdenilib" class="pie-title">Kredit xətti — ödənişlər</div>
       <div class="pie-card-row">
         <div class="pie-canvas-wrap"><canvas id="dashKrediBorcuCanvas"></canvas>
           <div class="pie-center-label"><span class="n" id="dashKrediBorcuMerkez">—</span><span data-i18n="dash.taksit" class="l">taksit</span></div>
@@ -155,10 +155,10 @@
 <nav class="bottom-nav" id="bottomNav">
   <div class="bottom-nav-inner">
     <button class="nav-item" id="navDashboard" onclick="sekmeSec('dashboard')">
-      <span class="nav-icon"><i data-ikon="icmal" data-olcu="22"></i></span><span data-i18n="nav.dashboard">İcmal</span>
+      <span class="nav-icon"><i data-ikon="icmal" data-olcu="22"></i></span><span data-i18n="nav.dashboard">Borclar</span>
     </button>
     <button class="nav-item" id="navAylikHesabat" onclick="sekmeSec('aylikHesabat')">
-      <span class="nav-icon"><i data-ikon="ayliq" data-olcu="22"></i></span><span data-i18n="nav.aylik">Aylıq</span>
+      <span class="nav-icon"><i data-ikon="ayliq" data-olcu="22"></i></span><span data-i18n="nav.aylik">Hesabat</span>
     </button>
     <button class="nav-item active" id="navAna" onclick="sekmeSec('ana')">
       <span class="nav-icon"><i data-ikon="xercler" data-olcu="22"></i></span><span data-i18n="nav.xercler">Xərclər</span>
@@ -354,7 +354,7 @@
     <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:8px;" onclick="ayarlarSonEmeliyyatlarAc()"><span class="ayarlar-ikon"><i data-ikon="tarixce"></i></span><span class="ayarlar-metin" data-i18n="ayarlar.sonEmeliyyatlar">Son əməliyyatlar</span></button>
 
     <!-- İstək 2: sıra — Yenilə → Sistem (tema, kilid, Google Drive) → Hesab (həmişə görünür, ən altda) -->
-    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:8px;" onclick="tetbiqiYenile()"><span class="ayarlar-ikon"><i data-ikon="yenile"></i></span><span class="ayarlar-metin" data-i18n="ayarlar.yenile">Yenilə (son versiyanı yüklə)</span></button>
+    <button class="ayarlar-kutu ayarlar-setir-ic" style="justify-content:flex-start; margin-bottom:8px;" onclick="tetbiqiYenile()"><span class="ayarlar-ikon"><i data-ikon="yenile"></i></span><span class="ayarlar-metin" data-i18n="ayarlar.yenile">Tətbiqi yenilə</span></button>
 
     <div class="ayarlar-qrup" id="sistemQrup">
       <button class="ayarlar-kutu ayarlar-setir-ic ayarlar-qrup-bas" id="sistemBaslikBtn" onclick="sistemBolmesiToggle()" aria-expanded="false" aria-controls="sistemBolmesi">
@@ -374,7 +374,7 @@
           <div class="error-text" id="kilidAyarError"></div>
         </div>
         <div class="qrup-setir">
-          <div class="ayarlar-setir-ic" style="justify-content:flex-start;"><span class="ayarlar-ikon"><i data-ikon="bulud"></i></span><span class="ayarlar-metin" data-i18n="ayarlar.googleDriveBaslik">Google Drive (əl ilə ehtiyat nüsxə)</span></div>
+          <div class="ayarlar-setir-ic" style="justify-content:flex-start;"><span class="ayarlar-ikon"><i data-ikon="bulud"></i></span><span class="ayarlar-metin" data-i18n="ayarlar.googleDriveBaslik">Google Drive ehtiyat nüsxəsi</span></div>
           <div class="drive-box" id="driveBox">
             <div data-i18n="ayarlar.googleDriveABagli" class="drive-status" id="driveStatus">Google Drive-a qoşulmayıb</div>
             <div data-i18n="ayarlar.baglansanGonderVeCek" class="drive-sub" id="driveSub">Qoşulandan sonra məlumatlarını "Göndər" və "Yüklə" düymələri ilə özün idarə edəcəksən.</div>
@@ -443,10 +443,10 @@
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="aylikHesabatPaneliniKapat()" class="geri-btn" aria-label="Geri"><i data-ikon="geri" data-olcu="22"></i></button>
-      <h2 data-i18n="aylik.buAyHaraPul" style="margin:0; flex:1;">Bu ay pulun hara gedir?</h2>
+      <h2 data-i18n="aylik.buAyHaraPul" style="margin:0; flex:1;">Aylıq hesabat</h2>
     </div>
     <div class="hesabat-cemi-card">
-      <div data-i18n="aylik.buAyXerclediyin" class="k">Bu ay xərclədiyin</div>
+      <div data-i18n="aylik.buAyXerclediyin" class="k">Bu ayın xərcləri</div>
       <div class="v" id="aylikHesabatCemi">—</div>
       <div class="k" id="aylikHesabatAlt" style="margin-top:4px; font-weight:500;"></div>
     </div>
@@ -472,7 +472,7 @@
       <div id="aylikSabitListesi"></div>
     </div>
 
-    <h3 data-i18n="aylik.gunlukXercTrendiBu" style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Gündəlik xərc dinamikası (bu ay)</h3>
+    <h3 data-i18n="aylik.gunlukXercTrendiBu" style="font-size:14px; margin:18px 0 10px; color:var(--ink);">Günlər üzrə xərclər</h3>
     <div style="background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); padding:14px; margin-bottom:16px;">
       <canvas id="aylikTrendCanvas" height="160"></canvas>
     </div>
@@ -563,7 +563,7 @@
   <div class="page-inner">
     <div class="field-row between" style="border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:4px;">
       <button onclick="hesablarPaneliniKapat()" class="geri-btn" aria-label="Geri"><i data-ikon="geri" data-olcu="22"></i></button>
-      <h2 style="margin:0; flex:1;" data-i18n="hesablar.basliq">Hesablar və borclar</h2>
+      <h2 style="margin:0; flex:1;" data-i18n="hesablar.basliq">Hesablar</h2>
     </div>
 
     <div class="hesab-add-head" style="margin-top:6px;">

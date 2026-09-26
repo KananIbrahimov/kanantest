@@ -32,11 +32,11 @@ function appIskeletiOlustur() {
     </div>
     <div class="insight-strip">
       <div class="insight-box">
-        <div class="k" data-i18n="ana.gunlukOrtalama">Gündəlik orta</div>
+        <div class="k" data-i18n="ana.gunlukOrtalama">Bu ay gündə orta</div>
         <div class="v" id="insightOrtalama">—</div>
       </div>
       <div class="insight-box">
-        <div class="k" data-i18n="ana.enCoxXerc">Ən çox xərclənən</div>
+        <div class="k" data-i18n="ana.enCoxXerc">Ən çox xərc</div>
         <div class="v" id="insightTopKategori">—</div>
       </div>
     </div>
@@ -44,7 +44,7 @@ function appIskeletiOlustur() {
     <div class="history-head" style="margin-top:4px;"><span data-i18n="ana.gununXercleri">Günün xərcləri</span></div>
     <ul id="giderListesi" style="list-style:none; padding:0; margin:0 0 14px;"></ul>
     <button class="dashed-btn" id="kateqoriyaEkleBtn" onclick="catPanelYeniAc()" style="display:none;" data-i18n="ana.yeniKateqoriya">Yeni kateqoriya</button>
-    <button class="dashed-btn" id="duzenlemeBtn" onclick="duzenlemeRejimiDeyis()" data-i18n="ana.ekraniDuzenle">Ekranı tənzimlə</button>
+    <button class="dashed-btn" id="duzenlemeBtn" onclick="duzenlemeRejimiDeyis()" data-i18n="ana.ekraniDuzenle">Kateqoriyaları redaktə et</button>
     <!-- "Keçmiş tarixə xərc əlavə et" düyməsi Ayarlar → Son əməliyyatlar səhifəsinə köçürülüb -->
   `;
   dilTetbiqEt(appEl); // skelet JS ilə qurulur — data-i18n etiketləri burada tətbiq olunur
@@ -75,8 +75,16 @@ function gunDeyisdiYoxla() {
 }
 setInterval(gunDeyisdiYoxla, 60000);
 
-function gunSayisi() {
-  return 1;
+function ayGundeOrta(tarix) {
+  const il = tarix.getFullYear(), ay = tarix.getMonth(), gunSay = tarix.getDate();
+  const sonGun = new Date(il, ay, gunSay, 23, 59, 59, 999).getTime();
+  let cem = 0;
+  giderler.forEach(g => {
+    if (g.aylikRef || !g.tamTarix || kategoriAylikdirmi(g.kategori)) return;
+    const t = new Date(g.tamTarix);
+    if (t.getFullYear() === il && t.getMonth() === ay && t.getTime() <= sonGun) cem += g.tutar;
+  });
+  return pulYuvarla(cem / gunSay);
 }
 
 function tarixBugunmu(tarix) {
@@ -244,7 +252,9 @@ function ekraniGuncelle() {
   }
 
   const insightOrtEl = document.getElementById('insightOrtalama');
-  if (insightOrtEl) insightOrtEl.innerText = (toplam / gunSayisi()).toFixed(2) + ' AZN';
+  // "Bu ay gündə orta": baxılan ayın gündəlik xərcləri (aylıq sabit xərclər və kredit ödənişləri xaric),
+  // ayın 1-dən baxılan günə qədər olan günlərin sayına bölünür. (Əvvəl bu sahə sadəcə günün cəmini təkrarlayırdı.)
+  if (insightOrtEl) insightOrtEl.innerText = ayGundeOrta(goruntulenenTarix).toFixed(2) + ' AZN';
   const insightTopEl = document.getElementById('insightTopKategori');
   if (insightTopEl) insightTopEl.innerText = topKategoriAd ? topKategoriAd : '—';
 
@@ -255,7 +265,7 @@ function ekraniGuncelle() {
 
   const butonlarEl = document.getElementById('butonlarKonteyneri');
   const duzenlemeBtnEl = document.getElementById('duzenlemeBtn');
-  if (duzenlemeBtnEl) duzenlemeBtnEl.innerText = duzenlemeRejimi ? tr('ana.hazirdir', 'Hazırdır') : tr('ana.ekraniDuzenle', 'Ekranı tənzimlə');
+  if (duzenlemeBtnEl) duzenlemeBtnEl.innerText = duzenlemeRejimi ? tr('ana.hazirdir', 'Hazırdır') : tr('ana.ekraniDuzenle', 'Kateqoriyaları redaktə et');
   const kateqoriyaEkleBtnEl = document.getElementById('kateqoriyaEkleBtn');
   if (kateqoriyaEkleBtnEl) kateqoriyaEkleBtnEl.style.display = duzenlemeRejimi ? 'flex' : 'none';
   if (butonlarEl) {
@@ -1526,7 +1536,7 @@ function aylikHesabatGoster() {
       trendSiyahi.forEach(t => {
         let etiket, sinif;
         if (t.yeni) { etiket = tr('aylik.trendYeni', 'Yeni'); sinif = 'trend-new'; }
-        else if (t.bitib) { etiket = tr('aylik.trendKesildi', 'Dayandı'); sinif = 'trend-down'; }
+        else if (t.bitib) { etiket = tr('aylik.trendKesildi', 'Bu ay yoxdur'); sinif = 'trend-down'; }
         else { etiket = (t.deyisim > 0 ? '↑ ' : '↓ ') + Math.abs(t.deyisim).toFixed(0) + '%'; sinif = t.deyisim > 0 ? 'trend-up' : 'trend-down'; }
         const div = document.createElement('div');
         div.className = 'trend-row';

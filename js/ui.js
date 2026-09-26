@@ -150,7 +150,7 @@ const dilHazirPromise = dilYukle(dilKodu).then(() => {
   try { temaTetbiqEt(localStorage.getItem('tema') || 'dark'); kilidAyarGoster(); } catch (e) { console.warn('[i18n]', e); }
   try {
     const dzBtn = document.getElementById('duzenlemeBtn');
-    if (dzBtn) dzBtn.innerText = duzenlemeRejimi ? tr('ana.hazirdir', 'Hazırdır') : tr('ana.ekraniDuzenle', 'Ekranı tənzimlə');
+    if (dzBtn) dzBtn.innerText = duzenlemeRejimi ? tr('ana.hazirdir', 'Hazırdır') : tr('ana.ekraniDuzenle', 'Kateqoriyaları redaktə et');
   } catch (e) {}
   // Təhlükəsizlik şəbəkəsi: lüğət ekran çəkildikdən SONRA gəlibsə, dinamik ekranları yenidən çək.
   // (ekraniGuncelle özü veriYuklendi=false olanda heç nə etmir — erkən çağırmaq təhlükəsizdir.)
