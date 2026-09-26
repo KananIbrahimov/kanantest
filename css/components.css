@@ -360,3 +360,10 @@ body.demo-aktiv { padding-top: calc(56px + env(safe-area-inset-top, 0px)); }
 body.demo-aktiv .page-inner { padding-top: calc(56px + env(safe-area-inset-top, 0px)); }
 
 .error-text.ugur { color: var(--success-ink); }
+
+/* Giriş/qeydiyyat ekranında dil seçimi */
+.dil-secici { display: flex; justify-content: flex-end; gap: 4px; margin: 0 0 14px; }
+.dil-secim { min-width: 40px; height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; letter-spacing: .06em; cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
+.dil-secim:hover { color: var(--ink); }
+.dil-secim.aktiv { color: var(--ink); border-color: var(--brand-ink); background: color-mix(in srgb, var(--brand-ink) 12%, transparent); }
+.dil-secim:focus-visible { outline: 2px solid var(--brand-ink); outline-offset: 2px; }

@@ -270,5 +270,43 @@ function dilSec(kod) {
   }
   location.reload();
 }
+// ---- Giriş / qeydiyyat ekranında sürətli dil seçimi (AZ · EN · RU) ----
+// Dil dəyişəndə səhifə yenidən yüklənir; yazılmış e-poçt/ad və açıq qeydiyyat forması itməsin deyə
+// (şifrələr istisna) sessionStorage-də saxlanılıb geri qaytarılır.
+const GIRIS_DILLERI = [['az', 'AZ', 'Azərbaycan dili'], ['en', 'EN', 'English'], ['ru', 'RU', 'Русский']];
+function girisDilSeciciCiz() {
+  document.querySelectorAll('[data-dil-secici]').forEach(kok => {
+    kok.innerHTML = GIRIS_DILLERI.map(([kod, qisa, ad]) =>
+      `<button type="button" class="dil-secim${kod === dilKodu ? ' aktiv' : ''}" data-kod="${kod}" title="${escapeHtml(ad)}" aria-label="${escapeHtml(ad)}" aria-pressed="${kod === dilKodu}">${qisa}</button>`).join('');
+    kok.querySelectorAll('button[data-kod]').forEach(b => b.addEventListener('click', () => girisDilSec(b.dataset.kod)));
+  });
+}
+function girisDilSec(kod) {
+  if (!DIL_KOD_REGEX.test(kod) || kod === dilKodu) return;
+  const deyer = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const qm = document.getElementById('qeydiyyatModal');
+  try {
+    sessionStorage.setItem('giris_forma', JSON.stringify({
+      email: deyer('emailGirisEmail'),
+      qeydiyyat: !!(qm && qm.classList.contains('active')),
+      ad: deyer('qeydiyyatAd'), soyad: deyer('qeydiyyatSoyad'), qEmail: deyer('qeydiyyatEmail')
+    }));
+    localStorage.setItem('dil', kod);
+  } catch (e) { return; }
+  location.reload();
+}
+function girisFormasiniBerpaEt() {
+  let f = null;
+  try { f = JSON.parse(sessionStorage.getItem('giris_forma') || 'null'); sessionStorage.removeItem('giris_forma'); } catch (e) { f = null; }
+  if (!f) return;
+  const yaz = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+  yaz('emailGirisEmail', f.email);
+  if (f.qeydiyyat && typeof qeydiyyatModalAc === 'function') {
+    qeydiyyatModalAc();
+    yaz('qeydiyyatAd', f.ad); yaz('qeydiyyatSoyad', f.soyad); yaz('qeydiyyatEmail', f.qEmail);
+  }
+}
+document.addEventListener('DOMContentLoaded', () => { girisDilSeciciCiz(); girisFormasiniBerpaEt(); });
+dilHazirPromise.then(girisDilSeciciCiz);
 // ==================== /Dil (i18n) ====================
 
