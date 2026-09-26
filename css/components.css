@@ -298,3 +298,7 @@ select.filtr-inp { margin-bottom: 10px; }
 .filtr-tarix { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .filtr-tarix > div { min-width: 0; }
 .filtr-netice { font-size: 12px; color: var(--muted); font-weight: 600; margin: 2px 2px 8px; font-variant-numeric: tabular-nums; }
+
+/* Giriş / qeydiyyat / kilid ekranlarında izah mətni */
+.lock-box .hint { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 0 18px; }
+.lock-box input { margin-bottom: 10px; min-height: 42px; }

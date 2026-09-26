@@ -296,3 +296,9 @@ body {
 .list-item button.sil:hover { color: var(--danger); }
 .empty-note { color: var(--muted); text-align: center; font-size: 13.5px; padding: 18px 0; margin: 0; }
 
+
+/* ==== Brend: loqo + yazı (v3.12) ==== */
+.brand-logo { width: 30px; height: 30px; border-radius: 8px; display: block; }
+.brand-logo-lg { width: 76px; height: 76px; border-radius: 19px; margin: 0 auto 16px; box-shadow: 0 10px 30px var(--shadow); }
+.brand-wordmark { font-size: 13px !important; font-weight: 600 !important; letter-spacing: 0.22em !important; text-transform: uppercase; color: var(--ink); margin: 0; }
+.brand-wordmark-lg { font-size: 16px !important; letter-spacing: 0.26em !important; margin-bottom: 8px !important; }

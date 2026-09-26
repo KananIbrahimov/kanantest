@@ -3,9 +3,9 @@ function appIskeletiOlustur() {
   const appEl = document.getElementById('app');
   if (!appEl) return;
   appEl.innerHTML = `
-    <div class="top" style="justify-content:center; align-items:center; gap:8px;">
-      <img src="icon-192.png" alt="Safe Money" style="width:28px; height:28px; border-radius:7px;">
-      <h1>Safe Money</h1>
+    <div class="top" style="justify-content:center; align-items:center; gap:10px;">
+      <img src="icon-192.png" alt="" class="brand-logo" width="30" height="30">
+      <h1 class="brand-wordmark">Safe Money</h1>
     </div>
     <div class="date-nav">
       <button class="date-nav-arrow" id="tarixGeriBtn" onclick="tarixDeyis(-1)" aria-label="‹">${ikon('sol', 18)}</button>

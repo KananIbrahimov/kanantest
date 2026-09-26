@@ -5,6 +5,7 @@
 
 // VACİB: Hər yeni versiya buraxdıqda bu adı artır (v3 → v4 → v5 ...).
 // Bu, köhnə keşin avtomatik təmizlənməsini təmin edir.
+// (v25: Yeni premium loqo (qrafit + gümüşü seyf çarxı) və 'SAFE MONEY' yazısı; ikonlar yeniləndi.)
 // (v24: Başlıqlar 3 dildə aydınlaşdırıldı (Borclar, Hesabat); 'Bu ay gündə orta' düzgün hesablanır.)
 // (v23: Son əməliyyatlar — kateqoriya və tarix aralığı filtri; keçmiş tarixə xərc düyməsi bura köçdü.)
 // (v22: Premium Graphite & Silver tema, SVG ikonlar; keçmiş günün xərcləri yalnız baxış; Ayarlar yenidən quruldu.)
@@ -22,7 +23,7 @@
 // (v10: dil faylları (lang/*.json) üçün network-first əlavə edildi.)
 // (v9: ad "Safe Money" olaraq dəyişdi və yeni logo əlavə edildi — köhnə keşlənmiş
 // ikonların/title-ın istifadəçilərdə qalmaması üçün versiya artırıldı.)
-const CACHE_ADI = 'safe-money-cache-v24';
+const CACHE_ADI = 'safe-money-cache-v25';
 
 const KESLENECEK_FAYLLAR = [
   './index.html',
