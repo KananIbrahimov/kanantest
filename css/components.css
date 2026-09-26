@@ -87,7 +87,7 @@ input:focus { border-color: var(--brand-soft); }
 @keyframes pageSlideIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
 .page-inner {
   width: 100%; max-width: 430px; margin: 0 auto; box-sizing: border-box;
-  padding: 20px 14px calc(86px + env(safe-area-inset-bottom, 0px)); flex: 1; display: flex; flex-direction: column; min-height: 100%;
+  padding: 20px 14px calc(96px + env(safe-area-inset-bottom, 0px)); flex: 1 0 auto; display: flex; flex-direction: column; min-height: 100%;
 }
 .page-inner .modal-list { max-height: none; }
 /* Long pages (like Hesablar və Borclar) have more content than fits one screen.
@@ -167,7 +167,8 @@ input:focus { border-color: var(--brand-soft); }
 .drive-box .drive-status.ok { color: var(--success-ink); }
 .drive-box .drive-status.err { color: var(--danger); }
 .drive-box .drive-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
-.drive-box .drive-btns { display: flex; gap: 6px; margin-top: 8px; }
+.drive-box .drive-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.drive-box .drive-btns-ayrac { flex-basis: 100%; height: 0; }
 .drive-box .drive-btns button { flex: 1; font-size: 12px; padding: 9px 6px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; color: var(--ink); font-family: inherit; }
 .drive-box .drive-btns button:hover { border-color: var(--brand-soft); }
 
@@ -367,3 +368,17 @@ body.demo-aktiv .page-inner { padding-top: calc(56px + env(safe-area-inset-top, 
 .dil-secim:hover { color: var(--ink); }
 .dil-secim.aktiv { color: var(--ink); border-color: var(--brand-ink); background: color-mix(in srgb, var(--brand-ink) 12%, transparent); }
 .dil-secim:focus-visible { outline: 2px solid var(--brand-ink); outline-offset: 2px; }
+
+/* Drive: 24 saatlıq ehtiyat nüsxə xatırlatması (alt menyunun üstündə) */
+.drive-xatirlatma { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 150;
+  width: calc(100% - 24px); max-width: 406px; box-sizing: border-box; display: flex; align-items: center; gap: 10px;
+  padding: 10px 10px 10px 14px; border-radius: 14px; background: var(--panel-alt); border: 1px solid var(--line); box-shadow: 0 10px 28px var(--shadow); color: var(--ink); }
+.drive-xatirlatma .dx-ikon { display: flex; color: var(--brand-ink); flex-shrink: 0; }
+.drive-xatirlatma .dx-metn { flex: 1; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+.drive-xatirlatma .dx-btn { flex-shrink: 0; border: none; border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 12.5px; font-weight: 600; background: var(--brand-ink); color: var(--bg); cursor: pointer; }
+.drive-xatirlatma .dx-btn:disabled { opacity: .6; }
+.drive-xatirlatma .dx-bagla { flex-shrink: 0; display: flex; border: none; background: transparent; color: var(--muted); padding: 4px; cursor: pointer; }
+.en-son-etiket { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; letter-spacing: .02em; border: 1px solid var(--brand-ink); color: var(--brand-ink); vertical-align: 1px; }
+.berpa-secimler { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.berpa-secimler .btn { width: 100%; justify-content: center; }
+.berpa-secimler .berpa-cerceve { border: 1px solid var(--line); }

@@ -38,6 +38,8 @@ function driveTokenClientHazirla() {
         driveTokenBitisZamani = Date.now() + (Number(resp.expires_in || 3600) - 60) * 1000;
         driveBagli = true;
         localStorage.setItem('drive_bagli', '1');
+        driveTokenYaddaSaxla();
+        driveEpoctunuOyren();
         const cb = driveGeriCagirisFn; driveGeriCagirisFn = null;
         driveMenyuGuncelle();
         if (cb) cb();
@@ -60,7 +62,12 @@ function driveTokenGerekliyse(sessiz, sonra) {
     }
     if (driveAccessToken && Date.now() < driveTokenBitisZamani) { sonra(); return; }
     driveGeriCagirisFn = sonra;
-    driveTokenClient.requestAccessToken({ prompt: sessiz ? '' : 'consent' });
+    // prompt:'' — Google təsdiq ekranını yalnız həqiqətən lazım olanda (ilk dəfə / icazə geri alınıbsa) göstərir.
+    // Əvvəllər həmişə 'consent' göndərilirdi və buna görə hər dəfə yenidən təsdiq istənilirdi.
+    const ayar = { prompt: '' };
+    const ipucu = localStorage.getItem('drive_email');
+    if (ipucu) ayar.login_hint = ipucu; // hesab seçimi ekranını da ötürür
+    driveTokenClient.requestAccessToken(ayar);
   }).catch(() => {
     driveSyncGedirmi = false; driveGeriCagirisFn = null;
     driveMenyuGuncelle(tr('drive.qosulmaAlinmadi', 'Google-a qoşulmaq alınmadı. İnterneti yoxla.'), true);
@@ -80,6 +87,7 @@ function driveBaglantiKes() {
   confirmAc(tr('ayarlar.driveBaglantisiniKesBaslik', 'Drive bağlantısını kəs'), tr('ayarlar.driveBaglantisiniKesSual', 'Drive bağlantısı kəsilsin? Drive-dakı fayllar silinməyəcək.'), () => {
     driveBagli = false; driveAccessToken = null; driveTokenBitisZamani = 0;
     localStorage.setItem('drive_bagli', '0');
+    driveTokenSil();
     driveMenyuGuncelle();
     menuKapat();
   });
@@ -94,7 +102,7 @@ function driveMenyuGuncelle(mesaj, xetaMi) {
     statusEl.className = 'drive-status' + (xetaMi ? ' err' : '');
     statusEl.innerText = xetaMi ? mesaj : tr('drive.bagliDeyil', 'Google Drive-a qoşulmayıb');
     subEl.innerText = tr('ayarlar.driveBaglanaBilersen', 'Qoşulandan sonra məlumatlarını "Göndər" və "Yüklə" düymələri ilə özün idarə edəcəksən.');
-    btnsEl.innerHTML = `<button onclick="driveBaglan()">${tr('ayarlar.baglan', 'Qoşul')}</button>`;
+    btnsEl.innerHTML = `<button onclick="driveBaglan()">${tr('ayarlar.baglan', 'Qoşul')}</button>` + faylDuymeleriHtml();
     return;
   }
   if (driveSyncGedirmi) {
@@ -108,7 +116,10 @@ function driveMenyuGuncelle(mesaj, xetaMi) {
     statusEl.innerText = tr('ayarlar.driveBagli', 'Drive-a qoşulub');
   }
   subEl.innerText = driveSonSync ? tr('drive.sonEmeliyyat', 'Son əməliyyat: {vaxt}', { vaxt: driveSonSync }) : tr('drive.helelik', 'Hələ heç nə göndərilməyib və ya yüklənməyib.');
-  btnsEl.innerHTML = `<button onclick="driveManualGonder()">${tr('ayarlar.driveGonder', 'Drive-a göndər')}</button><button onclick="driveManualCek()">${tr('ayarlar.driveCek', 'Drive-dan yüklə')}</button><button onclick="driveBaglantiKes()">${tr('ayarlar.baglantiniKes', 'Bağlantını kəs')}</button>`;
+  btnsEl.innerHTML = `<button onclick="driveManualGonder()">${tr('ayarlar.driveGonder', 'Drive-a göndər')}</button><button onclick="driveManualCek()">${tr('ayarlar.driveCek', 'Drive-dan yüklə')}</button><button onclick="driveBaglantiKes()">${tr('ayarlar.baglantiniKes', 'Bağlantını kəs')}</button>` + faylDuymeleriHtml();
+}
+function faylDuymeleriHtml() {
+  return `<div class="drive-btns-ayrac"></div><button onclick="faylaYukle()">${escapeHtml(tr('fayl.saxla', 'Faylda saxla'))}</button><button onclick="fayldanBerpaAc()">${escapeHtml(tr('berpa.fayl', 'Fayldan bərpa et'))}</button>`;
 }
 
 function driveBackupVerisi() {
@@ -214,6 +225,8 @@ function driveManualGonder() {
     try {
       await driveYukleEt();
       driveSonSyncQeydEt();
+      driveBackupVaxtiQeydEt();
+      driveXatirlatmaGizle();
       driveSyncGedirmi = false;
       driveMenyuGuncelle();
     } catch (e) {
@@ -254,7 +267,8 @@ function driveBackupSecimGoster(fayllar) {
     const item = document.createElement('div');
     item.className = 'modal-item';
     item.style.cursor = 'pointer';
-    item.innerHTML = `<div class="field-row between"><span>${escapeHtml(driveTarixSaatFormat(f.createdTime))}</span><span style="color:var(--brand-ink); font-size:12px; font-weight:600;">${escapeHtml(tr('drive.sec', 'Seç →'))}</span></div>`;
+    const enSon = konteyner.children.length === 0;
+    item.innerHTML = `<div class="field-row between"><span>${escapeHtml(driveTarixSaatFormat(f.createdTime))}${enSon ? ` <span class="en-son-etiket">${escapeHtml(tr('drive.enSon', 'Ən son'))}</span>` : ''}</span><span style="color:var(--brand-ink); font-size:12px; font-weight:600;">${escapeHtml(tr('drive.sec', 'Seç →'))}</span></div>`;
     item.onclick = () => driveBackupSecildi(f.id, f.createdTime);
     konteyner.appendChild(item);
   });
@@ -281,12 +295,183 @@ function driveBackupSecildi(fileId, createdTime) {
         driveSonSyncQeydEt();
         driveSyncGedirmi = false;
         driveMenyuGuncelle();
+        toastGoster(tr('berpa.olundu', 'Məlumatlar bərpa olundu.'));
       } catch (e) {
         driveSyncGedirmi = false;
         driveMenyuGuncelle(tr('drive.berpaAlinmadi', 'Bərpa alınmadı: {xeta}', { xeta: (e && e.message ? e.message : e) }), true);
       }
     });
   });
+}
+// ---- Token keşi: tətbiq 1 saat ərzində yenidən açılsa Google pəncərəsi ümumiyyətlə açılmır ----
+// (icazə yalnız bu tətbiqin yaratdığı fayllara aiddir — drive.file)
+function driveTokenYaddaSaxla() {
+  try { localStorage.setItem('drive_token', JSON.stringify({ t: driveAccessToken, b: driveTokenBitisZamani })); } catch (e) {}
+}
+function driveTokenSil() {
+  try { localStorage.removeItem('drive_token'); } catch (e) {}
+}
+(function driveTokenBerpa() {
+  try {
+    const x = JSON.parse(localStorage.getItem('drive_token') || 'null');
+    if (x && x.t && x.b > Date.now()) { driveAccessToken = x.t; driveTokenBitisZamani = x.b; }
+    else localStorage.removeItem('drive_token');
+  } catch (e) {}
+})();
+// Google hesabının e-poçtunu yadda saxla — növbəti dəfə hesab seçimi ekranı çıxmasın (login_hint).
+function driveEpoctunuOyren() {
+  if (!driveAccessToken) return;
+  fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)', { headers: { Authorization: 'Bearer ' + driveAccessToken } })
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { const e = d && d.user && d.user.emailAddress; if (e) localStorage.setItem('drive_email', e); })
+    .catch(() => {});
+}
+
+// ---- 24 saatlıq ehtiyat nüsxə ----
+const DRIVE_BACKUP_ARALIQ = 24 * 60 * 60 * 1000;
+function driveBackupVaxtiQeydEt() {
+  try { localStorage.setItem('drive_son_backup_ms', String(Date.now())); } catch (e) {}
+}
+function driveBackupVaxtiGelib() {
+  const son = Number(localStorage.getItem('drive_son_backup_ms') || 0);
+  return !son || Date.now() - son >= DRIVE_BACKUP_ARALIQ;
+}
+function driveXatirlatmaGizle() {
+  const el = document.getElementById('driveXatirlatma');
+  if (el) el.remove();
+}
+function driveXatirlatmaGoster() {
+  if (document.getElementById('driveXatirlatma')) return;
+  const el = document.createElement('div');
+  el.id = 'driveXatirlatma';
+  el.className = 'drive-xatirlatma';
+  el.setAttribute('role', 'status');
+  el.innerHTML = `<span class="dx-ikon">${ikon('bulud', 18)}</span><span class="dx-metn">${escapeHtml(tr('drive.xatirlatma', 'Son ehtiyat nüsxədən 24 saatdan çox keçib.'))}</span>` +
+    `<button class="dx-btn" onclick="driveXatirlatmaBas()">${escapeHtml(tr('drive.indiGonder', 'İndi göndər'))}</button>` +
+    `<button class="dx-bagla" onclick="driveXatirlatmaGizle()" aria-label="${escapeHtml(tr('umumi.bagla', 'Bağla'))}">${ikon('sil', 16)}</button>`;
+  document.body.appendChild(el);
+}
+function driveXatirlatmaBas() {
+  const btn = document.querySelector('#driveXatirlatma .dx-btn');
+  if (btn) { btn.disabled = true; btn.innerText = tr('ayarlar.driveEmeliyyatGedir', 'İcra olunur…'); }
+  driveArxaPlanGonder(false);
+}
+// Göndərişi edir. Token keşdədirsə heç bir pəncərə açılmır; deyilsə (yalnız istifadəçi basanda) Google
+// pəncərəsi açılıb adətən sual vermədən özü bağlanır.
+function driveArxaPlanGonder(sessizMi) {
+  if (driveSyncGedirmi) return;
+  driveSyncGedirmi = true;
+  driveMenyuGuncelle();
+  const et = async () => {
+    try {
+      await driveYukleEt();
+      driveSonSyncQeydEt();
+      driveBackupVaxtiQeydEt();
+      driveXatirlatmaGizle();
+      driveSyncGedirmi = false;
+      driveMenyuGuncelle();
+      toastGoster(tr('drive.gonderildiToast', 'Ehtiyat nüsxə Google Drive-a göndərildi.'));
+    } catch (e) {
+      driveSyncGedirmi = false;
+      driveMenyuGuncelle(tr('drive.gonderilmedi', 'Göndərmək alınmadı: {xeta}', { xeta: (e && e.message ? e.message : e) }), true);
+      if (e && /401|403/.test(String(e.message))) { driveAccessToken = null; driveTokenBitisZamani = 0; driveTokenSil(); }
+      if (sessizMi) driveXatirlatmaGoster();
+      else { const btn = document.querySelector('#driveXatirlatma .dx-btn'); if (btn) { btn.disabled = false; btn.innerText = tr('drive.indiGonder', 'İndi göndər'); } }
+    }
+  };
+  if (sessizMi) et(); // yalnız keşdə etibarlı token olanda çağırılır
+  else driveTokenGerekliyse(true, et);
+}
+// Tətbiq açılanda (məlumat yükləndikdən sonra) bir dəfə çağırılır.
+let driveAcilisYoxlanib = false;
+function driveAcilisYoxla() {
+  if (driveAcilisYoxlanib || demoRejim || !veriMenbeGuvenli) return;
+  driveAcilisYoxlanib = true;
+  let yeniGiris = false;
+  try { yeniGiris = sessionStorage.getItem('berpa_teklif') === '1'; sessionStorage.removeItem('berpa_teklif'); } catch (e) {}
+  // Google skriptini əvvəlcədən yüklə: düyməyə basanda pəncərə dərhal açılsın (iPhone Safari toxunuşdan
+  // sonra gecikən pəncərəni bloklayır).
+  if (yeniGiris || driveBagli) driveGisSkriptiniYukle().then(driveTokenClientHazirla).catch(() => {});
+  if (yeniGiris) { setTimeout(() => modalAc('berpaModal'), 300); return; }
+  if (!driveBagli || !driveBackupVaxtiGelib()) return;
+  if (driveAccessToken && Date.now() < driveTokenBitisZamani) driveArxaPlanGonder(true);
+  else setTimeout(driveXatirlatmaGoster, 800);
+}
+
+// ---- Girişdən sonra bərpa seçimi ----
+function berpaDriveSec() {
+  modalKapat('berpaModal');
+  if (GOOGLE_DRIVE_CLIENT_ID.indexOf('BURAYA_OZ_CLIENT_ID') === 0) return;
+  driveSyncGedirmi = true;
+  driveTokenGerekliyse(true, async () => {
+    try {
+      const fayllar = await driveBackupFayllariniListele();
+      driveSyncGedirmi = false;
+      driveMenyuGuncelle();
+      if (!fayllar.length) { alertAc(tr('drive.backupYoxdur', 'Drive-da hələ ehtiyat nüsxə yoxdur.')); return; }
+      driveBackupSecimGoster(fayllar);
+    } catch (e) {
+      driveSyncGedirmi = false;
+      alertAc(tr('drive.siyahiAlinmadi', 'Siyahını yükləmək alınmadı: {xeta}', { xeta: (e && e.message ? e.message : e) }));
+    }
+  });
+}
+function berpaFaylSec() { modalKapat('berpaModal'); fayldanBerpaAc(); }
+
+// ---- Fayl ehtiyatı (Google pəncərəsindən asılı deyil — iPhone-da ana ekran tətbiqi üçün etibarlı yol) ----
+function faylaYukle() {
+  if (demoRejim) { alertAc(tr('demo.driveYox', 'Nümunə rejimində Google Drive istifadə olunmur.')); return; }
+  const ad = driveYeniBackupAdi().replace(DRIVE_FILE_PREFIX, 'safe-money-backup');
+  const metn = JSON.stringify(driveBackupVerisi(), null, 1);
+  const blob = new Blob([metn], { type: 'application/json' });
+  const iosMu = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  try {
+    const fayl = new File([blob], ad, { type: 'application/json' });
+    if (iosMu && navigator.canShare && navigator.canShare({ files: [fayl] })) {
+      navigator.share({ files: [fayl], title: ad }).catch(() => {});
+      return;
+    }
+  } catch (e) { /* köhnə brauzer — adi yükləməyə keç */ }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = ad; document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1500);
+}
+function fayldanBerpaAc() {
+  if (demoRejim) { alertAc(tr('demo.driveYox', 'Nümunə rejimində Google Drive istifadə olunmur.')); return; }
+  let inp = document.getElementById('berpaFaylInput');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.id = 'berpaFaylInput'; inp.accept = '.json,application/json'; inp.style.display = 'none';
+    inp.addEventListener('change', () => { const f = inp.files && inp.files[0]; inp.value = ''; if (f) fayldanBerpaOxu(f); });
+    document.body.appendChild(inp);
+  }
+  inp.click();
+}
+function fayldanBerpaOxu(fayl) {
+  const oxu = new FileReader();
+  oxu.onload = () => {
+    let d = null;
+    try { d = JSON.parse(String(oxu.result)); } catch (e) { d = null; }
+    if (!d || typeof d !== 'object' || Array.isArray(d) || !(Array.isArray(d.giderler) || Array.isArray(d.kategoriler))) {
+      alertAc(tr('fayl.etibarsiz', 'Bu fayl Safe Money ehtiyat nüsxəsi deyil.'));
+      return;
+    }
+    const tarix = d.backupTarixi ? driveTarixSaatFormat(d.backupTarixi) : fayl.name;
+    confirmAc(tr('drive.berpaBaslik', 'Ehtiyat nüsxə bərpa edilsin?'), tr('drive.berpaSual', '{tarix} tarixli nüsxə indiki məlumatların yerinə yazılacaq. Bu əməliyyatı geri qaytarmaq olmur.', { tarix }), () => {
+      try {
+        driveVerisiniTetbiqEt(d);
+        veriKaydet();
+        ekraniGuncelle();
+        const hm = document.getElementById('hesablarModal');
+        if (hm && hm.classList.contains('active') && typeof hesablarGoster === 'function') hesablarGoster();
+        toastGoster(tr('berpa.olundu', 'Məlumatlar bərpa olundu.'));
+      } catch (e) {
+        alertAc(tr('drive.berpaAlinmadi', 'Bərpa alınmadı: {xeta}', { xeta: (e && e.message ? e.message : e) }));
+      }
+    });
+  };
+  oxu.readAsText(fayl);
 }
 // ==================== /Google Drive ====================
 
@@ -373,15 +558,18 @@ function emailIleGirisEt() {
   if (!email || !sifre) { xetaEl.innerText = tr('giris.epoctVeSifreYaz', 'E-poçtu və şifrəni daxil et.'); return; }
   firebaseBaslat().then((hazir) => {
     if (!hazir) { xetaEl.innerText = tr('giris.baglantiAlinmadi', 'Bağlantı alınmadı. İnterneti yoxla və yenidən cəhd et.'); return; }
+    try { sessionStorage.setItem('berpa_teklif', '1'); } catch (e) {}
     firebase.auth().signInWithEmailAndPassword(email, sifre).then((deyisim) => {
       const istifadeci = deyisim.user;
       if (istifadeci && !istifadeci.emailVerified) {
         tesdiqGozleyenIstifadeci = istifadeci;
         xetaEl.innerText = tr('giris.epoctTesdiqlenmeyibUzun', 'E-poçtun hələ təsdiqlənməyib. Poçt qutunu ("Spam" qovluğunu da) yoxla, linkə keçid et və yenidən daxil ol.');
         document.getElementById('tesdiqYenidenBtn').style.display = 'block';
+        try { sessionStorage.removeItem('berpa_teklif'); } catch (e) {}
         firebase.auth().signOut();
       }
     }).catch((e) => {
+      try { sessionStorage.removeItem('berpa_teklif'); } catch (e2) {}
       console.warn('Email giriş xətası:', e);
       if (e && e.code === 'auth/user-not-found') xetaEl.innerText = tr('giris.hesabTapilmadi', 'Bu e-poçtla hesab tapılmadı. Əvvəlcə "Hesab yarat" ilə qeydiyyatdan keç.');
       else if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) xetaEl.innerText = tr('giris.sifreSehvdir', 'Şifrə yanlışdır.');
@@ -546,6 +734,23 @@ function demoDatasiniQur() {
       giderler.push({ kategori: kat[ki].ad, tutar, tamTarix: dt.toISOString(), tarix: tarixSaatYaz(dt), hesabId: (i === 2 ? kart.id : debet.id) });
     }
   }
+  // Aylıq sabit xərclər (kirayə, kommunal və s.) — bu ay və keçən ay üçün, hesabat qrafiki boş qalmasın
+  const sabitler = [
+    ['demo.katKiraye', 'Kirayə', '🏠', '#8f9bb0', 450, 1],
+    ['demo.katKommunal', 'Kommunal', '💡', '#b3a27a', 68.4, 3],
+    ['demo.katInternet', 'İnternet', '📶', '#7f9fa8', 25, 2],
+    ['demo.katMobil', 'Mobil rabitə', '📱', '#a08aa6', 15, 2],
+    ['demo.katIdman', 'İdman zalı', '🏋️', '#8fa58a', 60, 4]
+  ];
+  sabitler.forEach(([acar, ad, ikonu, renk, tutar, gun]) => {
+    const katAd = tr(acar, ad);
+    kategoriler.push({ ad: katAd, ikon: ikonu, renk, sabitTutar: tutar, aylik: true });
+    [0, 1].forEach(ayGeri => {
+      const dt = new Date(bugun.getFullYear(), bugun.getMonth() - ayGeri, Math.min(gun, ayGeri ? gun : bugun.getDate()), 11, 0, 0, 0);
+      const mebleg = acar === 'demo.katKommunal' && ayGeri ? 74.9 : tutar;
+      giderler.push({ kategori: katAd, tutar: mebleg, tamTarix: dt.toISOString(), tarix: tarixSaatYaz(dt), hesabId: debet.id });
+    });
+  });
   giderler.sort((a, b) => new Date(b.tamTarix) - new Date(a.tamTarix));
   const t1 = gunEvvel(3, 10, 15), t2 = gunEvvel(12, 9, 0), t3 = gunEvvel(20, 18, 30);
   hesabTransferleri = [
@@ -569,6 +774,7 @@ function cixisEt() {
   if (demoRejim) { qonaqdanCix(); return; }
   confirmAc(tr('ayarlar.cixisEt', 'Çıxış et'), tr('ayarlar.cixisSual', 'Hesabdan çıxmaq istəyirsən? Bu cihazda yenidən giriş ekranı açılacaq.'), () => {
     if (firebaseUnsubscribe) { firebaseUnsubscribe(); firebaseUnsubscribe = null; }
+    driveTokenSil();
     firebase.auth().signOut().then(() => location.reload());
   });
 }

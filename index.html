@@ -37,7 +37,7 @@
     <input type="password" id="emailGirisSifre" placeholder="Şifrə (ən azı 6 simvol)" data-i18n-placeholder="giris.sifreEnAz6Placeholder" autocomplete="current-password" style="width:100%; margin-bottom:10px; box-sizing:border-box;">
     <button data-i18n="giris.daxilOl" class="btn btn-primary" onclick="emailIleGirisEt()" style="width:100%; margin-bottom:8px;">Daxil ol</button>
     <button type="button" class="link-btn" onclick="sifreSifirla()" data-i18n="giris.sifreniUnutdum">Şifrəni unutdum</button>
-    <button data-i18n="giris.hesabYaratIlkDefedirse" class="btn btn-ghost" onclick="qeydiyyatModalAc()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Hesab yarat (ilk dəfədirsə)</button>
+    <button data-i18n="giris.hesabYaratIlkDefedirse" class="btn btn-ghost" onclick="qeydiyyatModalAc()" style="width:100%; margin-bottom:10px; border:1px solid var(--line);">Qeydiyyatdan keç</button>
     <button type="button" class="btn btn-ghost qonaq-btn" onclick="qonaqKimiDaxilOl()" data-i18n="giris.qonaq">Qonaq kimi bax</button>
     <button data-i18n="giris.tesdiqEPoctunuYeniden" class="btn btn-ghost" id="tesdiqYenidenBtn" onclick="tesdiqEmailiYenidenGonder()" style="width:100%; margin-bottom:10px; border:1px solid var(--line); display:none;">Təsdiq məktubunu yenidən göndər</button>
     <div class="error-text" id="googleGirisXeta"></div>
@@ -295,6 +295,19 @@
 </div>
 
 <!-- Drive: available backups list to pick from -->
+<!-- Yenidən daxil olduqdan sonra: bərpa seçimi -->
+<div id="berpaModal" class="modal">
+  <div class="modal-content">
+    <h2 data-i18n="berpa.basliq">Məlumatları bərpa et</h2>
+    <p data-i18n="berpa.izah" class="hint">Hesabına yenidən daxil oldun. Buluddakı məlumatlarla davam edə və ya ehtiyat nüsxəni yükləyə bilərsən.</p>
+    <div class="berpa-secimler">
+      <button class="btn btn-primary btn-ikonlu" onclick="berpaDriveSec()"><i data-ikon="bulud" data-olcu="18"></i><span data-i18n="berpa.drive">Google Drive-dan bərpa et</span></button>
+      <button class="btn btn-ghost btn-ikonlu berpa-cerceve" onclick="berpaFaylSec()"><i data-ikon="tarixce" data-olcu="18"></i><span data-i18n="berpa.fayl">Fayldan bərpa et</span></button>
+      <button class="btn btn-ghost" onclick="modalKapat('berpaModal')" data-i18n="berpa.davam">Buluddakı məlumatla davam et</button>
+    </div>
+  </div>
+</div>
+
 <div id="driveBackupSecModal" class="modal">
   <div class="modal-content">
     <h2 data-i18n="backupSec.hansiBackup">Hansı ehtiyat nüsxə?</h2>

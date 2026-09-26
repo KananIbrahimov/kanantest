@@ -1,5 +1,5 @@
 /* Safe Money — vəziyyət, yükləmə, yadda saxlama */
-const APP_VERSION = '3.15'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
+const APP_VERSION = '3.16'; // hər yeni göndərilən html versiyasında əl ilə +1 artırılır
 let aktifDonem = 'gunluk';
 let goruntulenenTarix = new Date(); goruntulenenTarix.setHours(0, 0, 0, 0);
 let kategoriler = [];
@@ -170,6 +170,7 @@ async function veriYukle() {
   if (firebaseHazir && senkronKey) {
     firebaseDinlemeyeBasla();
   }
+  if (typeof driveAcilisYoxla === 'function') driveAcilisYoxla();
 }
 
 async function veriKaydet() {
